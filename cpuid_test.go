@@ -16,7 +16,7 @@ func TestCPUID(t *testing.T) {
 	t.Log("PhysicalCores:", CPU.PhysicalCores)
 	t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
 	t.Log("LogicalCores:", CPU.LogicalCores)
-	t.Log("Family", CPU.Family, "Mt odel:", CPU.Model)
+	t.Log("Family", CPU.Family, "Model:", CPU.Model)
 	t.Log("Features:", CPU.Features)
 	t.Log("Cacheline bytes:", CPU.CacheLine)
 	if CPU.SSE2() {
