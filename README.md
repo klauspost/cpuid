@@ -15,6 +15,31 @@ Package home: https://github.com/klauspost/cpuid
 [3]: https://travis-ci.org/klauspost/cpuid.svg
 [4]: https://travis-ci.org/klauspost/cpuid
 
+# features
+Currently these CPU features are detected:
+*	CMOV         (i686 CMOV)
+*	AMD 3DNOW!                (AMD 3DNOW)
+*	AMD 3DNNOW! Extension             (AMD 3DNowExt)
+*	MMX                     (standard MMX)
+*	MMX EXT                  (SSE integer functions or AMD MMX ext)
+*	SSE                     (SSE functions)
+*	SSE2                    (P4 SSE functions)
+*	SSE3                    (Prescott SSE3 functions)
+*	SSSE3                   (Conroe SSSE3 functions)
+*	SSE4.1                   (Penryn SSE4.1 functions)
+*	SSE4.2                   (Nehalem SSE4.2 functions)
+*	AVX                     (AVX functions)
+*	AVX2                    (AVX2 functions)
+*	FMA3                    (Intel FMA 3)
+*	FMA4                    (Bulldozer FMA4 functions)
+*	XOP                     (Bulldozer XOP functions)
+*	BMI1                    (Bit Manipulation Instruction Set 1)
+*	BMI2                    (Bit Manipulation Instruction Set 2)
+*	TBM                     (AMD Trailing Bit Manipulation)
+*	LZCNT                   (LZCNT instruction)
+*	AE-SNI                   (Advanced Encryption Standard New Instructions)
+*	CLMUL                   (Carry-less Multiplication)
+
 # example
 
 ```Go
