@@ -40,6 +40,10 @@ Currently these CPU features are detected:
 *	AE-SNI                   (Advanced Encryption Standard New Instructions)
 *	CLMUL                   (Carry-less Multiplication)
 
+# installing
+
+```go get github.com/klauspost/cpuid```
+
 # example
 
 ```Go
