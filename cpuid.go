@@ -1,14 +1,13 @@
 // Copyright (c) 2015 Klaus Post, released under MIT License. See LICENSE file.
 
-/*
-Package cpuid provides information about the CPU running the current program.
-
-CPU features are detected on startup, and kept for fast access through the life of the application.
-Currently x86 / x64 (AMD64) is supported.
-
-You can access the CPU information by accessing the shared CPU variable of the cpuid library.
-
-Package home: https://github.com/klauspost/cpuid */
+// Package cpuid provides information about the CPU running the current program.
+//
+// CPU features are detected on startup, and kept for fast access through the life of the application.
+// Currently x86 / x64 (AMD64) is supported.
+//
+// You can access the CPU information by accessing the shared CPU variable of the cpuid library.
+//
+// Package home: https://github.com/klauspost/cpuid
 package cpuid
 
 import "strings"
