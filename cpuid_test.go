@@ -10,11 +10,11 @@ import (
 // There is no real way to test a CPU identifier, since results will
 // obviously differ on each machine.
 func TestCPUID(t *testing.T) {
-	n := maxExtendedFunction()
+	n := maxFunctionID()
 	t.Logf("Max Function:%x\n", n)
 	n = maxExtendedFunction()
 	t.Logf("Max Extended Function:%x\n", n)
-	if n >= 7 {
+	if n >= maxFunctionID() {
 		_, ebx, _, _ := cpuid(7)
 		t.Logf("CPUID.(EAX=07H):EBX: 0x%x", ebx)
 	}
