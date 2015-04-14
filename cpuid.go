@@ -40,6 +40,7 @@ const (
 	FMA3                    // Intel FMA 3
 	FMA4                    // Bulldozer FMA4 functions
 	XOP                     // Bulldozer XOP functions
+	F16C                    // Half-precision floating-point conversion
 	BMI1                    // Bit Manipulation Instruction Set 1
 	BMI2                    // Bit Manipulation Instruction Set 2
 	TBM                     // AMD Trailing Bit Manipulation
@@ -50,6 +51,7 @@ const (
 	HLE                     // Hardware Lock Elision
 	RTM                     // Restricted Transactional Memory
 	RDRAND                  // RDRAND instruction is available
+	RDSEED                  // RDSEED instruction is available
 	ADX                     // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
 	SHA                     // Intel SHA Extensions
 	AVX512F                 // AVX-512 Foundation
@@ -88,6 +90,7 @@ var flagNames = map[Flags]string{
 	FMA3:        "FMA3",        // Intel FMA 3
 	FMA4:        "FMA4",        // Bulldozer FMA4 functions
 	XOP:         "XOP",         // Bulldozer XOP functions
+	F16C:        "F16C",        // Half-precision floating-point conversion
 	BMI1:        "BMI1",        // Bit Manipulation Instruction Set 1
 	BMI2:        "BMI2",        // Bit Manipulation Instruction Set 2
 	TBM:         "TBM",         // AMD Trailing Bit Manipulation
@@ -98,6 +101,7 @@ var flagNames = map[Flags]string{
 	HLE:         "HLE",         // Hardware Lock Elision
 	RTM:         "RTM",         // Restricted Transactional Memory
 	RDRAND:      "RDRAND",      // RDRAND instruction is available
+	RDSEED:      "RDSEED",      // RDSEED instruction is available
 	ADX:         "ADX",         // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
 	SHA:         "SHA",         // Intel SHA Extensions
 	AVX512F:     "AVX512F",     // AVX-512 Foundation
@@ -245,6 +249,11 @@ func (c CPUInfo) XOP() bool {
 	return c.Features&XOP != 0
 }
 
+// F16C indicates support of F16C instructions
+func (c CPUInfo) F16C() bool {
+	return c.Features&F16C != 0
+}
+
 // BMI1 indicates support of BMI1 instructions
 func (c CPUInfo) BMI1() bool {
 	return c.Features&BMI1 != 0
@@ -316,6 +325,11 @@ func (c CPUInfo) RTM() bool {
 // Rdrand indicates support of RDRAND instruction is available
 func (c CPUInfo) Rdrand() bool {
 	return c.Features&RDRAND != 0
+}
+
+// Rdseed indicates support of RDSEED instruction is available
+func (c CPUInfo) Rdseed() bool {
+	return c.Features&RDSEED != 0
 }
 
 // ADX indicates support of Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
@@ -556,6 +570,12 @@ func support() Flags {
 	if (c & (1 << 1)) != 0 {
 		rval |= CLMUL
 	}
+	if c&(1<<30) != 0 {
+		rval |= RDRAND
+	}
+	if c&(1<<29) != 0 {
+		rval |= F16C
+	}
 	if (c & (1 << 28)) != 0 {
 		// This field does not indicate that Hyper-Threading
 		// Technology has been enabled for this specific processor.
@@ -604,7 +624,7 @@ func support() Flags {
 			rval |= MPX
 		}
 		if ebx&(1<<18) != 0 {
-			rval |= RDRAND
+			rval |= RDSEED
 		}
 		if ebx&(1<<19) != 0 {
 			rval |= ADX

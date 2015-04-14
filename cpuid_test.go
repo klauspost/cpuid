@@ -208,6 +208,16 @@ func TestXOP(t *testing.T) {
 	t.Log("XOP Support:", got)
 }
 
+// TestF16C tests F16C() function
+func TestF16C(t *testing.T) {
+	got := CPU.F16C()
+	expected := CPU.Features&F16C == F16C
+	if got != expected {
+		t.Fatalf("F16C: expected %v, got %v", expected, got)
+	}
+	t.Log("F16C Support:", got)
+}
+
 // TestBMI1 tests BMI1() function
 func TestBMI1(t *testing.T) {
 	got := CPU.BMI1()
@@ -356,6 +366,16 @@ func TestRdrand(t *testing.T) {
 		t.Fatalf("Rdrand: expected %v, got %v", expected, got)
 	}
 	t.Log("Rdrand Support:", got)
+}
+
+// TestRdseed tests RDSEED() function (RDSEED instruction is available)
+func TestRdseed(t *testing.T) {
+	got := CPU.Rdseed()
+	expected := CPU.Features&RDSEED == RDSEED
+	if got != expected {
+		t.Fatalf("Rdseed: expected %v, got %v", expected, got)
+	}
+	t.Log("Rdseed Support:", got)
 }
 
 // TestADX tests ADX() function (Intel ADX (Multi-Precision Add-Carry Instruction Extensions))
