@@ -55,6 +55,7 @@ Currently these CPU features are detected:
 *  **AVX512CD**; (AVX-512 Conflict Detection Instructions)
 *  **AVX512BW**; (AVX-512 Byte and Word Instructions)
 *  **AVX512VL**; (AVX-512 Vector Length Extensions)
+*  **AVX512VBMI**; (AVX-512 Vector Bit Manipulation Instructions)
 *  **MPX**; (Intel MPX (Memory Protection Extensions))
 *  **ERMS**; (Enhanced REP MOVSB/STOSB)
 
