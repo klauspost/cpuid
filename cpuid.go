@@ -23,6 +23,7 @@ const (
 
 const (
 	CMOV        = 1 << iota // i686 CMOV
+	NX                      // NX (No-Execute) bit
 	AMD3DNOW                // AMD 3DNOW
 	AMD3DNOWEXT             // AMD 3DNowExt
 	MMX                     // standard MMX
@@ -32,6 +33,7 @@ const (
 	SSE3                    // Prescott SSE3 functions
 	SSSE3                   // Conroe SSSE3 functions
 	SSE4                    // Penryn SSE4.1 functions
+	SSE4A                   // AMD Barcelona microarchitecture SSE4a instructions
 	SSE42                   // Nehalem SSE4.2 functions
 	AVX                     // AVX functions
 	AVX2                    // AVX2 functions
@@ -45,6 +47,21 @@ const (
 	AESNI                   // Advanced Encryption Standard New Instructions
 	CLMUL                   // Carry-less Multiplication
 	HTT                     // Hyperthreading (enabled)
+	HLE                     // Hardware Lock Elision
+	RTM                     // Restricted Transactional Memory
+	RDRAND                  // RDRAND instruction is available
+	ADX                     // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
+	SHA                     // Intel SHA Extensions
+	AVX512F                 // AVX-512 Foundation
+	AVX512DQ                // AVX-512 Doubleword and Quadword Instructions
+	AVX512IFMA              // AVX-512 Integer Fused Multiply-Add Instructions
+	AVX512PF                // AVX-512 Prefetch Instructions
+	AVX512ER                // AVX-512 Exponential and Reciprocal Instructions
+	AVX512CD                // AVX-512 Conflict Detection Instructions
+	AVX512BW                // AVX-512 Byte and Word Instructions
+	AVX512VL                // AVX-512 Vector Length Extensions
+	MPX                     // Intel MPX (Memory Protection Extensions)
+	ERMS                    // Enhanced REP MOVSB/STOSB
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -54,6 +71,7 @@ const (
 
 var flagNames = map[Flags]string{
 	CMOV:        "CMOV",        // i686 CMOV
+	NX:          "NX",          // NX (No-Execute) bit
 	AMD3DNOW:    "AMD3DNOW",    // AMD 3DNOW
 	AMD3DNOWEXT: "AMD3DNOWEXT", // AMD 3DNowExt
 	MMX:         "MMX",         // Standard MMX
@@ -76,6 +94,21 @@ var flagNames = map[Flags]string{
 	AESNI:       "AESNI",       // Advanced Encryption Standard New Instructions
 	CLMUL:       "CLMUL",       // Carry-less Multiplication
 	HTT:         "HTT",         // Hyperthreading (enabled)
+	HLE:         "HLE",         // Hardware Lock Elision
+	RTM:         "RTM",         // Restricted Transactional Memory
+	RDRAND:      "RDRAND",      // RDRAND instruction is available
+	ADX:         "ADX",         // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
+	SHA:         "SHA",         // Intel SHA Extensions
+	AVX512F:     "AVX512F",     // AVX-512 Foundation
+	AVX512DQ:    "AVX512DQ",    // AVX-512 Doubleword and Quadword Instructions
+	AVX512IFMA:  "AVX512IFMA",  // AVX-512 Integer Fused Multiply-Add Instructions
+	AVX512PF:    "AVX512PF",    // AVX-512 Prefetch Instructions
+	AVX512ER:    "AVX512ER",    // AVX-512 Exponential and Reciprocal Instructions
+	AVX512CD:    "AVX512CD",    // AVX-512 Conflict Detection Instructions
+	AVX512BW:    "AVX512BW",    // AVX-512 Byte and Word Instructions
+	AVX512VL:    "AVX512VL",    // AVX-512 Vector Length Extensions
+	MPX:         "MPX",         // Intel MPX (Memory Protection Extensions)
+	ERMS:        "ERMS",        // Enhanced REP MOVSB/STOSB
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -126,7 +159,7 @@ func Detect() {
 	CPU.VendorID = vendorID()
 }
 
-// Generated here: http://play.golang.org/p/TMb5NyBvq1
+// Generated here: http://play.golang.org/p/BxFH2Gdc0G
 
 // Cmov indicates support of CMOV instructions
 func (c CPUInfo) Cmov() bool {
@@ -256,6 +289,91 @@ func (c CPUInfo) AesNi() bool {
 // (Carry-less Multiplication)
 func (c CPUInfo) Clmul() bool {
 	return c.Features&CLMUL != 0
+}
+
+// NX indicates support of NX (No-Execute) bit
+func (c CPUInfo) NX() bool {
+	return c.Features&NX != 0
+}
+
+// SSE4A indicates support of AMD Barcelona microarchitecture SSE4a instructions
+func (c CPUInfo) SSE4A() bool {
+	return c.Features&SSE4A != 0
+}
+
+// HLE indicates support of Hardware Lock Elision
+func (c CPUInfo) HLE() bool {
+	return c.Features&HLE != 0
+}
+
+// RTM indicates support of Restricted Transactional Memory
+func (c CPUInfo) RTM() bool {
+	return c.Features&RTM != 0
+}
+
+// Rdrand indicates support of RDRAND instruction is available
+func (c CPUInfo) Rdrand() bool {
+	return c.Features&RDRAND != 0
+}
+
+// ADX indicates support of Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
+func (c CPUInfo) ADX() bool {
+	return c.Features&ADX != 0
+}
+
+// SHA indicates support of Intel SHA Extensions
+func (c CPUInfo) SHA() bool {
+	return c.Features&SHA != 0
+}
+
+// AVX512F indicates support of AVX-512 Foundation
+func (c CPUInfo) AVX512F() bool {
+	return c.Features&AVX512F != 0
+}
+
+// AVX512DQ indicates support of AVX-512 Doubleword and Quadword Instructions
+func (c CPUInfo) AVX512DQ() bool {
+	return c.Features&AVX512DQ != 0
+}
+
+// AVX512IFMA indicates support of AVX-512 Integer Fused Multiply-Add Instructions
+func (c CPUInfo) AVX512IFMA() bool {
+	return c.Features&AVX512IFMA != 0
+}
+
+// AVX512PF indicates support of AVX-512 Prefetch Instructions
+func (c CPUInfo) AVX512PF() bool {
+	return c.Features&AVX512PF != 0
+}
+
+// AVX512ER indicates support of AVX-512 Exponential and Reciprocal Instructions
+func (c CPUInfo) AVX512ER() bool {
+	return c.Features&AVX512ER != 0
+}
+
+// AVX512CD indicates support of AVX-512 Conflict Detection Instructions
+func (c CPUInfo) AVX512CD() bool {
+	return c.Features&AVX512CD != 0
+}
+
+// AVX512BW indicates support of AVX-512 Byte and Word Instructions
+func (c CPUInfo) AVX512BW() bool {
+	return c.Features&AVX512BW != 0
+}
+
+// AVX512VL indicates support of AVX-512 Vector Length Extensions
+func (c CPUInfo) AVX512VL() bool {
+	return c.Features&AVX512VL != 0
+}
+
+// MPX indicates support of Intel MPX (Memory Protection Extensions)
+func (c CPUInfo) MPX() bool {
+	return c.Features&MPX != 0
+}
+
+// ERMS indicates support of Enhanced REP MOVSB/STOSB
+func (c CPUInfo) ERMS() bool {
+	return c.Features&ERMS != 0
 }
 
 // Atom indicates an Atom processor
@@ -466,6 +584,63 @@ func support() Flags {
 				rval |= BMI2
 			}
 		}
+		if ebx&(1<<4) != 0 {
+			rval |= HLE
+		}
+		if ebx&(1<<9) != 0 {
+			rval |= ERMS
+		}
+		if ebx&(1<<11) != 0 {
+			rval |= RTM
+		}
+		if ebx&(1<<14) != 0 {
+			rval |= MPX
+		}
+		if ebx&(1<<18) != 0 {
+			rval |= RDRAND
+		}
+		if ebx&(1<<19) != 0 {
+			rval |= ADX
+		}
+		if ebx&(1<<29) != 0 {
+			rval |= SHA
+		}
+
+		// Only detect AVX-512 features if XGETBV is supported
+		if c&((1<<26)|(1<<27)) == (1<<26)|(1<<27) {
+			// Check for OS support
+			eax, _ := xgetbv(0)
+
+			// Verify that XCR0[7:5] = ‘111b’ (OPMASK state, upper 256-bit of ZMM0-ZMM15 and
+			// ZMM16-ZMM31 state are enabled by OS)
+			/// and that XCR0[2:1] = ‘11b’ (XMM state and YMM state are enabled by OS).
+			if (eax>>5)&7 == 7 && (eax>>1)&3 == 3 {
+				if ebx&(1<<16) != 0 {
+					rval |= AVX512F
+				}
+				if ebx&(1<<17) != 0 {
+					rval |= AVX512DQ
+				}
+				if ebx&(1<<21) != 0 {
+					rval |= AVX512IFMA
+				}
+				if ebx&(1<<26) != 0 {
+					rval |= AVX512PF
+				}
+				if ebx&(1<<27) != 0 {
+					rval |= AVX512ER
+				}
+				if ebx&(1<<28) != 0 {
+					rval |= AVX512CD
+				}
+				if ebx&(1<<30) != 0 {
+					rval |= AVX512BW
+				}
+				if ebx&(1<<31) != 0 {
+					rval |= AVX512VL
+				}
+			}
+		}
 	}
 
 	if maxExtendedFunction() >= 0x80000001 {
@@ -485,6 +660,13 @@ func support() Flags {
 		if (d & (1 << 22)) != 0 {
 			rval |= MMXEXT
 		}
+		if (c & (1 << 6)) != 0 {
+			rval |= SSE4A
+		}
+		if d&(1<<20) != 0 {
+			rval |= NX
+		}
+
 		/* Allow for selectively disabling SSE2 functions on AMD processors
 		   with SSE2 support but not SSE4a. This includes Athlon64, some
 		   Opteron, and some Sempron processors. MMX, SSE, or 3DNow! are faster

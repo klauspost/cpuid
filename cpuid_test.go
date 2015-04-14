@@ -46,7 +46,7 @@ func Example() {
 	}
 }
 
-// Generated here: http://play.golang.org/p/31X7Inkrpp
+// Generated here: http://play.golang.org/p/mko-0tFt0Q
 
 // TestCmov tests Cmov() function
 func TestCmov(t *testing.T) {
@@ -306,4 +306,174 @@ func TestAtom(t *testing.T) {
 		t.Fatalf("Atom: expected %v, got %v", expected, got)
 	}
 	t.Log("ATOM Support:", got)
+}
+
+// TestNX tests NX() function (NX (No-Execute) bit)
+func TestNX(t *testing.T) {
+	got := CPU.NX()
+	expected := CPU.Features&NX == NX
+	if got != expected {
+		t.Fatalf("NX: expected %v, got %v", expected, got)
+	}
+	t.Log("NX Support:", got)
+}
+
+// TestSSE4A tests SSE4A() function (AMD Barcelona microarchitecture SSE4a instructions)
+func TestSSE4A(t *testing.T) {
+	got := CPU.SSE4A()
+	expected := CPU.Features&SSE4A == SSE4A
+	if got != expected {
+		t.Fatalf("SSE4A: expected %v, got %v", expected, got)
+	}
+	t.Log("SSE4A Support:", got)
+}
+
+// TestHLE tests HLE() function (Hardware Lock Elision)
+func TestHLE(t *testing.T) {
+	got := CPU.HLE()
+	expected := CPU.Features&HLE == HLE
+	if got != expected {
+		t.Fatalf("HLE: expected %v, got %v", expected, got)
+	}
+	t.Log("HLE Support:", got)
+}
+
+// TestRTM tests RTM() function (Restricted Transactional Memory)
+func TestRTM(t *testing.T) {
+	got := CPU.RTM()
+	expected := CPU.Features&RTM == RTM
+	if got != expected {
+		t.Fatalf("RTM: expected %v, got %v", expected, got)
+	}
+	t.Log("RTM Support:", got)
+}
+
+// TestRdrand tests RDRAND() function (RDRAND instruction is available)
+func TestRdrand(t *testing.T) {
+	got := CPU.Rdrand()
+	expected := CPU.Features&RDRAND == RDRAND
+	if got != expected {
+		t.Fatalf("Rdrand: expected %v, got %v", expected, got)
+	}
+	t.Log("Rdrand Support:", got)
+}
+
+// TestADX tests ADX() function (Intel ADX (Multi-Precision Add-Carry Instruction Extensions))
+func TestADX(t *testing.T) {
+	got := CPU.ADX()
+	expected := CPU.Features&ADX == ADX
+	if got != expected {
+		t.Fatalf("ADX: expected %v, got %v", expected, got)
+	}
+	t.Log("ADX Support:", got)
+}
+
+// TestSHA tests SHA() function (Intel SHA Extensions)
+func TestSHA(t *testing.T) {
+	got := CPU.SHA()
+	expected := CPU.Features&SHA == SHA
+	if got != expected {
+		t.Fatalf("SHA: expected %v, got %v", expected, got)
+	}
+	t.Log("SHA Support:", got)
+}
+
+// TestAVX512F tests AVX512F() function (AVX-512 Foundation)
+func TestAVX512F(t *testing.T) {
+	got := CPU.AVX512F()
+	expected := CPU.Features&AVX512F == AVX512F
+	if got != expected {
+		t.Fatalf("AVX512F: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512F Support:", got)
+}
+
+// TestAVX512DQ tests AVX512DQ() function (AVX-512 Doubleword and Quadword Instructions)
+func TestAVX512DQ(t *testing.T) {
+	got := CPU.AVX512DQ()
+	expected := CPU.Features&AVX512DQ == AVX512DQ
+	if got != expected {
+		t.Fatalf("AVX512DQ: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512DQ Support:", got)
+}
+
+// TestAVX512IFMA tests AVX512IFMA() function (AVX-512 Integer Fused Multiply-Add Instructions)
+func TestAVX512IFMA(t *testing.T) {
+	got := CPU.AVX512IFMA()
+	expected := CPU.Features&AVX512IFMA == AVX512IFMA
+	if got != expected {
+		t.Fatalf("AVX512IFMA: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512IFMA Support:", got)
+}
+
+// TestAVX512PF tests AVX512PF() function (AVX-512 Prefetch Instructions)
+func TestAVX512PF(t *testing.T) {
+	got := CPU.AVX512PF()
+	expected := CPU.Features&AVX512PF == AVX512PF
+	if got != expected {
+		t.Fatalf("AVX512PF: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512PF Support:", got)
+}
+
+// TestAVX512ER tests AVX512ER() function (AVX-512 Exponential and Reciprocal Instructions)
+func TestAVX512ER(t *testing.T) {
+	got := CPU.AVX512ER()
+	expected := CPU.Features&AVX512ER == AVX512ER
+	if got != expected {
+		t.Fatalf("AVX512ER: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512ER Support:", got)
+}
+
+// TestAVX512CD tests AVX512CD() function (AVX-512 Conflict Detection Instructions)
+func TestAVX512CD(t *testing.T) {
+	got := CPU.AVX512CD()
+	expected := CPU.Features&AVX512CD == AVX512CD
+	if got != expected {
+		t.Fatalf("AVX512CD: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512CD Support:", got)
+}
+
+// TestAVX512BW tests AVX512BW() function (AVX-512 Byte and Word Instructions)
+func TestAVX512BW(t *testing.T) {
+	got := CPU.AVX512BW()
+	expected := CPU.Features&AVX512BW == AVX512BW
+	if got != expected {
+		t.Fatalf("AVX512BW: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512BW Support:", got)
+}
+
+// TestAVX512VL tests AVX512VL() function (AVX-512 Vector Length Extensions)
+func TestAVX512VL(t *testing.T) {
+	got := CPU.AVX512VL()
+	expected := CPU.Features&AVX512VL == AVX512VL
+	if got != expected {
+		t.Fatalf("AVX512VL: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VL Support:", got)
+}
+
+// TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
+func TestMPX(t *testing.T) {
+	got := CPU.MPX()
+	expected := CPU.Features&MPX == MPX
+	if got != expected {
+		t.Fatalf("MPX: expected %v, got %v", expected, got)
+	}
+	t.Log("MPX Support:", got)
+}
+
+// TestERMS tests ERMS() function (Enhanced REP MOVSB/STOSB)
+func TestERMS(t *testing.T) {
+	got := CPU.ERMS()
+	expected := CPU.Features&ERMS == ERMS
+	if got != expected {
+		t.Fatalf("ERMS: expected %v, got %v", expected, got)
+	}
+	t.Log("ERMS Support:", got)
 }
