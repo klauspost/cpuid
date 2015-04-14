@@ -44,6 +44,7 @@ const (
 	LZCNT                   // LZCNT instruction
 	AESNI                   // Advanced Encryption Standard New Instructions
 	CLMUL                   // Carry-less Multiplication
+	HTT                     // Hyperthreading (enabled)
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -74,6 +75,7 @@ var flagNames = map[Flags]string{
 	LZCNT:       "LZCNT",       // LZCNT instruction
 	AESNI:       "AESNI",       // Advanced Encryption Standard New Instructions
 	CLMUL:       "CLMUL",       // Carry-less Multiplication
+	HTT:         "HTT",         // Hyperthreading (enabled)
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -87,9 +89,9 @@ type CPUInfo struct {
 	BrandName      string // Brand name reported by the CPU
 	VendorID       Vendor // Comparable CPU vendor ID
 	Features       Flags  // Features of the CPU
-	PhysicalCores  int    // Number of physical processor cores in your CPU. Will be 1 if undetectable.
+	PhysicalCores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	ThreadsPerCore int    // Number of threads per physical core. Will be 1 if undetectable.
-	LogicalCores   int    // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 1 if undetectable.
+	LogicalCores   int    // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
 	Family         int    // CPU family number
 	Model          int    // CPU model number
 	CacheLine      int    // Cache line size in bytes. Will be 0 if undetectable.
@@ -229,6 +231,11 @@ func (c CPUInfo) Lzcnt() bool {
 	return c.Features&LZCNT != 0
 }
 
+// HTT indicates the processor has Hyperthreading enabled
+func (c CPUInfo) HTT() bool {
+	return c.Features&HTT != 0
+}
+
 // SSE2Slow indicates that SSE2 may be slow on this processor
 func (c CPUInfo) SSE2Slow() bool {
 	return c.Features&SSE2SLOW != 0
@@ -324,7 +331,7 @@ func logicalCores() int {
 	switch vendorID() {
 	case Intel:
 		if maxFunctionID() < 0xb {
-			return 1
+			return 0
 		}
 		_, b, _, _ := cpuidex(0xb, 1)
 		return int(b & 0xffff)
@@ -332,7 +339,7 @@ func logicalCores() int {
 		_, b, _, _ := cpuid(1)
 		return int((b >> 16) & 0xff)
 	default:
-		return 1
+		return 0
 	}
 }
 
@@ -354,7 +361,7 @@ func physicalCores() int {
 		_, _, c, _ := cpuid(0x80000008)
 		return int(c&0xff) + 1
 	default:
-		return 1
+		return 0
 	}
 }
 
@@ -390,7 +397,7 @@ func support() Flags {
 		return 0
 	}
 	rval := uint64(0)
-	_, _, c, d := cpuid(1)
+	_, b, c, d := cpuid(1)
 	if (d & (1 << 15)) != 0 {
 		rval |= CMOV
 	}
@@ -423,6 +430,16 @@ func support() Flags {
 	}
 	if (c & (1 << 1)) != 0 {
 		rval |= CLMUL
+	}
+	if (c & (1 << 28)) != 0 {
+		// This field does not indicate that Hyper-Threading
+		// Technology has been enabled for this specific processor.
+		// To determine if Hyper-Threading Technology is supported,
+		// check the value returned in EBX[23:16]
+		v := (b >> 16) & 255
+		if v > 0 {
+			rval |= HTT
+		}
 	}
 
 	// Check OXSAVE and AVX bits

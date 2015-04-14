@@ -258,6 +258,16 @@ func TestAesNi(t *testing.T) {
 	t.Log("AESNI Support:", got)
 }
 
+// TestHTT tests HTT() function
+func TestHTT(t *testing.T) {
+	got := CPU.HTT()
+	expected := CPU.Features&HTT == HTT
+	if got != expected {
+		t.Fatalf("HTT: expected %v, got %v", expected, got)
+	}
+	t.Log("HTT Support:", got)
+}
+
 // TestClmul tests Clmul() function
 func TestClmul(t *testing.T) {
 	got := CPU.Clmul()
