@@ -60,6 +60,7 @@ const (
 	AVX512CD                // AVX-512 Conflict Detection Instructions
 	AVX512BW                // AVX-512 Byte and Word Instructions
 	AVX512VL                // AVX-512 Vector Length Extensions
+	AVX512VBMI              // AVX-512 Vector Bit Manipulation Instructions
 	MPX                     // Intel MPX (Memory Protection Extensions)
 	ERMS                    // Enhanced REP MOVSB/STOSB
 
@@ -107,6 +108,7 @@ var flagNames = map[Flags]string{
 	AVX512CD:    "AVX512CD",    // AVX-512 Conflict Detection Instructions
 	AVX512BW:    "AVX512BW",    // AVX-512 Byte and Word Instructions
 	AVX512VL:    "AVX512VL",    // AVX-512 Vector Length Extensions
+	AVX512VBMI:  "AVX512VBMI",  // AVX-512 Vector Bit Manipulation Instructions
 	MPX:         "MPX",         // Intel MPX (Memory Protection Extensions)
 	ERMS:        "ERMS",        // Enhanced REP MOVSB/STOSB
 
@@ -366,6 +368,11 @@ func (c CPUInfo) AVX512VL() bool {
 	return c.Features&AVX512VL != 0
 }
 
+// AVX512VBMI indicates support of AVX-512 Vector Bit Manipulation Instructions
+func (c CPUInfo) AVX512VBMI() bool {
+	return c.Features&AVX512VBMI != 0
+}
+
 // MPX indicates support of Intel MPX (Memory Protection Extensions)
 func (c CPUInfo) MPX() bool {
 	return c.Features&MPX != 0
@@ -574,7 +581,7 @@ func support() Flags {
 
 	// Check AVX2, AVX2 requires OS support, but BMI1/2 don't.
 	if mfi >= 7 {
-		_, ebx, _, _ := cpuid(7)
+		_, ebx, ecx, _ := cpuidex(7, 0)
 		if (rval&AVX) != 0 && (ebx&0x00000020) != 0 {
 			rval |= AVX2
 		}
@@ -638,6 +645,10 @@ func support() Flags {
 				}
 				if ebx&(1<<31) != 0 {
 					rval |= AVX512VL
+				}
+				// ecx
+				if ecx&(1<<1) != 0 {
+					rval |= AVX512VBMI
 				}
 			}
 		}
