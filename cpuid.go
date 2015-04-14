@@ -11,7 +11,6 @@
 package cpuid
 
 import "strings"
-import "fmt"
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -583,7 +582,6 @@ func support() Flags {
 	// Check AVX2, AVX2 requires OS support, but BMI1/2 don't.
 	if mfi >= 7 {
 		_, ebx, ecx, _ := cpuidex(7, 0)
-		fmt.Printf("ebx:0x%x, ecx:0x%x\n", ebx, ecx)
 		if (rval&AVX) != 0 && (ebx&0x00000020) != 0 {
 			rval |= AVX2
 		}
