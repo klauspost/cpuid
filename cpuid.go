@@ -470,6 +470,12 @@ func logicalCores() int {
 	switch vendorID() {
 	case Intel:
 		if maxFunctionID() < 0xb {
+			// Use cpuid(1)
+			_, ebx, _, _ := cpuid(1)
+			ebx <<= 16
+			if ebx != 0 {
+				return int(ebx & 0xff)
+			}
 			return 0
 		}
 		_, b, _, _ := cpuidex(0xb, 1)
