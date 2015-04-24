@@ -469,11 +469,8 @@ func logicalCores() int {
 			// that can be assigned to logical processors in a physical package.
 			// The value may not be the same as the number of logical processors that are present in the hardware of a physical package.
 			_, ebx, _, _ := cpuid(1)
-			ebx <<= 16
-			if ebx != 0 {
-				return int(ebx & 0xff)
-			}
-			return 0
+			logical := (ebx >> 16) & 0xff
+			return int(logical)
 		}
 		_, b, _, _ := cpuidex(0xb, 1)
 		return int(b & 0xffff)
