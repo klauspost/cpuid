@@ -469,8 +469,11 @@ func threadsPerCore() int {
 func logicalCores() int {
 	switch vendorID() {
 	case Intel:
+		// Use this on old Intel processors
 		if maxFunctionID() < 0xb {
-			// Use cpuid(1)
+			// CPUID.1:EBX[23:16] represents the maximum number of addressable IDs (initial APIC ID)
+			// that can be assigned to logical processors in a physical package.
+			// The value may not be the same as the number of logical processors that are present in the hardware of a physical package.
 			_, ebx, _, _ := cpuid(1)
 			ebx <<= 16
 			if ebx != 0 {
