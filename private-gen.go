@@ -106,14 +106,21 @@ func main() {
 		if err != nil {
 			log.Fatalf("writing output: %s", err)
 		}
+		log.Println("Generated", outputName)
 	}
 
 	for _, file := range copyFiles {
-		dst := Package + string(os.PathSeparator) + file
+		dst := ""
+		if strings.HasPrefix(file, "cpuid") {
+			dst = Package + string(os.PathSeparator) + file
+		} else {
+			dst = Package + string(os.PathSeparator) + "cpuid_" + file
+		}
 		err := copyFile(file, dst)
 		if err != nil {
 			log.Fatalf("copying file: %s", err)
 		}
+		log.Println("Copied", dst)
 	}
 }
 
