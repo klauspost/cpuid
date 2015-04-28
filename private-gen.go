@@ -19,7 +19,7 @@ import (
 	"unicode/utf8"
 )
 
-var inFiles = []string{"cpuid.go"}
+var inFiles = []string{"cpuid.go", "cpuid_test.go"}
 var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "detect_ref.go", "detect_intel.go"}
 var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
@@ -29,7 +29,12 @@ var reWrites = []rewrite{
 	initRewrite("Detect -> detect"),
 	initRewrite("CPU -> cpu"),
 }
-var excludeNames = map[string]bool{"string": true, "join": true, "trim": true}
+var excludeNames = map[string]bool{"string": true, "join": true, "trim": true,
+	// cpuid_test.go
+	"t": true, "println": true, "logf": true, "log": true, "fatalf": true,
+}
+
+var excludePrefixes = []string{"test", "benchmark"}
 
 func main() {
 	Package := "private"
@@ -64,6 +69,11 @@ func main() {
 			case *ast.Ident:
 				if x.IsExported() {
 					t := strings.ToLower(x.Name)
+					for _, pre := range excludePrefixes {
+						if strings.HasPrefix(t, pre) {
+							return true
+						}
+					}
 					if excludeNames[t] != true {
 						//if x.Pos() > startDecl && x.Pos() < endDecl {
 						exported[x.Name] = initRewrite(x.Name + " -> " + t)
