@@ -507,3 +507,62 @@ func TestERMS(t *testing.T) {
 	}
 	t.Log("ERMS Support:", got)
 }
+
+// TestVendor writes the detected vendor. Will be 0 if unknown
+func TestVendor(t *testing.T) {
+	t.Log("Vendor ID:", CPU.VendorID)
+}
+
+// Intel returns true if vendor is recognized as Intel
+func TestIntel(t *testing.T) {
+	got := CPU.Intel()
+	expected := CPU.VendorID == Intel
+	if got != expected {
+		t.Fatalf("TestIntel: expected %v, got %v", expected, got)
+	}
+	t.Log("TestIntel:", got)
+}
+
+// AMD returns true if vendor is recognized as AMD
+func TestAMD(t *testing.T) {
+	got := CPU.AMD()
+	expected := CPU.VendorID == AMD
+	if got != expected {
+		t.Fatalf("TestAMD: expected %v, got %v", expected, got)
+	}
+	t.Log("TestAMD:", got)
+}
+
+// Transmeta returns true if vendor is recognized as Transmeta
+func TestTransmeta(t *testing.T) {
+	got := CPU.Transmeta()
+	expected := CPU.VendorID == Transmeta
+	if got != expected {
+		t.Fatalf("TestTransmeta: expected %v, got %v", expected, got)
+	}
+	t.Log("TestTransmeta:", got)
+}
+
+// NSC returns true if vendor is recognized as National Semiconductor
+func TestNSC(t *testing.T) {
+	got := CPU.NSC()
+	expected := CPU.VendorID == NSC
+	if got != expected {
+		t.Fatalf("TestNSC: expected %v, got %v", expected, got)
+	}
+	t.Log("TestNSC:", got)
+}
+
+// VIA returns true if vendor is recognized as VIA
+func TestVIA(t *testing.T) {
+	got := CPU.VIA()
+	expected := CPU.VendorID == VIA
+	if got != expected {
+		t.Fatalf("TestVIA: expected %v, got %v", expected, got)
+	}
+	t.Log("TestVIA:", got)
+}
+
+func TestVM(t *testing.T) {
+	t.Log("Vendor ID:", CPU.VM())
+}

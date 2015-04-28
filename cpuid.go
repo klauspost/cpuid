@@ -19,6 +19,13 @@ const (
 	Other Vendor = iota
 	Intel
 	AMD
+	VIA
+	Transmeta
+	NSC
+	KVM  // Kernel-based Virtual Machine
+	MSVM // Microsoft Hyper-V or Windows Virtual PC
+	VMware
+	XenHVM
 )
 
 const (
@@ -412,6 +419,32 @@ func (c CPUInfo) AMD() bool {
 	return c.VendorID == AMD
 }
 
+// Transmeta returns true if vendor is recognized as Transmeta
+func (c CPUInfo) Transmeta() bool {
+	return c.VendorID == Transmeta
+}
+
+// NSC returns true if vendor is recognized as National Semiconductor
+func (c CPUInfo) NSC() bool {
+	return c.VendorID == NSC
+}
+
+// VIA returns true if vendor is recognized as VIA
+func (c CPUInfo) VIA() bool {
+	return c.VendorID == VIA
+}
+
+// VM Will return true if the cpu id indicates we are in
+// a virtual machine. This is only a hint, and will very likely
+// have many false negatives.
+func (c CPUInfo) VM() bool {
+	switch c.VendorID {
+	case MSVM, KVM, VMware, XenHVM:
+		return true
+	}
+	return false
+}
+
 // Flags contains detected cpu features and caracteristics
 type Flags uint64
 
@@ -510,15 +543,30 @@ func physicalCores() int {
 	}
 }
 
+// Except from http://en.wikipedia.org/wiki/CPUID#EAX.3D0:_Get_vendor_ID
+var vendorMapping = map[string]Vendor{
+	"AMDisbetter!": AMD,
+	"AuthenticAMD": AMD,
+	"CentaurHauls": VIA,
+	"GenuineIntel": Intel,
+	"TransmetaCPU": Transmeta,
+	"GenuineTMx86": Transmeta,
+	"Geode by NSC": NSC,
+	"VIA VIA VIA ": VIA,
+	"KVMKVMKVMKVM": KVM,
+	"Microsoft Hv": MSVM,
+	"VMwareVMware": VMware,
+	"XenVMMXenVMM": XenHVM,
+}
+
 func vendorID() Vendor {
 	_, b, c, d := cpuid(0)
-	if b == 0x756e6547 && d == 0x49656e69 && c == 0x6c65746e {
-		return Intel
-	} else if b == 0x68747541 && d == 0x69746e65 && c == 0x444d4163 {
-		return AMD
-	} else {
+	v := valAsString(b, d, c)
+	vend, ok := vendorMapping[string(v)]
+	if !ok {
 		return Other
 	}
+	return vend
 }
 
 func cacheLine() int {
