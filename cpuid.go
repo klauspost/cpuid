@@ -451,25 +451,16 @@ func (c CPUInfo) RTCounter() uint64 {
 	return uint64(a) | (uint64(d) << 32)
 }
 
-// ChipCore returns chip and core number if they are available.
-// If the value is undetectable '-1' is returned for both values.
-// This uses the 'RDTSCP' command and does not attempt to query the system.
-// Only works on Linux systems.
-func (c CPUInfo) ChipCore() (chip int, core int) {
-	core = -1
-	chip = -1
+// Ia32TscAux returns the IA32_TSC_AUX part of the RDTSCP.
+// This variable is OS dependent, but on Linux contains information
+// about the current cpu/core the code is running on.
+// If the RDTSCP instruction isn't supported on the CPU, the value 0 is returned.
+func (c CPUInfo) Ia32TscAux() uint32 {
 	if !c.RDTSCP() {
-		return
+		return 0
 	}
 	_, _, ecx, _ := rdtscpAsm()
-	// FIXME: Can Linux return a zero value?
-	// Finding documentation on IA32_TSC_AUX is tricky.
-	if ecx == 0 {
-		return
-	}
-	chip = int((ecx & 0xFFF000) >> 12)
-	core = int(ecx & 0xFFF)
-	return
+	return ecx
 }
 
 // VM Will return true if the cpu id indicates we are in

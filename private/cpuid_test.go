@@ -565,17 +565,32 @@ func TestVIA(t *testing.T) {
 	t.Log("TestVIA:", got)
 }
 
+// Test VM function
 func TestVM(t *testing.T) {
 	t.Log("Vendor ID:", cpu.vm())
 }
 
+// Test RTCounter function
 func TestRtCounter(t *testing.T) {
 	a := cpu.rtcounter()
 	b := cpu.rtcounter()
 	t.Log("CPU Counter:", a, b, b-a)
 }
 
-func TestChipCore(t *testing.T) {
-	chip, core := cpu.chipcore()
-	t.Log("Chip, Core:", chip, core)
+// Prints the value of Ia32TscAux()
+func TestIa32TscAux(t *testing.T) {
+	t.Logf("Ia32TscAux:0x%x", cpu.ia32tscaux())
+}
+
+// This example will calculate the chip/core number on Linux
+// Linux encodes numa id (<<12) and core id (8bit) into TSC_AUX.
+func examplecpuinfo_ia32tscaux(t *testing.T) {
+	ecx := cpu.ia32tscaux()
+	if ecx == 0 {
+		fmt.Println("Unknown CPU ID")
+		return
+	}
+	chip := (ecx & 0xFFF000) >> 12
+	core := ecx & 0xFFF
+	fmt.Println("Chip, Core:", chip, core)
 }
