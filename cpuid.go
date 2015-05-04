@@ -143,6 +143,8 @@ type CPUInfo struct {
 	Family         int    // CPU family number
 	Model          int    // CPU model number
 	CacheLine      int    // Cache line size in bytes. Will be 0 if undetectable.
+	maxFunc        uint32
+	maxExFunc      uint32
 }
 
 // CPU contains information about the CPU as detected on startup,
@@ -164,6 +166,8 @@ func init() {
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
 func Detect() {
+	CPU.maxFunc = maxFunctionID()
+	CPU.maxExFunc = maxExtendedFunction()
 	CPU.BrandName = brandName()
 	CPU.CacheLine = cacheLine()
 	CPU.Family, CPU.Model = familyModel()
@@ -461,6 +465,19 @@ func (c CPUInfo) Ia32TscAux() uint32 {
 	}
 	_, _, ecx, _ := rdtscpAsm()
 	return ecx
+}
+
+// Core will return the number of the core number
+// The code is currently executing on.
+// This is likely to change when the OS re-schedules the running thread
+// to another CPU.
+// If the current core cannot be detected, -1 will be returned.
+func (c CPUInfo) Core() int {
+	if c.maxFunc < 1 {
+		return -1
+	}
+	_, ebx, _, _ := cpuid(1)
+	return int(ebx >> 24)
 }
 
 // VM Will return true if the cpu id indicates we are in

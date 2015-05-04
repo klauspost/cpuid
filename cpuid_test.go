@@ -580,6 +580,22 @@ func TestIa32TscAux(t *testing.T) {
 	t.Logf("Ia32TscAux:0x%x", CPU.Ia32TscAux())
 }
 
+// Prints the value of Ia32TscAux()
+func TestCore(t *testing.T) {
+	t.Log("Currently executing on core:", CPU.Core())
+}
+
+func TestMaxFunction(t *testing.T) {
+	expect := maxFunctionID()
+	if CPU.maxFunc != expect {
+		t.Fatal("Max function does not match, expected", expect, "but got", CPU.maxFunc)
+	}
+	expect = maxExtendedFunction()
+	if CPU.maxExFunc != expect {
+		t.Fatal("Max Extended function does not match, expected", expect, "but got", CPU.maxFunc)
+	}
+}
+
 // This example will calculate the chip/core number on Linux
 // Linux encodes numa id (<<12) and core id (8bit) into TSC_AUX.
 func ExampleCPUInfo_Ia32TscAux(t *testing.T) {
