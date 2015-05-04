@@ -568,3 +568,14 @@ func TestVIA(t *testing.T) {
 func TestVM(t *testing.T) {
 	t.Log("Vendor ID:", cpu.vm())
 }
+
+func TestRtCounter(t *testing.T) {
+	a := cpu.rtcounter()
+	b := cpu.rtcounter()
+	t.Log("CPU Counter:", a, b, b-a)
+}
+
+func TestChipCore(t *testing.T) {
+	chip, core := cpu.chipcore()
+	t.Log("Chip, Core:", chip, core)
+}

@@ -30,3 +30,12 @@ TEXT ·xgetbv(SB),7,$0
 	MOVL AX,eax+4(FP)
 	MOVL DX,edx+8(FP)
 	RET
+
+// func rdtscpAsm() (eax, ebx, ecx, edx uint32)
+TEXT ·rdtscpAsm(SB),7,$0	
+	BYTE $0x0F; BYTE $0x01; BYTE $0xF9  // RDTSCP
+	MOVL AX,eax+0(FP)
+	MOVL BX,ebx+4(FP)
+	MOVL CX,ecx+8(FP)
+	MOVL DX,edx+12(FP)
+	RET

@@ -66,6 +66,7 @@ const (
 	avx512vbmi			// AVX-512 Vector Bit Manipulation Instructions
 	mpx				// Intel MPX (Memory Protection Extensions)
 	erms				// Enhanced REP MOVSB/STOSB
+	rdtscp				// RDTSCP Instruction
 
 	// Performance indicators
 	sse2slow	// SSE2 is supported, but usually not faster
@@ -116,6 +117,7 @@ var flagNames = map[flags]string{
 	avx512vbmi:	"AVX512VBMI",	// AVX-512 Vector Bit Manipulation Instructions
 	mpx:		"MPX",		// Intel MPX (Memory Protection Extensions)
 	erms:		"ERMS",		// Enhanced REP MOVSB/STOSB
+	rdtscp:		"RDTSCP",	// RDTSCP Instruction
 
 	// Performance indicators
 	sse2slow:	"SSE2SLOW",	// SSE2 supported, but usually not faster
@@ -398,6 +400,10 @@ func (c cpuInfo) erms() bool {
 	return c.features&erms != 0
 }
 
+func (c cpuInfo) rdtscp() bool {
+	return c.features&rdtscp != 0
+}
+
 // Atom indicates an Atom processor
 func (c cpuInfo) atom() bool {
 	return c.features&atom != 0
@@ -426,6 +432,38 @@ func (c cpuInfo) nsc() bool {
 // VIA returns true if vendor is recognized as VIA
 func (c cpuInfo) via() bool {
 	return c.vendorid == via
+}
+
+// RTCounter returns the 64-bit time-stamp counter
+// Uses the RDTSCP instruction. The value 0 is returned
+// if the CPU does not support the instruction.
+func (c cpuInfo) rtcounter() uint64 {
+	if !c.rdtscp() {
+		return 0
+	}
+	a, _, _, d := rdtscpAsm()
+	return uint64(a) | (uint64(d) << 32)
+}
+
+// ChipCore returns chip and core number if they are available.
+// If the value is undetectable '-1' is returned for both values.
+// This uses the 'RDTSCP' command and does not attempt to query the system.
+// Only works on Linux systems.
+func (c cpuInfo) chipcore() (chip int, core int) {
+	core = -1
+	chip = -1
+	if !c.rdtscp() {
+		return
+	}
+	_, _, ecx, _ := rdtscpAsm()
+	// FIXME: Can Linux return a zero value?
+	// Finding documentation on IA32_TSC_AUX is tricky.
+	if ecx == 0 {
+		return
+	}
+	chip = int((ecx & 0xFFF000) >> 12)
+	core = int(ecx & 0xFFF)
+	return
 }
 
 // VM Will return true if the cpu id indicates we are in
@@ -744,6 +782,9 @@ func support() flags {
 		}
 		if d&(1<<20) != 0 {
 			rval |= nx
+		}
+		if d&(1<<27) != 0 {
+			rval |= rdtscp
 		}
 
 		/* Allow for selectively disabling SSE2 functions on AMD processors
