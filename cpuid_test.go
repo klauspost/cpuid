@@ -577,12 +577,18 @@ func TestRtCounter(t *testing.T) {
 
 // Prints the value of Ia32TscAux()
 func TestIa32TscAux(t *testing.T) {
-	t.Logf("Ia32TscAux:0x%x", CPU.Ia32TscAux())
+	ecx := CPU.Ia32TscAux()
+	t.Logf("Ia32TscAux:0x%x\n", ecx)
+	if ecx != 0 {
+		chip := (ecx & 0xFFF000) >> 12
+		core := ecx & 0xFFF
+		t.Log("Likely chip, core:", chip, core)
+	}
 }
 
-// Prints the value of Ia32TscAux()
-func TestCore(t *testing.T) {
-	t.Log("Currently executing on core:", CPU.Core())
+// Prints the value of LogicalCPU()
+func TestLogicalCPU(t *testing.T) {
+	t.Log("Currently executing on cpu:", CPU.LogicalCPU())
 }
 
 func TestMaxFunction(t *testing.T) {

@@ -467,11 +467,11 @@ func (c CPUInfo) Ia32TscAux() uint32 {
 	return ecx
 }
 
-// Core will return the core number the code is currently executing on.
+// LogicalCPU will return the Logical CPU the code is currently executing on.
 // This is likely to change when the OS re-schedules the running thread
 // to another CPU.
 // If the current core cannot be detected, -1 will be returned.
-func (c CPUInfo) Core() int {
+func (c CPUInfo) LogicalCPU() int {
 	if c.maxFunc < 1 {
 		return -1
 	}
