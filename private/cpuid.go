@@ -461,8 +461,7 @@ func (c cpuInfo) ia32tscaux() uint32 {
 	return ecx
 }
 
-// Core will return the number of the core number
-// The code is currently executing on.
+// Core will return the core number the code is currently executing on.
 // This is likely to change when the OS re-schedules the running thread
 // to another CPU.
 // If the current core cannot be detected, -1 will be returned.
