@@ -73,6 +73,7 @@ const (
 	MPX                     // Intel MPX (Memory Protection Extensions)
 	ERMS                    // Enhanced REP MOVSB/STOSB
 	RDTSCP                  // RDTSCP Instruction
+	CX16                    // CMPXCHG16B Instruction
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -124,6 +125,7 @@ var flagNames = map[Flags]string{
 	MPX:         "MPX",         // Intel MPX (Memory Protection Extensions)
 	ERMS:        "ERMS",        // Enhanced REP MOVSB/STOSB
 	RDTSCP:      "RDTSCP",      // RDTSCP Instruction
+	CX16:        "CX16",        // CMPXCHG16B Instruction
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -414,6 +416,10 @@ func (c CPUInfo) RDTSCP() bool {
 	return c.Features&RDTSCP != 0
 }
 
+func (c CPUInfo) CX16() bool {
+	return c.Features&CX16 != 0
+}
+
 // Atom indicates an Atom processor
 func (c CPUInfo) Atom() bool {
 	return c.Features&ATOM != 0
@@ -674,6 +680,9 @@ func support() Flags {
 	}
 	if c&(1<<29) != 0 {
 		rval |= F16C
+	}
+	if c&(1<<13) != 0 {
+		rval |= CX16
 	}
 	if (c & (1 << 28)) != 0 {
 		// This field does not indicate that Hyper-Threading

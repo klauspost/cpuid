@@ -218,6 +218,16 @@ func TestF16C(t *testing.T) {
 	t.Log("F16C Support:", got)
 }
 
+// TestCX16 tests CX16() function
+func TestCX16(t *testing.T) {
+	got := CPU.CX16()
+	expected := CPU.Features&CX16 == CX16
+	if got != expected {
+		t.Fatalf("CX16: expected %v, got %v", expected, got)
+	}
+	t.Log("CX16 Support:", got)
+}
+
 // TestBMI1 tests BMI1() function
 func TestBMI1(t *testing.T) {
 	got := CPU.BMI1()
