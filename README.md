@@ -60,6 +60,8 @@ Currently these CPU features are detected:
 *  **AVX512VBMI**; (AVX-512 Vector Bit Manipulation Instructions)
 *  **MPX**; (Intel MPX (Memory Protection Extensions))
 *  **ERMS**; (Enhanced REP MOVSB/STOSB)
+*  **RDTSCP**; (RDTSCP Instruction)
+*  **CX16**; (CMPXCHG16B Instruction)
 
 *  **SSE2SLOW**; (SSE2 is supported, but usually not faster)
 *  **SSE3SLOW**; (SSE3 is supported, but usually not faster)
