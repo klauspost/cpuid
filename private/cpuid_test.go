@@ -220,6 +220,16 @@ func TestF16C(t *testing.T) {
 	t.Log("F16C Support:", got)
 }
 
+// TestCX16 tests CX16() function
+func TestCX16(t *testing.T) {
+	got := cpu.cx16()
+	expected := cpu.features&cx16 == cx16
+	if got != expected {
+		t.Fatalf("CX16: expected %v, got %v", expected, got)
+	}
+	t.Log("CX16 Support:", got)
+}
+
 // TestBMI1 tests BMI1() function
 func TestBMI1(t *testing.T) {
 	got := cpu.bmi1()
@@ -258,6 +268,16 @@ func TestLzcnt(t *testing.T) {
 		t.Fatalf("Lzcnt: expected %v, got %v", expected, got)
 	}
 	t.Log("LZCNT Support:", got)
+}
+
+// TestLzcnt tests Lzcnt() function
+func TestPopcnt(t *testing.T) {
+	got := cpu.popcnt()
+	expected := cpu.features&popcnt == popcnt
+	if got != expected {
+		t.Fatalf("Popcnt: expected %v, got %v", expected, got)
+	}
+	t.Log("POPCNT Support:", got)
 }
 
 // TestAesNi tests AesNi() function

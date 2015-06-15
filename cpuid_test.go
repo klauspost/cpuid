@@ -268,6 +268,16 @@ func TestLzcnt(t *testing.T) {
 	t.Log("LZCNT Support:", got)
 }
 
+// TestLzcnt tests Lzcnt() function
+func TestPopcnt(t *testing.T) {
+	got := CPU.Popcnt()
+	expected := CPU.Features&POPCNT == POPCNT
+	if got != expected {
+		t.Fatalf("Popcnt: expected %v, got %v", expected, got)
+	}
+	t.Log("POPCNT Support:", got)
+}
+
 // TestAesNi tests AesNi() function
 func TestAesNi(t *testing.T) {
 	got := CPU.AesNi()

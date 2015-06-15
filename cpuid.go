@@ -52,6 +52,7 @@ const (
 	BMI2                    // Bit Manipulation Instruction Set 2
 	TBM                     // AMD Trailing Bit Manipulation
 	LZCNT                   // LZCNT instruction
+	POPCNT                  // POPCNT instruction
 	AESNI                   // Advanced Encryption Standard New Instructions
 	CLMUL                   // Carry-less Multiplication
 	HTT                     // Hyperthreading (enabled)
@@ -104,6 +105,7 @@ var flagNames = map[Flags]string{
 	BMI2:        "BMI2",        // Bit Manipulation Instruction Set 2
 	TBM:         "TBM",         // AMD Trailing Bit Manipulation
 	LZCNT:       "LZCNT",       // LZCNT instruction
+	POPCNT:      "POPCNT",      // POPCNT instruction
 	AESNI:       "AESNI",       // Advanced Encryption Standard New Instructions
 	CLMUL:       "CLMUL",       // Carry-less Multiplication
 	HTT:         "HTT",         // Hyperthreading (enabled)
@@ -288,6 +290,11 @@ func (c CPUInfo) TBM() bool {
 // Lzcnt indicates support of LZCNT instruction
 func (c CPUInfo) Lzcnt() bool {
 	return c.Features&LZCNT != 0
+}
+
+// Popcnt indicates support of POPCNT instruction
+func (c CPUInfo) Popcnt() bool {
+	return c.Features&POPCNT != 0
 }
 
 // HTT indicates the processor has Hyperthreading enabled
@@ -674,6 +681,9 @@ func support() Flags {
 	}
 	if (c & (1 << 1)) != 0 {
 		rval |= CLMUL
+	}
+	if c&(1<<23) != 0 {
+		rval |= POPCNT
 	}
 	if c&(1<<30) != 0 {
 		rval |= RDRAND

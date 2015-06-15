@@ -46,6 +46,7 @@ const (
 	bmi2				// Bit Manipulation Instruction Set 2
 	tbm				// AMD Trailing Bit Manipulation
 	lzcnt				// LZCNT instruction
+	popcnt				// POPCNT instruction
 	aesni				// Advanced Encryption Standard New Instructions
 	clmul				// Carry-less Multiplication
 	htt				// Hyperthreading (enabled)
@@ -67,6 +68,7 @@ const (
 	mpx				// Intel MPX (Memory Protection Extensions)
 	erms				// Enhanced REP MOVSB/STOSB
 	rdtscp				// RDTSCP Instruction
+	cx16				// CMPXCHG16B Instruction
 
 	// Performance indicators
 	sse2slow	// SSE2 is supported, but usually not faster
@@ -97,6 +99,7 @@ var flagNames = map[flags]string{
 	bmi2:		"BMI2",		// Bit Manipulation Instruction Set 2
 	tbm:		"TBM",		// AMD Trailing Bit Manipulation
 	lzcnt:		"LZCNT",	// LZCNT instruction
+	popcnt:		"POPCNT",	// POPCNT instruction
 	aesni:		"AESNI",	// Advanced Encryption Standard New Instructions
 	clmul:		"CLMUL",	// Carry-less Multiplication
 	htt:		"HTT",		// Hyperthreading (enabled)
@@ -118,6 +121,7 @@ var flagNames = map[flags]string{
 	mpx:		"MPX",		// Intel MPX (Memory Protection Extensions)
 	erms:		"ERMS",		// Enhanced REP MOVSB/STOSB
 	rdtscp:		"RDTSCP",	// RDTSCP Instruction
+	cx16:		"CX16",		// CMPXCHG16B Instruction
 
 	// Performance indicators
 	sse2slow:	"SSE2SLOW",	// SSE2 supported, but usually not faster
@@ -282,6 +286,11 @@ func (c cpuInfo) lzcnt() bool {
 	return c.features&lzcnt != 0
 }
 
+// Popcnt indicates support of POPCNT instruction
+func (c cpuInfo) popcnt() bool {
+	return c.features&popcnt != 0
+}
+
 // HTT indicates the processor has Hyperthreading enabled
 func (c cpuInfo) htt() bool {
 	return c.features&htt != 0
@@ -406,6 +415,10 @@ func (c cpuInfo) erms() bool {
 
 func (c cpuInfo) rdtscp() bool {
 	return c.features&rdtscp != 0
+}
+
+func (c cpuInfo) cx16() bool {
+	return c.features&cx16 != 0
 }
 
 // Atom indicates an Atom processor
@@ -663,11 +676,17 @@ func support() flags {
 	if (c & (1 << 1)) != 0 {
 		rval |= clmul
 	}
+	if c&(1<<23) != 0 {
+		rval |= popcnt
+	}
 	if c&(1<<30) != 0 {
 		rval |= rdrand
 	}
 	if c&(1<<29) != 0 {
 		rval |= f16c
+	}
+	if c&(1<<13) != 0 {
+		rval |= cx16
 	}
 	if (c & (1 << 28)) != 0 {
 		// This field does not indicate that Hyper-Threading
