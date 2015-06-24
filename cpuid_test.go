@@ -46,6 +46,18 @@ func Example() {
 	}
 }
 
+func TestBrandNameZero(t *testing.T) {
+	if len(CPU.BrandName) > 0 {
+		// Cut out last byte
+		last := []byte(CPU.BrandName[len(CPU.BrandName)-1:])
+		if last[0] == 0 {
+			t.Fatal("last byte was zero")
+		} else if last[0] == 32 {
+			t.Fatal("whitespace wasn't trimmed")
+		}
+	}
+}
+
 // Generated here: http://play.golang.org/p/mko-0tFt0Q
 
 // TestCmov tests Cmov() function
