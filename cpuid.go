@@ -879,11 +879,11 @@ func valAsString(values ...uint32) []byte {
 		switch {
 		case dst[0] == 0:
 			return r[:i*4]
-		case r[1] == 0:
+		case dst[1] == 0:
 			return r[:i*4+1]
-		case r[2] == 0:
+		case dst[2] == 0:
 			return r[:i*4+2]
-		case r[3] == 0:
+		case dst[3] == 0:
 			return r[:i*4+3]
 		}
 	}
