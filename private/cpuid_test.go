@@ -620,6 +620,12 @@ func TestIa32TscAux(t *testing.T) {
 	}
 }
 
+func TestThreadsPerCoreNZ(t *testing.T) {
+	if cpu.threadspercore == 0 {
+		t.Fatal("threads per core is zero")
+	}
+}
+
 // Prints the value of LogicalCPU()
 func TestLogicalCPU(t *testing.T) {
 	t.Log("Currently executing on cpu:", cpu.logicalcpu())

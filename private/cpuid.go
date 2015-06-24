@@ -548,6 +548,9 @@ func threadsPerCore() int {
 	}
 
 	_, b, _, _ := cpuidex(0xb, 0)
+	if b&0xffff == 0 {
+		return 1
+	}
 	return int(b & 0xffff)
 }
 
