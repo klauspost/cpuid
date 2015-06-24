@@ -538,12 +538,12 @@ func maxFunctionID() uint32 {
 
 func brandName() string {
 	if maxExtendedFunction() >= 0x80000004 {
-		name := make([]byte, 0, 64)
+		v := make([]uint32, 0, 48)
 		for i := uint32(0); i < 3; i++ {
 			a, b, c, d := cpuid(0x80000002 + i)
-			name = append(name, valAsString(a, b, c, d)...)
+			v = append(v, a, b, c, d)
 		}
-		return strings.Trim(string(name), " ")
+		return strings.Trim(string(valAsString(v...)), " ")
 	}
 	return "unknown"
 }
