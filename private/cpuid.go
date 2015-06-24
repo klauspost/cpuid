@@ -88,6 +88,7 @@ var flagNames = map[flags]string{
 	sse3:		"SSE3",		// Prescott SSE3 functions
 	ssse3:		"SSSE3",	// Conroe SSSE3 functions
 	sse4:		"SSE4.1",	// Penryn SSE4.1 functions
+	sse4a:		"SSE4A",	// AMD Barcelona microarchitecture SSE4a instructions
 	sse42:		"SSE4.2",	// Nehalem SSE4.2 functions
 	avx:		"AVX",		// AVX functions
 	avx2:		"AVX2",		// AVX functions
