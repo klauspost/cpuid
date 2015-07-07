@@ -25,6 +25,11 @@ func TestCPUID(t *testing.T) {
 	t.Log("Family", CPU.Family, "Model:", CPU.Model)
 	t.Log("Features:", CPU.Features)
 	t.Log("Cacheline bytes:", CPU.CacheLine)
+	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
+	t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
+	t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
+	t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
+
 	if CPU.SSE2() {
 		t.Log("Yay - we have SSE 2")
 	}
