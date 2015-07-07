@@ -88,6 +88,7 @@ var flagNames = map[flags]string{
 	sse3:		"SSE3",		// Prescott SSE3 functions
 	ssse3:		"SSSE3",	// Conroe SSSE3 functions
 	sse4:		"SSE4.1",	// Penryn SSE4.1 functions
+	sse4a:		"SSE4A",	// AMD Barcelona microarchitecture SSE4a instructions
 	sse42:		"SSE4.2",	// Nehalem SSE4.2 functions
 	avx:		"AVX",		// AVX functions
 	avx2:		"AVX2",		// AVX functions
@@ -532,12 +533,12 @@ func maxFunctionID() uint32 {
 
 func brandName() string {
 	if maxExtendedFunction() >= 0x80000004 {
-		name := make([]byte, 0, 64)
+		v := make([]uint32, 0, 48)
 		for i := uint32(0); i < 3; i++ {
 			a, b, c, d := cpuid(0x80000002 + i)
-			name = append(name, valAsString(a, b, c, d)...)
+			v = append(v, a, b, c, d)
 		}
-		return strings.Trim(string(name), " ")
+		return strings.Trim(string(valAsString(v...)), " ")
 	}
 	return "unknown"
 }
@@ -548,6 +549,9 @@ func threadsPerCore() int {
 	}
 
 	_, b, _, _ := cpuidex(0xb, 0)
+	if b&0xffff == 0 {
+		return 1
+	}
 	return int(b & 0xffff)
 }
 
@@ -873,11 +877,11 @@ func valAsString(values ...uint32) []byte {
 		switch {
 		case dst[0] == 0:
 			return r[:i*4]
-		case r[1] == 0:
+		case dst[1] == 0:
 			return r[:i*4+1]
-		case r[2] == 0:
+		case dst[2] == 0:
 			return r[:i*4+2]
-		case r[3] == 0:
+		case dst[3] == 0:
 			return r[:i*4+3]
 		}
 	}

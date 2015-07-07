@@ -51,6 +51,18 @@ func Example() {
 	}
 }
 
+func TestBrandNameZero(t *testing.T) {
+	if len(CPU.BrandName) > 0 {
+		// Cut out last byte
+		last := []byte(CPU.BrandName[len(CPU.BrandName)-1:])
+		if last[0] == 0 {
+			t.Fatal("last byte was zero")
+		} else if last[0] == 32 {
+			t.Fatal("whitespace wasn't trimmed")
+		}
+	}
+}
+
 // Generated here: http://play.golang.org/p/mko-0tFt0Q
 
 // TestCmov tests Cmov() function
@@ -608,6 +620,12 @@ func TestIa32TscAux(t *testing.T) {
 		chip := (ecx & 0xFFF000) >> 12
 		core := ecx & 0xFFF
 		t.Log("Likely chip, core:", chip, core)
+	}
+}
+
+func TestThreadsPerCoreNZ(t *testing.T) {
+	if CPU.ThreadsPerCore == 0 {
+		t.Fatal("threads per core is zero")
 	}
 }
 
