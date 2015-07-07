@@ -69,6 +69,7 @@ Package home: https://github.com/klauspost/cpuid
 *  **SSE3SLOW** (SSE3 is supported, but usually not faster)
 *  **ATOM** (Atom processor, some SSSE3 instructions are slower)
 *  **Cache line** (Probable size of a cache line).
+*  **L1, L2, L3 Cache size** on newer Intel/AMD CPUs.
 
 ## Cpu Vendor/VM
 * **Intel**
@@ -104,7 +105,11 @@ func main() {
 	fmt.Println("Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model)
 	fmt.Println("Features:", cpuid.CPU.Features)
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
-
+	fmt.Println("L1 Data Cache:", cpuid.CPU.Cache.L1D, "bytes")
+	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1D, "bytes")
+	fmt.Println("L2 Cache:", cpuid.CPU.Cache.L2, "bytes")
+	fmt.Println("L3 Cache:", cpuid.CPU.Cache.L3, "bytes")
+	
 	// Test if we have a specific feature:
 	if cpuid.CPU.SSE() {
 		fmt.Println("We have Streaming SIMD Extensions")
