@@ -142,6 +142,12 @@ type cpuInfo struct {
 	family		int	// CPU family number
 	model		int	// CPU model number
 	cacheline	int	// Cache line size in bytes. Will be 0 if undetectable.
+	cache		struct {
+		l1i	int	// L1 Instruction Cache (per core or shared). Will be -1 if undetected
+		l1d	int	// L1 Data Cache (per core or shared). Will be -1 if undetected
+		l2	int	// L2 Cache (per core or shared). Will be -1 if undetected
+		l3	int	// L3 Instruction Cache (per core or shared). Will be -1 if undetected
+	}
 	maxFunc		uint32
 	maxExFunc	uint32
 }
@@ -175,6 +181,7 @@ func detect() {
 	cpu.logicalcores = logicalCores()
 	cpu.physicalcores = physicalCores()
 	cpu.vendorid = vendorID()
+	cpu.cacheSize()
 }
 
 // Generated here: http://play.golang.org/p/BxFH2Gdc0G
@@ -638,6 +645,70 @@ func cacheLine() int {
 	}
 	// TODO: Read from Cache and TLB Information
 	return int(cache)
+}
+
+func (c *cpuInfo) cacheSize() {
+	c.cache.l1d = -1
+	c.cache.l1i = -1
+	c.cache.l2 = -1
+	c.cache.l3 = -1
+	vendor := vendorID()
+	switch vendor {
+	case intel:
+		if maxFunctionID() < 4 {
+			return
+		}
+		for i := uint32(0); ; i++ {
+			eax, ebx, ecx, _ := cpuidex(4, i)
+			cacheType := eax & 15
+			if cacheType == 0 {
+				break
+			}
+			cacheLevel := (eax >> 5) & 7
+			coherency := int(ebx&0xfff) + 1
+			partitions := int((ebx>>12)&0x3ff) + 1
+			associativity := int((ebx>>22)&0x3ff) + 1
+			sets := int(ecx) + 1
+			size := associativity * partitions * coherency * sets
+			switch cacheLevel {
+			case 1:
+				if cacheType == 1 {
+					// 1 = Data Cache
+					c.cache.l1d = size
+				} else if cacheType == 2 {
+					// 2 = Instruction Cache
+					c.cache.l1i = size
+				} else {
+					if c.cache.l1d < 0 {
+						c.cache.l1i = size
+					}
+					if c.cache.l1i < 0 {
+						c.cache.l1i = size
+					}
+				}
+			case 2:
+				c.cache.l2 = size
+			case 3:
+				c.cache.l3 = size
+			}
+		}
+	case amd:
+		// Untested.
+		if maxExtendedFunction() < 0x80000005 {
+			return
+		}
+		_, _, ecx, edx := cpuid(0x80000005)
+		c.cache.l1d = int(((ecx >> 24) & 0xFF) * 1024)
+		c.cache.l1i = int(((edx >> 24) & 0xFF) * 1024)
+
+		if maxExtendedFunction() < 0x80000006 {
+			return
+		}
+		_, _, ecx, _ = cpuid(0x80000006)
+		c.cache.l2 = int(((ecx >> 16) & 0xFFFF) * 1024)
+	}
+
+	return
 }
 
 func support() flags {
