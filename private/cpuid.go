@@ -863,8 +863,9 @@ func support() flags {
 
 	if maxExtendedFunction() >= 0x80000001 {
 		_, _, c, d := cpuid(0x80000001)
-		if (c & 0x00000020) != 0 {
+		if (c & (1 << 5)) != 0 {
 			rval |= lzcnt
+			rval |= popcnt
 		}
 		if (d & (1 << 31)) != 0 {
 			rval |= amd3dnow
