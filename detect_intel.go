@@ -4,7 +4,14 @@
 
 package cpuid
 
-func cpuid(op uint32) (eax, ebx, ecx, edx uint32)
-func cpuidex(op, op2 uint32) (eax, ebx, ecx, edx uint32)
-func xgetbv(index uint32) (eax, edx uint32)
-func rdtscpAsm() (eax, ebx, ecx, edx uint32)
+func asmCpuid(op uint32) (eax, ebx, ecx, edx uint32)
+func asmCpuidex(op, op2 uint32) (eax, ebx, ecx, edx uint32)
+func asmXgetbv(index uint32) (eax, edx uint32)
+func asmRdtscpAsm() (eax, ebx, ecx, edx uint32)
+
+func initCPU() {
+	cpuid = asmCpuid
+	cpuidex = asmCpuidex
+	xgetbv = asmXgetbv
+	rdtscpAsm = asmRdtscpAsm
+}

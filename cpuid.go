@@ -158,6 +158,11 @@ type CPUInfo struct {
 	maxExFunc uint32
 }
 
+var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
+var cpuidex func(op, op2 uint32) (eax, ebx, ecx, edx uint32)
+var xgetbv func(index uint32) (eax, edx uint32)
+var rdtscpAsm func() (eax, ebx, ecx, edx uint32)
+
 // CPU contains information about the CPU as detected on startup,
 // or when Detect last was called.
 //
@@ -166,6 +171,7 @@ type CPUInfo struct {
 var CPU CPUInfo
 
 func init() {
+	initCPU()
 	Detect()
 }
 
