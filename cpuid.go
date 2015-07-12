@@ -611,11 +611,12 @@ func physicalCores() int {
 	case Intel:
 		return logicalCores() / threadsPerCore()
 	case AMD:
-		_, _, c, _ := cpuid(0x80000008)
-		return int(c&0xff) + 1
-	default:
-		return 0
+		if maxExtendedFunction() >= 0x80000008 {
+			_, _, c, _ := cpuid(0x80000008)
+			return int(c&0xff) + 1
+		}
 	}
+	return 0
 }
 
 // Except from http://en.wikipedia.org/wiki/CPUID#EAX.3D0:_Get_vendor_ID
