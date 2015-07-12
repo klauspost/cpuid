@@ -16,10 +16,6 @@ func TestCPUID(t *testing.T) {
 	t.Logf("Max Function:0x%x\n", n)
 	n = maxExtendedFunction()
 	t.Logf("Max Extended Function:0x%x\n", n)
-	if n >= maxFunctionID() {
-		_, ebx, _, _ := cpuid(7)
-		t.Logf("CPUID.(EAX=07H):EBX: 0x%x", ebx)
-	}
 	t.Log("Name:", cpu.brandname)
 	t.Log("PhysicalCores:", cpu.physicalcores)
 	t.Log("ThreadsPerCore:", cpu.threadspercore)

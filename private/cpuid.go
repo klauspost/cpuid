@@ -152,6 +152,11 @@ type cpuInfo struct {
 	maxExFunc	uint32
 }
 
+var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
+var cpuidex func(op, op2 uint32) (eax, ebx, ecx, edx uint32)
+var xgetbv func(index uint32) (eax, edx uint32)
+var rdtscpAsm func() (eax, ebx, ecx, edx uint32)
+
 // CPU contains information about the CPU as detected on startup,
 // or when Detect last was called.
 //
@@ -160,6 +165,7 @@ type cpuInfo struct {
 var cpu cpuInfo
 
 func init() {
+	initCPU()
 	detect()
 }
 
@@ -599,11 +605,12 @@ func physicalCores() int {
 	case intel:
 		return logicalCores() / threadsPerCore()
 	case amd:
-		_, _, c, _ := cpuid(0x80000008)
-		return int(c&0xff) + 1
-	default:
-		return 0
+		if maxExtendedFunction() >= 0x80000008 {
+			_, _, c, _ := cpuid(0x80000008)
+			return int(c&0xff) + 1
+		}
 	}
+	return 0
 }
 
 // Except from http://en.wikipedia.org/wiki/CPUID#EAX.3D0:_Get_vendor_ID
