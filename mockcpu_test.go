@@ -162,7 +162,6 @@ func TestMocks(t *testing.T) {
 		t.Logf("Max Function:0x%x\n", n)
 		n = maxExtendedFunction()
 		t.Logf("Max Extended Function:0x%x\n", n)
-		t.Log("Name:", CPU.BrandName)
 		t.Log("PhysicalCores:", CPU.PhysicalCores)
 		t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
 		t.Log("LogicalCores:", CPU.LogicalCores)
@@ -173,6 +172,18 @@ func TestMocks(t *testing.T) {
 		t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
 		t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
 		t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
+		if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
+			if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
+				t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
+					CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
+			}
+		}
 
+		if CPU.ThreadsPerCore > 1 && !CPU.HTT() {
+			t.Fatalf("Hyperthreading not detected")
+		}
+		if CPU.ThreadsPerCore == 1 && CPU.HTT() {
+			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
+		}
 	}
 }

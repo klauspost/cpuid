@@ -10,7 +10,9 @@
 // Package home: https://github.com/klauspost/cpuid
 package cpuid
 
-import "strings"
+import (
+	"strings"
+)
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -563,11 +565,28 @@ func brandName() string {
 }
 
 func threadsPerCore() int {
-	if maxFunctionID() < 0xb {
+	mfi := maxFunctionID()
+	if mfi < 0x4 || vendorID() != Intel {
 		return 1
 	}
 
-	_, b, _, _ := cpuidex(0xb, 0)
+	if mfi < 0xb {
+		_, b, _, d := cpuid(1)
+		if (d & (1 << 28)) != 0 {
+			// v will contain logical core count
+			v := (b >> 16) & 255
+			if v > 1 {
+				a4, _, _, _ := cpuid(4)
+				// physical cores
+				v2 := (a4 >> 26) + 1
+				if v2 > 0 {
+					return int(v) / int(v2)
+				}
+			}
+		}
+		return 1
+	}
+	_, b, _, _ := cpuid(0xb)
 	if b&0xffff == 0 {
 		return 1
 	}
@@ -575,10 +594,14 @@ func threadsPerCore() int {
 }
 
 func logicalCores() int {
+	mfi := maxFunctionID()
 	switch vendorID() {
 	case Intel:
 		// Use this on old Intel processors
-		if maxFunctionID() < 0xb {
+		if mfi < 0xb {
+			if mfi < 1 {
+				return 0
+			}
 			// CPUID.1:EBX[23:16] represents the maximum number of addressable IDs (initial APIC ID)
 			// that can be assigned to logical processors in a physical package.
 			// The value may not be the same as the number of logical processors that are present in the hardware of a physical package.
@@ -731,7 +754,7 @@ func support() Flags {
 		return 0
 	}
 	rval := uint64(0)
-	_, b, c, d := cpuid(1)
+	_, _, c, d := cpuid(1)
 	if (d & (1 << 15)) != 0 {
 		rval |= CMOV
 	}
@@ -777,13 +800,8 @@ func support() Flags {
 	if c&(1<<13) != 0 {
 		rval |= CX16
 	}
-	if vend == Intel && (d&(1<<28)) != 0 {
-		// This field does not indicate that Hyper-Threading
-		// Technology has been enabled for this specific processor.
-		// To determine if Hyper-Threading Technology is supported,
-		// check the value returned in EBX[23:16]
-		v := (b >> 16) & 255
-		if v > 1 {
+	if vend == Intel && (d&(1<<28)) != 0 && mfi >= 4 {
+		if threadsPerCore() > 1 {
 			rval |= HTT
 		}
 	}
