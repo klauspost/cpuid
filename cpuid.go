@@ -788,8 +788,8 @@ func support() Flags {
 		}
 	}
 
-	// Check OXSAVE and AVX bits
-	if (c & 0x18000000) == 0x18000000 {
+	// Check XGETBV, OXSAVE and AVX bits
+	if c&(1<<26) != 0 && c&(1<<27) != 0 && c&(1<<28) != 0 {
 		// Check for OS support
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {

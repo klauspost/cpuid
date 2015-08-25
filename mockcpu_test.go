@@ -123,7 +123,19 @@ func mockCPU(def []byte) {
 		theid := first[op2]
 		return theid[0], theid[1], theid[2], theid[3]
 	}
-
+	xgetbv = func(index uint32) (eax, edx uint32) {
+		first, ok := fakeID[1]
+		if !ok {
+			panic(fmt.Sprintf("XGETBV not supported %v", fakeID))
+		}
+		second := first[0]
+		// ECX bit 26 must be set
+		if (second[2] & 1 << 26) == 0 {
+			panic(fmt.Sprintf("XGETBV not supported %v", fakeID))
+		}
+		// We don't have any data to return, unfortunately
+		return 0, 0
+	}
 }
 
 func TestMocks(t *testing.T) {
