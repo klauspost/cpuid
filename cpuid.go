@@ -726,6 +726,7 @@ func (c *CPUInfo) cacheSize() {
 
 func support() Flags {
 	mfi := maxFunctionID()
+	vend := vendorID()
 	if mfi < 0x1 {
 		return 0
 	}
@@ -776,13 +777,13 @@ func support() Flags {
 	if c&(1<<13) != 0 {
 		rval |= CX16
 	}
-	if (d & (1 << 28)) != 0 {
+	if vend == Intel && (d&(1<<28)) != 0 {
 		// This field does not indicate that Hyper-Threading
 		// Technology has been enabled for this specific processor.
 		// To determine if Hyper-Threading Technology is supported,
 		// check the value returned in EBX[23:16]
 		v := (b >> 16) & 255
-		if v > 0 {
+		if v > 1 {
 			rval |= HTT
 		}
 	}
