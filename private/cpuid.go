@@ -4,7 +4,9 @@
 
 package cpuid
 
-import "strings"
+import (
+	"strings"
+)
 
 // Vendor is a representation of a CPU vendor.
 type vendor int
@@ -557,11 +559,28 @@ func brandName() string {
 }
 
 func threadsPerCore() int {
-	if maxFunctionID() < 0xb {
+	mfi := maxFunctionID()
+	if mfi < 0x4 || vendorID() != intel {
 		return 1
 	}
 
-	_, b, _, _ := cpuidex(0xb, 0)
+	if mfi < 0xb {
+		_, b, _, d := cpuid(1)
+		if (d & (1 << 28)) != 0 {
+			// v will contain logical core count
+			v := (b >> 16) & 255
+			if v > 1 {
+				a4, _, _, _ := cpuid(4)
+				// physical cores
+				v2 := (a4 >> 26) + 1
+				if v2 > 0 {
+					return int(v) / int(v2)
+				}
+			}
+		}
+		return 1
+	}
+	_, b, _, _ := cpuid(0xb)
 	if b&0xffff == 0 {
 		return 1
 	}
@@ -569,10 +588,14 @@ func threadsPerCore() int {
 }
 
 func logicalCores() int {
+	mfi := maxFunctionID()
 	switch vendorID() {
 	case intel:
 		// Use this on old Intel processors
-		if maxFunctionID() < 0xb {
+		if mfi < 0xb {
+			if mfi < 1 {
+				return 0
+			}
 			// CPUID.1:EBX[23:16] represents the maximum number of addressable IDs (initial APIC ID)
 			// that can be assigned to logical processors in a physical package.
 			// The value may not be the same as the number of logical processors that are present in the hardware of a physical package.
@@ -720,11 +743,12 @@ func (c *cpuInfo) cacheSize() {
 
 func support() flags {
 	mfi := maxFunctionID()
+	vend := vendorID()
 	if mfi < 0x1 {
 		return 0
 	}
 	rval := uint64(0)
-	_, b, c, d := cpuid(1)
+	_, _, c, d := cpuid(1)
 	if (d & (1 << 15)) != 0 {
 		rval |= cmov
 	}
@@ -770,19 +794,14 @@ func support() flags {
 	if c&(1<<13) != 0 {
 		rval |= cx16
 	}
-	if (c & (1 << 28)) != 0 {
-		// This field does not indicate that Hyper-Threading
-		// Technology has been enabled for this specific processor.
-		// To determine if Hyper-Threading Technology is supported,
-		// check the value returned in EBX[23:16]
-		v := (b >> 16) & 255
-		if v > 0 {
+	if vend == intel && (d&(1<<28)) != 0 && mfi >= 4 {
+		if threadsPerCore() > 1 {
 			rval |= htt
 		}
 	}
 
-	// Check OXSAVE and AVX bits
-	if (c & 0x18000000) == 0x18000000 {
+	// Check XGETBV, OXSAVE and AVX bits
+	if c&(1<<26) != 0 && c&(1<<27) != 0 && c&(1<<28) != 0 {
 		// Check for OS support
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {
