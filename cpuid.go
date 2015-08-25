@@ -776,7 +776,7 @@ func support() Flags {
 	if c&(1<<13) != 0 {
 		rval |= CX16
 	}
-	if (c & (1 << 28)) != 0 {
+	if (d & (1 << 28)) != 0 {
 		// This field does not indicate that Hyper-Threading
 		// Technology has been enabled for this specific processor.
 		// To determine if Hyper-Threading Technology is supported,
