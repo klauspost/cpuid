@@ -65,6 +65,7 @@ Package home: https://github.com/klauspost/cpuid
 *  **CX16** (CMPXCHG16B Instruction)
 
 ## Performance
+*  **RDTSCP()** Returns current cycle count. Can be used for benchmarking.
 *  **SSE2SLOW** (SSE2 is supported, but usually not faster)
 *  **SSE3SLOW** (SSE3 is supported, but usually not faster)
 *  **ATOM** (Atom processor, some SSSE3 instructions are slower)
