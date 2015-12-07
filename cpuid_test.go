@@ -31,6 +31,29 @@ func TestCPUID(t *testing.T) {
 	}
 }
 
+func TestDumpCPUID(t *testing.T) {
+	n := int(maxFunctionID())
+	for i := 0; i <= n; i++ {
+		a, b, c, d := cpuid(uint32(i))
+		t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a, b, c, d)
+		ex := uint32(1)
+		for {
+			a2, b2, c2, d2 := cpuidex(uint32(i), ex)
+			if a2 == a && b2 == b && d2 == d || ex > 50 || a2 == 0 {
+				break
+			}
+			t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a2, b2, c2, d2)
+			a, b, c, d = a2, b2, c2, d2
+			ex++
+		}
+	}
+	n2 := maxExtendedFunction()
+	for i := uint32(0x80000000); i <= n2; i++ {
+		a, b, c, d := cpuid(i)
+		t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a, b, c, d)
+	}
+}
+
 func Example() {
 	// Print basic CPU information:
 	fmt.Println("Name:", CPU.BrandName)
