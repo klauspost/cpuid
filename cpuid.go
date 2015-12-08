@@ -10,9 +10,7 @@
 // Package home: https://github.com/klauspost/cpuid
 package cpuid
 
-import (
-	"strings"
-)
+import "strings"
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -77,6 +75,7 @@ const (
 	ERMS                    // Enhanced REP MOVSB/STOSB
 	RDTSCP                  // RDTSCP Instruction
 	CX16                    // CMPXCHG16B Instruction
+	SGX                     // Software Guard Extensions
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -131,6 +130,7 @@ var flagNames = map[Flags]string{
 	ERMS:        "ERMS",        // Enhanced REP MOVSB/STOSB
 	RDTSCP:      "RDTSCP",      // RDTSCP Instruction
 	CX16:        "CX16",        // CMPXCHG16B Instruction
+	SGX:         "SGX",         // Software Guard Extensions
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -156,6 +156,7 @@ type CPUInfo struct {
 		L2  int // L2 Cache (per core or shared). Will be -1 if undetected
 		L3  int // L3 Instruction Cache (per core or shared). Will be -1 if undetected
 	}
+	SGX       SGXSupport
 	maxFunc   uint32
 	maxExFunc uint32
 }
@@ -191,6 +192,7 @@ func Detect() {
 	CPU.CacheLine = cacheLine()
 	CPU.Family, CPU.Model = familyModel()
 	CPU.Features = support()
+	CPU.SGX = sgx(CPU.Features&SGX != 0)
 	CPU.ThreadsPerCore = threadsPerCore()
 	CPU.LogicalCores = logicalCores()
 	CPU.PhysicalCores = physicalCores()
@@ -747,6 +749,30 @@ func (c *CPUInfo) cacheSize() {
 	return
 }
 
+type SGXSupport struct {
+	Available           bool
+	SGX1Supported       bool
+	SGX2Supported       bool
+	MaxEnclaveSizeNot64 int64
+	MaxEnclaveSize64    int64
+}
+
+func sgx(available bool) (rval SGXSupport) {
+	rval.Available = available
+
+	if !available {
+		return
+	}
+
+	a, _, _, d := cpuidex(0x12, 0)
+	rval.SGX1Supported = a&0x01 != 0
+	rval.SGX2Supported = a&0x02 != 0
+	rval.MaxEnclaveSizeNot64 = 1 << (d & 0xFF)     // pow 2
+	rval.MaxEnclaveSize64 = 1 << ((d >> 8) & 0xFF) // pow 2
+
+	return
+}
+
 func support() Flags {
 	mfi := maxFunctionID()
 	vend := vendorID()
@@ -829,6 +855,9 @@ func support() Flags {
 			if (ebx & 0x00000100) != 0 {
 				rval |= BMI2
 			}
+		}
+		if ebx&(1<<2) != 0 {
+			rval |= SGX
 		}
 		if ebx&(1<<4) != 0 {
 			rval |= HLE
