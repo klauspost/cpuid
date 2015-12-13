@@ -29,7 +29,30 @@ func TestCPUID(t *testing.T) {
 	t.Log("L3 Cache:", cpu.cache.l3, "bytes")
 
 	if cpu.sse2() {
-		t.Log("Yay - we have SSE 2")
+		t.Log("We have SSE2")
+	}
+}
+
+func TestDumpCPUID(t *testing.T) {
+	n := int(maxFunctionID())
+	for i := 0; i <= n; i++ {
+		a, b, c, d := cpuidex(uint32(i), 0)
+		t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a, b, c, d)
+		ex := uint32(1)
+		for {
+			a2, b2, c2, d2 := cpuidex(uint32(i), ex)
+			if a2 == a && b2 == b && d2 == d || ex > 50 || a2 == 0 {
+				break
+			}
+			t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a2, b2, c2, d2)
+			a, b, c, d = a2, b2, c2, d2
+			ex++
+		}
+	}
+	n2 := maxExtendedFunction()
+	for i := uint32(0x80000000); i <= n2; i++ {
+		a, b, c, d := cpuid(i)
+		t.Logf("CPUID %08x: %08x-%08x-%08x-%08x", i, a, b, c, d)
 	}
 }
 
@@ -655,3 +678,42 @@ func examplecpuinfo_ia32tscaux(t *testing.T) {
 	core := ecx & 0xFFF
 	fmt.Println("Chip, Core:", chip, core)
 }
+
+/*
+func TestPhysical(t *testing.T) {
+	var test16 = "CPUID 00000000: 0000000d-756e6547-6c65746e-49656e69 \nCPUID 00000001: 000206d7-03200800-1fbee3ff-bfebfbff   \nCPUID 00000002: 76035a01-00f0b2ff-00000000-00ca0000   \nCPUID 00000003: 00000000-00000000-00000000-00000000   \nCPUID 00000004: 3c004121-01c0003f-0000003f-00000000   \nCPUID 00000004: 3c004122-01c0003f-0000003f-00000000   \nCPUID 00000004: 3c004143-01c0003f-000001ff-00000000   \nCPUID 00000004: 3c07c163-04c0003f-00003fff-00000006   \nCPUID 00000005: 00000040-00000040-00000003-00021120   \nCPUID 00000006: 00000075-00000002-00000009-00000000   \nCPUID 00000007: 00000000-00000000-00000000-00000000   \nCPUID 00000008: 00000000-00000000-00000000-00000000   \nCPUID 00000009: 00000001-00000000-00000000-00000000   \nCPUID 0000000a: 07300403-00000000-00000000-00000603   \nCPUID 0000000b: 00000000-00000000-00000003-00000003   \nCPUID 0000000b: 00000005-00000010-00000201-00000003   \nCPUID 0000000c: 00000000-00000000-00000000-00000000   \nCPUID 0000000d: 00000007-00000340-00000340-00000000   \nCPUID 0000000d: 00000001-00000000-00000000-00000000   \nCPUID 0000000d: 00000100-00000240-00000000-00000000   \nCPUID 80000000: 80000008-00000000-00000000-00000000   \nCPUID 80000001: 00000000-00000000-00000001-2c100800   \nCPUID 80000002: 20202020-49202020-6c65746e-20295228   \nCPUID 80000003: 6e6f6558-20295228-20555043-322d3545   \nCPUID 80000004: 20303636-20402030-30322e32-007a4847   \nCPUID 80000005: 00000000-00000000-00000000-00000000   \nCPUID 80000006: 00000000-00000000-01006040-00000000   \nCPUID 80000007: 00000000-00000000-00000000-00000100   \nCPUID 80000008: 0000302e-00000000-00000000-00000000"
+	restore := mockCPU([]byte(test16))
+	Detect()
+	t.Log("Name:", CPU.BrandName)
+	n := maxFunctionID()
+	t.Logf("Max Function:0x%x\n", n)
+	n = maxExtendedFunction()
+	t.Logf("Max Extended Function:0x%x\n", n)
+	t.Log("PhysicalCores:", CPU.PhysicalCores)
+	t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
+	t.Log("LogicalCores:", CPU.LogicalCores)
+	t.Log("Family", CPU.Family, "Model:", CPU.Model)
+	t.Log("Features:", CPU.Features)
+	t.Log("Cacheline bytes:", CPU.CacheLine)
+	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
+	t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
+	t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
+	t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
+	if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
+		if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
+			t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
+				CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
+		}
+	}
+
+	if CPU.ThreadsPerCore > 1 && !CPU.HTT() {
+		t.Fatalf("Hyperthreading not detected")
+	}
+	if CPU.ThreadsPerCore == 1 && CPU.HTT() {
+		t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
+	}
+	restore()
+	Detect()
+	TestCPUID(t)
+}
+*/
