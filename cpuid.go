@@ -586,7 +586,7 @@ func threadsPerCore() int {
 		}
 		return 1
 	}
-	_, b, _, _ := cpuid(0xb)
+	_, b, _, _ := cpuidex(0xb, 0)
 	if b&0xffff == 0 {
 		return 1
 	}
