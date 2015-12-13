@@ -11,6 +11,12 @@ import (
 
 type fakecpuid map[uint32][][]uint32
 
+type idfuncs struct {
+	cpuid   func(op uint32) (eax, ebx, ecx, edx uint32)
+	cpuidex func(op, op2 uint32) (eax, ebx, ecx, edx uint32)
+	xgetbv  func(index uint32) (eax, edx uint32)
+}
+
 func (f fakecpuid) String() string {
 	var out = make([]string, 0, len(f))
 	for key, val := range f {
@@ -22,7 +28,8 @@ func (f fakecpuid) String() string {
 	sort.Sort(&sorter)
 	return strings.Join(sorter, "\n")
 }
-func mockCPU(def []byte) {
+
+func mockCPU(def []byte) func() {
 	lines := strings.Split(string(def), "\n")
 	anyfound := false
 	fakeID := make(fakecpuid)
@@ -79,6 +86,15 @@ func mockCPU(def []byte) {
 		fakeID[idV] = existing
 		anyfound = true
 	}
+
+	restorer := func(f idfuncs) func() {
+		return func() {
+			cpuid = f.cpuid
+			cpuidex = f.cpuidex
+			xgetbv = f.xgetbv
+		}
+	}(idfuncs{cpuid: cpuid, cpuidex: cpuidex, xgetbv: xgetbv})
+
 	cpuid = func(op uint32) (eax, ebx, ecx, edx uint32) {
 		if op == 0x80000000 || op == 0 {
 			var ok bool
@@ -136,6 +152,7 @@ func mockCPU(def []byte) {
 		// We don't have any data to return, unfortunately
 		return 0, 0
 	}
+	return restorer
 }
 
 func TestMocks(t *testing.T) {
@@ -155,7 +172,7 @@ func TestMocks(t *testing.T) {
 		}
 		rc.Close()
 		t.Log("Opening", f.FileInfo().Name())
-		mockCPU(content)
+		restore := mockCPU(content)
 		Detect()
 		t.Log("Name:", CPU.BrandName)
 		n := maxFunctionID()
@@ -185,5 +202,8 @@ func TestMocks(t *testing.T) {
 		if CPU.ThreadsPerCore == 1 && CPU.HTT() {
 			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
 		}
+		restore()
 	}
+	Detect()
+
 }

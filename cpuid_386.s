@@ -2,6 +2,7 @@
 
 // func asmCpuid(op uint32) (eax, ebx, ecx, edx uint32)
 TEXT ·asmCpuid(SB),7,$0
+    XORQ CX, CX
 	MOVL op+0(FP),AX
 	CPUID
 	MOVL AX,eax+4(FP)
