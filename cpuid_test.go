@@ -264,6 +264,16 @@ func TestCX16(t *testing.T) {
 	t.Log("CX16 Support:", got)
 }
 
+// TestSGX tests SGX() function
+func TestSGX(t *testing.T) {
+	got := CPU.SGX.Available
+	expected := CPU.Features&SGX == SGX
+	if got != expected {
+		t.Fatalf("SGX: expected %v, got %v", expected, got)
+	}
+	t.Log("SGX Support:", got)
+}
+
 // TestBMI1 tests BMI1() function
 func TestBMI1(t *testing.T) {
 	got := CPU.BMI1()

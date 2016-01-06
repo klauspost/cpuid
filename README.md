@@ -63,6 +63,7 @@ Package home: https://github.com/klauspost/cpuid
 *  **ERMS** (Enhanced REP MOVSB/STOSB)
 *  **RDTSCP** (RDTSCP Instruction)
 *  **CX16** (CMPXCHG16B Instruction)
+*  **SGX** (Software Guard Extensions, with activation details)
 
 ## Performance
 *  **RDTSCP()** Returns current cycle count. Can be used for benchmarking.
@@ -110,7 +111,7 @@ func main() {
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1D, "bytes")
 	fmt.Println("L2 Cache:", cpuid.CPU.Cache.L2, "bytes")
 	fmt.Println("L3 Cache:", cpuid.CPU.Cache.L3, "bytes")
-	
+
 	// Test if we have a specific feature:
 	if cpuid.CPU.SSE() {
 		fmt.Println("We have Streaming SIMD Extensions")
