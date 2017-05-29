@@ -103,6 +103,10 @@ func mockCPU(def []byte) func() {
 				return 0, 0, 0, 0
 			}
 		}
+		if op == 0x1 {
+			// not running in Hypervisor
+			return 0, 0, 0, 0
+		}
 		first, ok := fakeID[op]
 		if !ok {
 			if op > maxFunctionID() {
@@ -175,6 +179,7 @@ func TestMocks(t *testing.T) {
 		restore := mockCPU(content)
 		Detect()
 		t.Log("Name:", CPU.BrandName)
+		t.Log("Hypervisor:", CPU.HypervisorName)
 		n := maxFunctionID()
 		t.Logf("Max Function:0x%x\n", n)
 		n = maxExtendedFunction()

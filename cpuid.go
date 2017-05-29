@@ -10,7 +10,9 @@
 // Package home: https://github.com/klauspost/cpuid
 package cpuid
 
-import "strings"
+import (
+	"strings"
+)
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -143,6 +145,7 @@ var flagNames = map[Flags]string{
 type CPUInfo struct {
 	BrandName      string // Brand name reported by the CPU
 	VendorID       Vendor // Comparable CPU vendor ID
+	HypervisorName string // Hyperrvisor Vendor
 	Features       Flags  // Features of the CPU
 	PhysicalCores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	ThreadsPerCore int    // Number of threads per physical core. Will be 1 if undetectable.
@@ -197,6 +200,7 @@ func Detect() {
 	CPU.LogicalCores = logicalCores()
 	CPU.PhysicalCores = physicalCores()
 	CPU.VendorID = vendorID()
+	CPU.HypervisorName = hypervisorVendorName()
 	CPU.cacheSize()
 }
 
@@ -552,6 +556,50 @@ func maxExtendedFunction() uint32 {
 func maxFunctionID() uint32 {
 	a, _, _, _ := cpuid(0)
 	return a
+}
+
+func isHypervisorActive() bool {
+	_, _, i, _ := cpuid(0x1)
+	return i&(1<<31) != 0
+}
+
+func getHypervisorCpuid(ax uint32) string {
+	_, b, c, d := cpuid(ax)
+	name := strings.TrimRight(string(valAsString(b, c, d)), "\000")
+	return name
+}
+
+// see https://people.redhat.com/~rjones/virt-what/ for how full coverage is done
+// Vbox etc will need (optional - only do if root) dmi access
+func hypervisorName() string {
+	if !isHypervisorActive() {
+		return ""
+	}
+	// KVM has been caught to move its real signature to this leaf, and put something completely different in the
+	// standard location. So this leaf must be checked first.
+	// Sven removed it - in one test system, this leaf returns garbage :(
+	//if hv := getHypervisorCpuid(0x40000100); hv != "" {
+	//	return hv
+	//}
+
+	return getHypervisorCpuid(0x40000000)
+}
+
+// https://en.wikipedia.org/wiki/CPUID#EAX.3D0:_Get_vendor_ID
+var hvmap = map[string]string{
+	"bhyve bhyve ": "bhyve",
+	"KVMKVMKVM":    "kvm",
+	"Microsoft Hv": "hyperv",
+	"VMwareVMware": "vmware",
+	"XenVMMXenVMM": "xenhvm",
+}
+
+func hypervisorVendorName() string {
+	name := hypervisorName()
+	if n, ok := hvmap[name]; ok {
+		return n
+	}
+	return name
 }
 
 func brandName() string {
