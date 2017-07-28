@@ -643,6 +643,7 @@ func TestCPUInfo_TSX(t *testing.T) {
 	}
 	t.Log("TestNSC:", got)
 }
+
 // Test RTCounter function
 func TestRtCounter(t *testing.T) {
 	a := CPU.RTCounter()
