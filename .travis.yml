@@ -6,10 +6,10 @@ os:
   - linux
   - osx  
 go:
-  - 1.5.x
   - 1.6.x
   - 1.7.x
   - 1.8.x
+  - 1.9.x
   - master
 
 script: 
@@ -21,4 +21,5 @@ script:
 matrix:
   allow_failures:
     - go: 'master'
+    - go: '1.6.x'
   fast_finish: true 
