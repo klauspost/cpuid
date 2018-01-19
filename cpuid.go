@@ -10,7 +10,10 @@
 // Package home: https://github.com/klauspost/cpuid
 package cpuid
 
-import "strings"
+import (
+	"runtime"
+	"strings"
+)
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -139,6 +142,60 @@ var flagNames = map[Flags]string{
 
 }
 
+/* all special features for arm64 should be defined here */
+const (
+	/* extension instructions */
+	CPU_ARM64_FEATURE_FP = 1 << iota
+	CPU_ARM64_FEATURE_ASIMD
+	CPU_ARM64_FEATURE_EVTSTRM
+	CPU_ARM64_FEATURE_AES
+	CPU_ARM64_FEATURE_PMULL
+	CPU_ARM64_FEATURE_SHA1
+	CPU_ARM64_FEATURE_SHA2
+	CPU_ARM64_FEATURE_CRC32
+	CPU_ARM64_FEATURE_ATOMICS
+	CPU_ARM64_FEATURE_FPHP
+	CPU_ARM64_FEATURE_ASIMDHP
+	CPU_ARM64_FEATURE_CPUID
+	CPU_ARM64_FEATURE_ASIMDRDM
+	CPU_ARM64_FEATURE_JSCVT
+	CPU_ARM64_FEATURE_FCMA
+	CPU_ARM64_FEATURE_LRCPC
+	CPU_ARM64_FEATURE_DCPOP
+	CPU_ARM64_FEATURE_SHA3
+	CPU_ARM64_FEATURE_SM3
+	CPU_ARM64_FEATURE_SM4
+	CPU_ARM64_FEATURE_ASIMDDP
+	CPU_ARM64_FEATURE_SHA512
+	CPU_ARM64_FEATURE_SVE
+)
+
+var flagNames_Arm64 = map[Flags]string{
+	CPU_ARM64_FEATURE_FP:       "FP",
+	CPU_ARM64_FEATURE_ASIMD:    "ASIMD",
+	CPU_ARM64_FEATURE_EVTSTRM:  "EVTSTRM",
+	CPU_ARM64_FEATURE_AES:      "AES",
+	CPU_ARM64_FEATURE_PMULL:    "PMULL",
+	CPU_ARM64_FEATURE_SHA1:     "SHA1",
+	CPU_ARM64_FEATURE_SHA2:     "SHA2",
+	CPU_ARM64_FEATURE_CRC32:    "CRC32",
+	CPU_ARM64_FEATURE_ATOMICS:  "ATOMICS",
+	CPU_ARM64_FEATURE_FPHP:     "FPHP",
+	CPU_ARM64_FEATURE_ASIMDHP:  "ASIMDHP",
+	CPU_ARM64_FEATURE_CPUID:    "CPUID",
+	CPU_ARM64_FEATURE_ASIMDRDM: "ASIMDRDM",
+	CPU_ARM64_FEATURE_JSCVT:    "JSCVT",
+	CPU_ARM64_FEATURE_FCMA:     "FCMA",
+	CPU_ARM64_FEATURE_LRCPC:    "LRCPC",
+	CPU_ARM64_FEATURE_DCPOP:    "DCPOP",
+	CPU_ARM64_FEATURE_SHA3:     "SHA3",
+	CPU_ARM64_FEATURE_SM3:      "SM3",
+	CPU_ARM64_FEATURE_SM4:      "SM4",
+	CPU_ARM64_FEATURE_ASIMDDP:  "ASIMDDP",
+	CPU_ARM64_FEATURE_SHA512:   "SHA512",
+	CPU_ARM64_FEATURE_SVE:      "SVE",
+}
+
 // CPUInfo contains information about the detected system CPU.
 type CPUInfo struct {
 	BrandName      string // Brand name reported by the CPU
@@ -176,6 +233,15 @@ var CPU CPUInfo
 func init() {
 	initCPU()
 	Detect()
+}
+
+// IsArm64Arch returns true if the architecture is ARM64.
+func IsArm64Arch() bool {
+	switch runtime.GOARCH {
+	case "arm64":
+		return true
+	}
+	return false
 }
 
 // Detect will re-detect current CPU info.
@@ -540,11 +606,19 @@ func (f Flags) String() string {
 
 // Strings returns and array of the detected features.
 func (f Flags) Strings() []string {
+	var val string
+
 	s := support()
 	r := make([]string, 0, 20)
 	for i := uint(0); i < 64; i++ {
 		key := Flags(1 << i)
-		val := flagNames[key]
+
+		if !IsArm64Arch() {
+			val = flagNames[key]
+		} else {
+			val = flagNames_Arm64[key]
+		}
+
 		if s&key != 0 {
 			r = append(r, val)
 		}
@@ -782,6 +856,11 @@ func hasSGX(available bool) (rval SGXSupport) {
 }
 
 func support() Flags {
+	if IsArm64Arch() {
+		a, _, _, _ := cpuidex(0, 0)
+		return Flags(a)
+	}
+
 	mfi := maxFunctionID()
 	vend := vendorID()
 	if mfi < 0x1 {
