@@ -454,7 +454,7 @@ func (c CPUInfo) CX16() bool {
 // TSX is split into HLE (Hardware Lock Elision) and RTM (Restricted Transactional Memory) detection.
 // So TSX simply checks that.
 func (c CPUInfo) TSX() bool {
-	return c.Features&(MPX|RTM) == MPX|RTM
+	return c.Features&(HLE|RTM) == HLE|RTM
 }
 
 // Atom indicates an Atom processor
