@@ -84,6 +84,7 @@ Package home: https://github.com/klauspost/cpuid
 * **VMware**
 * **XenHVM**
 * **Bhyve**
+* **Hygon**
 
 # installing
 
