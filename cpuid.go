@@ -80,6 +80,7 @@ const (
 	SGX                     // Software Guard Extensions
 	IBPB                    // Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
 	STIBP                   // Single Thread Indirect Branch Predictors
+	VMX                     // Virtual Machine Extensions
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -137,6 +138,7 @@ var flagNames = map[Flags]string{
 	SGX:         "SGX",         // Software Guard Extensions
 	IBPB:        "IBPB",        // Indirect Branch Restricted Speculation and Indirect Branch Predictor Barrier
 	STIBP:       "STIBP",       // Single Thread Indirect Branch Predictors
+	VMX:         "VMX",         // Virtual Machine Extensions
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -221,6 +223,11 @@ func (c CPUInfo) Amd3dnow() bool {
 // Amd3dnowExt indicates support of AMD 3DNOW! Extended instructions
 func (c CPUInfo) Amd3dnowExt() bool {
 	return c.Features&AMD3DNOWEXT != 0
+}
+
+// VMX indicates support of VMX
+func (c CPUInfo) VMX() bool {
+	return c.Features&VMX != 0
 }
 
 // MMX indicates support of MMX instructions
@@ -819,6 +826,9 @@ func support() Flags {
 	}
 	if (c & 1) != 0 {
 		rval |= SSE3
+	}
+	if (c & (1 << 5)) != 0 {
+		rval |= VMX
 	}
 	if (c & 0x00000200) != 0 {
 		rval |= SSSE3

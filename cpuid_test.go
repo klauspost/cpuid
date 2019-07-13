@@ -114,6 +114,16 @@ func TestAmd3dnowExt(t *testing.T) {
 	t.Log("AMD3DNOWEXT Support:", got)
 }
 
+// TestVMX tests VMX() function
+func TestVMX(t *testing.T) {
+	got := CPU.VMX()
+	expected := CPU.Features&VMX == VMX
+	if got != expected {
+		t.Fatalf("VMX: expected %v, got %v", expected, got)
+	}
+	t.Log("VMX Support:", got)
+}
+
 // TestMMX tests MMX() function
 func TestMMX(t *testing.T) {
 	got := CPU.MMX()
