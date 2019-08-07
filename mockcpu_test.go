@@ -202,6 +202,9 @@ func TestMocks(t *testing.T) {
 		if CPU.ThreadsPerCore == 1 && CPU.HTT() {
 			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
 		}
+		if CPU.IBS() {
+			fmt.Println(CPU.BrandName, "IBS Extended:", CPU.ExtendedIBS())
+		}
 		restore()
 	}
 	Detect()

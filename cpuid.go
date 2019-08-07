@@ -80,6 +80,7 @@ const (
 	SGX                     // Software Guard Extensions
 	IBPB                    // Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
 	STIBP                   // Single Thread Indirect Branch Predictors
+	IBS                     // Instruction Based Sampling (AMD)
 
 	// Performance indicators
 	SSE2SLOW // SSE2 is supported, but usually not faster
@@ -137,6 +138,7 @@ var flagNames = map[Flags]string{
 	SGX:         "SGX",         // Software Guard Extensions
 	IBPB:        "IBPB",        // Indirect Branch Restricted Speculation and Indirect Branch Predictor Barrier
 	STIBP:       "STIBP",       // Single Thread Indirect Branch Predictors
+	IBS:         "IBS",         // Instruction Based Sampling
 
 	// Performance indicators
 	SSE2SLOW: "SSE2SLOW", // SSE2 supported, but usually not faster
@@ -462,6 +464,10 @@ func (c CPUInfo) TSX() bool {
 // Atom indicates an Atom processor
 func (c CPUInfo) Atom() bool {
 	return c.Features&ATOM != 0
+}
+
+func (c CPUInfo) IBS() bool {
+	return c.Features&IBS != 0
 }
 
 // Intel returns true if vendor is recognized as Intel
@@ -955,6 +961,9 @@ func support() Flags {
 			rval |= LZCNT
 			rval |= POPCNT
 		}
+		if (c & (1 << 10)) != 0 {
+			rval |= IBS
+		}
 		if (d & (1 << 31)) != 0 {
 			rval |= AMD3DNOW
 		}
@@ -1024,6 +1033,39 @@ func support() Flags {
 		}
 	}
 	return Flags(rval)
+}
+
+func (c CPUInfo) ExtendedIBS() string {
+	if c.maxExFunc < 0x8000001b {
+		return "Extended IBS info not available"
+	}
+	eax, _, _, _ := cpuid(0x8000001b)
+	var res []string
+	if (eax>>0)&1 == 1 {
+		res = append(res, "IBSFFV")
+	}
+	if (eax>>1)&1 == 1 {
+		res = append(res, "FetchSam")
+	}
+	if (eax>>2)&1 == 1 {
+		res = append(res, "OpSam")
+	}
+	if (eax>>3)&1 == 1 {
+		res = append(res, "RdWrOpCnt")
+	}
+	if (eax>>4)&1 == 1 {
+		res = append(res, "OpCnt")
+	}
+	if (eax>>5)&1 == 1 {
+		res = append(res, "BrnTrgt")
+	}
+	if (eax>>6)&1 == 1 {
+		res = append(res, "OpCntExt")
+	}
+	if (eax>>7)&1 == 1 {
+		res = append(res, "RipInvalidChk")
+	}
+	return strings.Join(res, " ")
 }
 
 func valAsString(values ...uint32) []byte {
