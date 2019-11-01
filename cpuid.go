@@ -73,6 +73,7 @@ const (
 	AVX512BW                // AVX-512 Byte and Word Instructions
 	AVX512VL                // AVX-512 Vector Length Extensions
 	AVX512VBMI              // AVX-512 Vector Bit Manipulation Instructions
+	AVX512VNNI              // AVX-512 Vector Neural Network Instructions
 	MPX                     // Intel MPX (Memory Protection Extensions)
 	ERMS                    // Enhanced REP MOVSB/STOSB
 	RDTSCP                  // RDTSCP Instruction
@@ -131,6 +132,7 @@ var flagNames = map[Flags]string{
 	AVX512BW:    "AVX512BW",    // AVX-512 Byte and Word Instructions
 	AVX512VL:    "AVX512VL",    // AVX-512 Vector Length Extensions
 	AVX512VBMI:  "AVX512VBMI",  // AVX-512 Vector Bit Manipulation Instructions
+	AVX512VNNI:  "AVX512VNNI",  // AVX-512 Vector Neural Network Instructions
 	MPX:         "MPX",         // Intel MPX (Memory Protection Extensions)
 	ERMS:        "ERMS",        // Enhanced REP MOVSB/STOSB
 	RDTSCP:      "RDTSCP",      // RDTSCP Instruction
@@ -438,6 +440,11 @@ func (c CPUInfo) AVX512VL() bool {
 // AVX512VBMI indicates support of AVX-512 Vector Bit Manipulation Instructions
 func (c CPUInfo) AVX512VBMI() bool {
 	return c.Features&AVX512VBMI != 0
+}
+
+// AVX512VNNI indicates support of AVX-512 Vector Neural Network Instructions
+func (c CPUInfo) AVX512VNNI() bool {
+	return c.Features&AVX512VNNI != 0
 }
 
 // MPX indicates support of Intel MPX (Memory Protection Extensions)
@@ -954,6 +961,9 @@ func support() Flags {
 				// ecx
 				if ecx&(1<<1) != 0 {
 					rval |= AVX512VBMI
+				}
+				if ecx&(1<<11) != 0 {
+					rval |= AVX512VNNI
 				}
 			}
 		}

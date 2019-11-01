@@ -554,7 +554,7 @@ func TestAVX512VL(t *testing.T) {
 	t.Log("AVX512VL Support:", got)
 }
 
-// TestAVX512VL tests AVX512VBMI() function (AVX-512 Vector Bit Manipulation Instructions)
+// TestAVX512VBMI tests AVX512VBMI() function (AVX-512 Vector Bit Manipulation Instructions)
 func TestAVX512VBMI(t *testing.T) {
 	got := CPU.AVX512VBMI()
 	expected := CPU.Features&AVX512VBMI == AVX512VBMI
@@ -562,6 +562,16 @@ func TestAVX512VBMI(t *testing.T) {
 		t.Fatalf("AVX512VBMI: expected %v, got %v", expected, got)
 	}
 	t.Log("AVX512VBMI Support:", got)
+}
+
+// TestAVX512VNNI tests AVX512VNNI() function (AVX-512 Vector Neural Network Instructions)
+func TestAVX512VNNI(t *testing.T) {
+	got := CPU.AVX512VNNI()
+	expected := CPU.Features&AVX512VNNI == AVX512VNNI
+	if got != expected {
+		t.Fatalf("AVX512VNNI: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VNNI Support:", got)
 }
 
 // TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
