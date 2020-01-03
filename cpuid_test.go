@@ -274,7 +274,7 @@ func TestCX16(t *testing.T) {
 	t.Log("CX16 Support:", got)
 }
 
-// TestSGX tests SGX() function
+// TestSGX tests SGX detection
 func TestSGX(t *testing.T) {
 	got := CPU.SGX.Available
 	expected := CPU.Features&SGX == SGX
@@ -282,6 +282,16 @@ func TestSGX(t *testing.T) {
 		t.Fatalf("SGX: expected %v, got %v", expected, got)
 	}
 	t.Log("SGX Support:", got)
+}
+
+// TestSGXLC tests SGX Launch Control detection
+func TestSGXLC(t *testing.T) {
+	got := CPU.SGX.LaunchControl
+	expected := CPU.Features&SGXLC == SGXLC
+	if got != expected {
+		t.Fatalf("SGX: expected %v, got %v", expected, got)
+	}
+	t.Log("SGX Launch Control Support:", got)
 }
 
 // TestBMI1 tests BMI1() function
