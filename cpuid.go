@@ -79,6 +79,7 @@ const (
 	RDTSCP                  // RDTSCP Instruction
 	CX16                    // CMPXCHG16B Instruction
 	SGX                     // Software Guard Extensions
+	SGXLC                   // Software Guard Extensions Launch Control
 	IBPB                    // Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
 	STIBP                   // Single Thread Indirect Branch Predictors
 	VMX                     // Virtual Machine Extensions
@@ -138,6 +139,7 @@ var flagNames = map[Flags]string{
 	RDTSCP:      "RDTSCP",      // RDTSCP Instruction
 	CX16:        "CX16",        // CMPXCHG16B Instruction
 	SGX:         "SGX",         // Software Guard Extensions
+	SGXLC:       "SGXLC",       // Software Guard Extensions Launch Control
 	IBPB:        "IBPB",        // Indirect Branch Restricted Speculation and Indirect Branch Predictor Barrier
 	STIBP:       "STIBP",       // Single Thread Indirect Branch Predictors
 	VMX:         "VMX",         // Virtual Machine Extensions
@@ -202,7 +204,7 @@ func Detect() {
 	CPU.CacheLine = cacheLine()
 	CPU.Family, CPU.Model = familyModel()
 	CPU.Features = support()
-	CPU.SGX = hasSGX(CPU.Features&SGX != 0)
+	CPU.SGX = hasSGX(CPU.Features&SGX != 0, CPU.Features&SGXLC != 0)
 	CPU.ThreadsPerCore = threadsPerCore()
 	CPU.LogicalCores = logicalCores()
 	CPU.PhysicalCores = physicalCores()
@@ -786,18 +788,21 @@ func (c *CPUInfo) cacheSize() {
 
 type SGXSupport struct {
 	Available           bool
+	LaunchControl       bool
 	SGX1Supported       bool
 	SGX2Supported       bool
 	MaxEnclaveSizeNot64 int64
 	MaxEnclaveSize64    int64
 }
 
-func hasSGX(available bool) (rval SGXSupport) {
+func hasSGX(available, lc bool) (rval SGXSupport) {
 	rval.Available = available
 
 	if !available {
 		return
 	}
+
+	rval.LaunchControl = lc
 
 	a, _, _, d := cpuidex(0x12, 0)
 	rval.SGX1Supported = a&0x01 != 0
@@ -920,6 +925,9 @@ func support() Flags {
 		}
 		if edx&(1<<26) != 0 {
 			rval |= IBPB
+		}
+		if ecx&(1<<30) != 0 {
+			rval |= SGXLC
 		}
 		if edx&(1<<27) != 0 {
 			rval |= STIBP
