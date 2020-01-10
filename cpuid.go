@@ -786,6 +786,11 @@ func (c *CPUInfo) cacheSize() {
 	return
 }
 
+type SGXEPCSection struct {
+	BaseAddress uint64
+	EPCSize     uint64
+}
+
 type SGXSupport struct {
 	Available           bool
 	LaunchControl       bool
@@ -793,6 +798,7 @@ type SGXSupport struct {
 	SGX2Supported       bool
 	MaxEnclaveSizeNot64 int64
 	MaxEnclaveSize64    int64
+	EPCSections         []SGXEPCSection
 }
 
 func hasSGX(available, lc bool) (rval SGXSupport) {
@@ -809,6 +815,24 @@ func hasSGX(available, lc bool) (rval SGXSupport) {
 	rval.SGX2Supported = a&0x02 != 0
 	rval.MaxEnclaveSizeNot64 = 1 << (d & 0xFF)     // pow 2
 	rval.MaxEnclaveSize64 = 1 << ((d >> 8) & 0xFF) // pow 2
+	rval.EPCSections = make([]SGXEPCSection, 0)
+
+	for subleaf := uint32(2); subleaf < 2+8; subleaf++ {
+		eax, ebx, ecx, edx := cpuidex(0x12, subleaf)
+		leafType := eax & 0xf
+
+		if leafType == 0 {
+			// Invalid subleaf, stop iterating
+			break
+		} else if leafType == 1 {
+			// EPC Section subleaf
+			baseAddress := uint64(eax&0xfffff000) + (uint64(ebx&0x000fffff) << 32)
+			size := uint64(ecx&0xfffff000) + (uint64(edx&0x000fffff) << 32)
+
+			section := SGXEPCSection{BaseAddress: baseAddress, EPCSize: size}
+			rval.EPCSections = append(rval.EPCSections, section)
+		}
+	}
 
 	return
 }

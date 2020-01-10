@@ -282,6 +282,17 @@ func TestSGX(t *testing.T) {
 		t.Fatalf("SGX: expected %v, got %v", expected, got)
 	}
 	t.Log("SGX Support:", got)
+
+	var total uint64 = 0
+	if CPU.SGX.Available {
+		for _, s := range CPU.SGX.EPCSections {
+			t.Logf("SGX EPC section: base address 0x%x, size %v", s.BaseAddress, s.EPCSize)
+			total += s.EPCSize
+		}
+		if total == 0 {
+			t.Fatal("SGX enabled without any available EPC memory")
+		}
+	}
 }
 
 // TestSGXLC tests SGX Launch Control detection
