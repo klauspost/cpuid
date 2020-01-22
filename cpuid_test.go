@@ -585,34 +585,34 @@ func TestAVX512VBMI(t *testing.T) {
 	t.Log("AVX512VBMI Support:", got)
 }
 
-// TestAVX512_VBMI2 tests AVX512_VBMI2 function (AVX-512 Vector Bit Manipulation Instructions, Version 2)
+// TestAVX512_VBMI2 tests AVX512VBMI2 function (AVX-512 Vector Bit Manipulation Instructions, Version 2)
 func TestAVX512_VBMI2(t *testing.T) {
-	got := CPU.AVX512_VBMI2()
-	expected := CPU.Features&AVX512_VBMI2 == AVX512_VBMI2
+	got := CPU.AVX512VBMI2()
+	expected := CPU.Features&AVX512VBMI2 == AVX512VBMI2
 	if got != expected {
-		t.Fatalf("AVX512_VBMI2: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512VBMI2: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_VBMI2 Support:", got)
+	t.Log("AVX512VBMI2 Support:", got)
 }
 
-// TestAVX512_VNNI tests AVX512_VNNI() function (AVX-512 Vector Neural Network Instructions)
+// TestAVX512_VNNI tests AVX512VNNI() function (AVX-512 Vector Neural Network Instructions)
 func TestAVX512_VNNI(t *testing.T) {
-	got := CPU.AVX512_VNNI()
-	expected := CPU.Features&AVX512_VNNI == AVX512_VNNI
+	got := CPU.AVX512VNNI()
+	expected := CPU.Features&AVX512VNNI == AVX512VNNI
 	if got != expected {
-		t.Fatalf("AVX512_VNNI: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512VNNI: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_VNNI Support:", got)
+	t.Log("AVX512VNNI Support:", got)
 }
 
-// TestAVX512_VPOPCNTDQ tests AVX512_VPOPCNTDQ() function (AVX-512 Vector Population Count Doubleword and Quadword)
+// TestAVX512_VPOPCNTDQ tests AVX512VPOPCNTDQ() function (AVX-512 Vector Population Count Doubleword and Quadword)
 func TestAVX512_VPOPCNTDQ(t *testing.T) {
-	got := CPU.AVX512_VPOPCNTDQ()
-	expected := CPU.Features&AVX512_VPOPCNTDQ == AVX512_VPOPCNTDQ
+	got := CPU.AVX512VPOPCNTDQ()
+	expected := CPU.Features&AVX512VPOPCNTDQ == AVX512VPOPCNTDQ
 	if got != expected {
-		t.Fatalf("AVX512_VPOPCNTDQ: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512VPOPCNTDQ: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_VPOPCNTDQ Support:", got)
+	t.Log("AVX512VPOPCNTDQ Support:", got)
 }
 
 // TestGFNI tests GFNI() function (Galois Field New Instructions)
@@ -635,14 +635,14 @@ func TestVAES(t *testing.T) {
 	t.Log("VAES Support:", got)
 }
 
-// TestAVX512_BITALG tests AVX512_BITALG() function (AVX-512 Bit Algorithms)
+// TestAVX512_BITALG tests AVX512BITALG() function (AVX-512 Bit Algorithms)
 func TestAVX512_BITALG(t *testing.T) {
-	got := CPU.AVX512_BITALG()
-	expected := CPU.Features&AVX512_BITALG == AVX512_BITALG
+	got := CPU.AVX512BITALG()
+	expected := CPU.Features&AVX512BITALG == AVX512BITALG
 	if got != expected {
-		t.Fatalf("AVX512_BITALG: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512BITALG: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_BITALG Support:", got)
+	t.Log("AVX512BITALG Support:", got)
 }
 
 // TestVPCLMULQDQ tests VPCLMULQDQ() function (Carry-Less Multiplication Quadword)
@@ -655,24 +655,24 @@ func TestVPCLMULQDQ(t *testing.T) {
 	t.Log("VPCLMULQDQ Support:", got)
 }
 
-// TestAVX512_BF16 tests AVX512_BF16() function (AVX-512 BFLOAT16 Instructions)
+// TestAVX512_BF16 tests AVX512BF16() function (AVX-512 BFLOAT16 Instructions)
 func TestAVX512_BF16(t *testing.T) {
-	got := CPU.AVX512_BF16()
-	expected := CPU.Features&AVX512_BF16 == AVX512_BF16
+	got := CPU.AVX512BF16()
+	expected := CPU.Features&AVX512BF16 == AVX512BF16
 	if got != expected {
-		t.Fatalf("AVX512_BF16: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512BF16: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_BF16 Support:", got)
+	t.Log("AVX512BF16 Support:", got)
 }
 
-// TestAVX512_VP2INTERSECT tests AVX512_VP2INTERSECT() function (AVX-512 Intersect for D/Q)
+// TestAVX512_VP2INTERSECT tests AVX512VP2INTERSECT() function (AVX-512 Intersect for D/Q)
 func TestAVX512_VP2INTERSECT(t *testing.T) {
-	got := CPU.AVX512_VP2INTERSECT()
-	expected := CPU.Features&AVX512_VP2INTERSECT == AVX512_VP2INTERSECT
+	got := CPU.AVX512VP2INTERSECT()
+	expected := CPU.Features&AVX512VP2INTERSECT == AVX512VP2INTERSECT
 	if got != expected {
-		t.Fatalf("AVX512_VP2INTERSECT: expected %v, got %v", expected, got)
+		t.Fatalf("AVX512VP2INTERSECT: expected %v, got %v", expected, got)
 	}
-	t.Log("AVX512_VP2INTERSECT Support:", got)
+	t.Log("AVX512VP2INTERSECT Support:", got)
 }
 
 // TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
