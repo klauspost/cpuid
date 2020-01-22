@@ -116,6 +116,16 @@ func TestAmd3dnowExt(t *testing.T) {
 	t.Log("AMD3DNOWEXT Support:", got)
 }
 
+// TestVMX tests VMX() function
+func TestVMX(t *testing.T) {
+	got := cpu.vmx()
+	expected := cpu.features&vmx == vmx
+	if got != expected {
+		t.Fatalf("VMX: expected %v, got %v", expected, got)
+	}
+	t.Log("VMX Support:", got)
+}
+
 // TestMMX tests MMX() function
 func TestMMX(t *testing.T) {
 	got := cpu.mmx()
@@ -266,7 +276,7 @@ func TestCX16(t *testing.T) {
 	t.Log("CX16 Support:", got)
 }
 
-// TestSGX tests SGX() function
+// TestSGX tests SGX detection
 func TestSGX(t *testing.T) {
 	got := cpu.sgx.available
 	expected := cpu.features&sgx == sgx
@@ -274,6 +284,27 @@ func TestSGX(t *testing.T) {
 		t.Fatalf("SGX: expected %v, got %v", expected, got)
 	}
 	t.Log("SGX Support:", got)
+
+	var total uint64 = 0
+	if cpu.sgx.available {
+		for _, s := range cpu.sgx.epcsections {
+			t.Logf("SGX EPC section: base address 0x%x, size %v", s.baseaddress, s.epcsize)
+			total += s.epcsize
+		}
+		if total == 0 {
+			t.Fatal("SGX enabled without any available EPC memory")
+		}
+	}
+}
+
+// TestSGXLC tests SGX Launch Control detection
+func TestSGXLC(t *testing.T) {
+	got := cpu.sgx.launchcontrol
+	expected := cpu.features&sgxlc == sgxlc
+	if got != expected {
+		t.Fatalf("SGX: expected %v, got %v", expected, got)
+	}
+	t.Log("SGX Launch Control Support:", got)
 }
 
 // TestBMI1 tests BMI1() function
@@ -546,7 +577,7 @@ func TestAVX512VL(t *testing.T) {
 	t.Log("AVX512VL Support:", got)
 }
 
-// TestAVX512VL tests AVX512VBMI() function (AVX-512 Vector Bit Manipulation Instructions)
+// TestAVX512VBMI tests AVX512VBMI() function (AVX-512 Vector Bit Manipulation Instructions)
 func TestAVX512VBMI(t *testing.T) {
 	got := cpu.avx512vbmi()
 	expected := cpu.features&avx512vbmi == avx512vbmi
@@ -554,6 +585,96 @@ func TestAVX512VBMI(t *testing.T) {
 		t.Fatalf("AVX512VBMI: expected %v, got %v", expected, got)
 	}
 	t.Log("AVX512VBMI Support:", got)
+}
+
+// TestAVX512_VBMI2 tests AVX512VBMI2 function (AVX-512 Vector Bit Manipulation Instructions, Version 2)
+func TestAVX512_VBMI2(t *testing.T) {
+	got := cpu.avx512vbmi2()
+	expected := cpu.features&avx512vbmi2 == avx512vbmi2
+	if got != expected {
+		t.Fatalf("AVX512VBMI2: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VBMI2 Support:", got)
+}
+
+// TestAVX512_VNNI tests AVX512VNNI() function (AVX-512 Vector Neural Network Instructions)
+func TestAVX512_VNNI(t *testing.T) {
+	got := cpu.avx512vnni()
+	expected := cpu.features&avx512vnni == avx512vnni
+	if got != expected {
+		t.Fatalf("AVX512VNNI: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VNNI Support:", got)
+}
+
+// TestAVX512_VPOPCNTDQ tests AVX512VPOPCNTDQ() function (AVX-512 Vector Population Count Doubleword and Quadword)
+func TestAVX512_VPOPCNTDQ(t *testing.T) {
+	got := cpu.avx512vpopcntdq()
+	expected := cpu.features&avx512vpopcntdq == avx512vpopcntdq
+	if got != expected {
+		t.Fatalf("AVX512VPOPCNTDQ: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VPOPCNTDQ Support:", got)
+}
+
+// TestGFNI tests GFNI() function (Galois Field New Instructions)
+func TestGFNI(t *testing.T) {
+	got := cpu.gfni()
+	expected := cpu.features&gfni == gfni
+	if got != expected {
+		t.Fatalf("GFNI: expected %v, got %v", expected, got)
+	}
+	t.Log("GFNI Support:", got)
+}
+
+// TestVAES tests VAES() function (Vector AES)
+func TestVAES(t *testing.T) {
+	got := cpu.vaes()
+	expected := cpu.features&vaes == vaes
+	if got != expected {
+		t.Fatalf("VAES: expected %v, got %v", expected, got)
+	}
+	t.Log("VAES Support:", got)
+}
+
+// TestAVX512_BITALG tests AVX512BITALG() function (AVX-512 Bit Algorithms)
+func TestAVX512_BITALG(t *testing.T) {
+	got := cpu.avx512bitalg()
+	expected := cpu.features&avx512bitalg == avx512bitalg
+	if got != expected {
+		t.Fatalf("AVX512BITALG: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512BITALG Support:", got)
+}
+
+// TestVPCLMULQDQ tests VPCLMULQDQ() function (Carry-Less Multiplication Quadword)
+func TestVPCLMULQDQ(t *testing.T) {
+	got := cpu.vpclmulqdq()
+	expected := cpu.features&vpclmulqdq == vpclmulqdq
+	if got != expected {
+		t.Fatalf("VPCLMULQDQ: expected %v, got %v", expected, got)
+	}
+	t.Log("VPCLMULQDQ Support:", got)
+}
+
+// TestAVX512_BF16 tests AVX512BF16() function (AVX-512 BFLOAT16 Instructions)
+func TestAVX512_BF16(t *testing.T) {
+	got := cpu.avx512bf16()
+	expected := cpu.features&avx512bf16 == avx512bf16
+	if got != expected {
+		t.Fatalf("AVX512BF16: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512BF16 Support:", got)
+}
+
+// TestAVX512_VP2INTERSECT tests AVX512VP2INTERSECT() function (AVX-512 Intersect for D/Q)
+func TestAVX512_VP2INTERSECT(t *testing.T) {
+	got := cpu.avx512vp2intersect()
+	expected := cpu.features&avx512vp2intersect == avx512vp2intersect
+	if got != expected {
+		t.Fatalf("AVX512VP2INTERSECT: expected %v, got %v", expected, got)
+	}
+	t.Log("AVX512VP2INTERSECT Support:", got)
 }
 
 // TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
@@ -646,14 +767,14 @@ func TestVM(t *testing.T) {
 	t.Log("Vendor ID:", cpu.vm())
 }
 
-// NSC returns true if vendor is recognized as National Semiconductor
+// TSX returns true if cpu supports transactional sync extensions.
 func TestCPUInfo_TSX(t *testing.T) {
 	got := cpu.tsx()
 	expected := cpu.hle() && cpu.rtm()
 	if got != expected {
-		t.Fatalf("TestNSC: expected %v, got %v", expected, got)
+		t.Fatalf("TestCPUInfo_TSX: expected %v, got %v", expected, got)
 	}
-	t.Log("TestNSC:", got)
+	t.Log("TestCPUInfo_TSX:", got)
 }
 
 // Test RTCounter function
