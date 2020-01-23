@@ -283,13 +283,15 @@ func TestSGX(t *testing.T) {
 	}
 	t.Log("SGX Support:", got)
 
-	var total uint64 = 0
 	if CPU.SGX.Available {
+		var total uint64 = 0
+		leaves := false
 		for _, s := range CPU.SGX.EPCSections {
 			t.Logf("SGX EPC section: base address 0x%x, size %v", s.BaseAddress, s.EPCSize)
 			total += s.EPCSize
+			leaves = true
 		}
-		if total == 0 {
+		if leaves && total == 0 {
 			t.Fatal("SGX enabled without any available EPC memory")
 		}
 	}
