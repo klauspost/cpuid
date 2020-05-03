@@ -10,7 +10,10 @@
 // Package home: https://github.com/klauspost/cpuid
 package cpuid
 
-import "strings"
+import (
+	"math"
+	"strings"
+)
 
 // Vendor is a representation of a CPU vendor.
 type Vendor int
@@ -659,11 +662,14 @@ func brandName() string {
 
 func threadsPerCore() int {
 	mfi := maxFunctionID()
-	if mfi < 0x4 || vendorID() != Intel {
+	if mfi < 0x4 || (vendorID() != Intel && vendorID() != AMD) {
 		return 1
 	}
 
 	if mfi < 0xb {
+		if vendorID() != Intel {
+			return 1
+		}
 		_, b, _, d := cpuid(1)
 		if (d & (1 << 28)) != 0 {
 			// v will contain logical core count
@@ -727,6 +733,13 @@ func physicalCores() int {
 	case Intel:
 		return logicalCores() / threadsPerCore()
 	case AMD, Hygon:
+		lc := logicalCores()
+		tpc := threadsPerCore()
+		if lc > 0 && tpc > 0 {
+			return lc / tpc
+		}
+		// The following is inaccurate on AMD EPYC 7742 64-Core Processor
+
 		if maxExtendedFunction() >= 0x80000008 {
 			_, _, c, _ := cpuid(0x80000008)
 			return int(c&0xff) + 1
@@ -837,6 +850,49 @@ func (c *CPUInfo) cacheSize() {
 		}
 		_, _, ecx, _ = cpuid(0x80000006)
 		c.Cache.L2 = int(((ecx >> 16) & 0xFFFF) * 1024)
+
+		// CPUID Fn8000_001D_EAX_x[N:0] Cache Properties
+		if maxExtendedFunction() < 0x8000001D {
+			return
+		}
+		for i := uint32(0); i < math.MaxUint32; i++ {
+			eax, ebx, ecx, _ := cpuidex(0x8000001D, i)
+
+			level := (eax >> 5) & 7
+			cacheNumSets := ecx + 1
+			cacheLineSize := 1 + (ebx & 2047)
+			cachePhysPartitions := 1 + ((ebx >> 12) & 511)
+			cacheNumWays := 1 + ((ebx >> 22) & 511)
+
+			typ := eax & 15
+			size := int(cacheNumSets * cacheLineSize * cachePhysPartitions * cacheNumWays)
+			if typ == 0 {
+				return
+			}
+
+			switch level {
+			case 1:
+				switch typ {
+				case 1:
+					// Data cache
+					c.Cache.L1D = size
+				case 2:
+					// Inst cache
+					c.Cache.L1I = size
+				default:
+					if c.Cache.L1D < 0 {
+						c.Cache.L1I = size
+					}
+					if c.Cache.L1I < 0 {
+						c.Cache.L1I = size
+					}
+				}
+			case 2:
+				c.Cache.L2 = size
+			case 3:
+				c.Cache.L3 = size
+			}
+		}
 	}
 
 	return
@@ -954,7 +1010,11 @@ func support() Flags {
 			rval |= HTT
 		}
 	}
-
+	if vend == AMD && (d&(1<<28)) != 0 && mfi >= 4 {
+		if threadsPerCore() > 1 {
+			rval |= HTT
+		}
+	}
 	// Check XGETBV, OXSAVE and AVX bits
 	if c&(1<<26) != 0 && c&(1<<27) != 0 && c&(1<<28) != 0 {
 		// Check for OS support
