@@ -15,6 +15,9 @@ import (
 	"strings"
 )
 
+// AMD refererence: https://www.amd.com/system/files/TechDocs/25481.pdf
+// and Processor Programming Reference (PPR)
+
 // Vendor is a representation of a CPU vendor.
 type Vendor int
 
@@ -186,7 +189,7 @@ type CPUInfo struct {
 		L1I int // L1 Instruction Cache (per core or shared). Will be -1 if undetected
 		L1D int // L1 Data Cache (per core or shared). Will be -1 if undetected
 		L2  int // L2 Cache (per core or shared). Will be -1 if undetected
-		L3  int // L3 Instruction Cache (per core or shared). Will be -1 if undetected
+		L3  int // L3 Cache (per core, per ccx or shared). Will be -1 if undetected
 	}
 	SGX       SGXSupport
 	maxFunc   uint32

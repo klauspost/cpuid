@@ -56,7 +56,7 @@ func main() {
 }
 
 func ParseURL(s string, gw *zip.Writer) error {
-	if strings.Contains(s, "CPUID.txt") {
+	if strings.HasSuffix(s, "CPUID.txt") {
 		fmt.Println("Adding", "http://users.atw.hu/instlatx64/"+s)
 		resp, err := http.Get("http://users.atw.hu/instlatx64/" + s)
 		if err != nil {
