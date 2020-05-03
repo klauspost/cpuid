@@ -27,6 +27,7 @@ func TestCPUID(t *testing.T) {
 	t.Log("L1 Data Cache:", cpu.cache.l1d, "bytes")
 	t.Log("L2 Cache:", cpu.cache.l2, "bytes")
 	t.Log("L3 Cache:", cpu.cache.l3, "bytes")
+	t.Log("Hz:", cpu.hz, "Hz")
 
 	if cpu.sse2() {
 		t.Log("We have SSE2")
