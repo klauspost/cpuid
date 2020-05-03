@@ -178,6 +178,7 @@ type CPUInfo struct {
 	Family         int    // CPU family number
 	Model          int    // CPU model number
 	CacheLine      int    // Cache line size in bytes. Will be 0 if undetectable.
+	Hz             int64  // Clock speed, if known
 	Cache          struct {
 		L1I int // L1 Instruction Cache (per core or shared). Will be -1 if undetected
 		L1D int // L1 Data Cache (per core or shared). Will be -1 if undetected
@@ -225,6 +226,7 @@ func Detect() {
 	CPU.LogicalCores = logicalCores()
 	CPU.PhysicalCores = physicalCores()
 	CPU.VendorID = vendorID()
+	CPU.Hz = hertz(CPU.BrandName)
 	CPU.cacheSize()
 }
 
@@ -599,6 +601,65 @@ func (c CPUInfo) LogicalCPU() int {
 	}
 	_, ebx, _, _ := cpuid(1)
 	return int(ebx >> 24)
+}
+
+// hertz tries to compute the clock speed of the CPU. If leaf 15 is
+// supported, use it, otherwise parse the brand string. Yes, really.
+func hertz(model string) int64 {
+	mfi := maxFunctionID()
+	if mfi >= 0x15 {
+		eax, ebx, ecx, _ := cpuid(0x15)
+		if eax != 0 && ebx != 0 && ecx != 0 {
+			return int64((int64(ecx) * int64(ebx)) / int64(eax))
+		}
+	}
+	// computeHz determines the official rated speed of a CPU from its brand
+	// string. This insanity is *actually the official documented way to do
+	// this according to Intel*, prior to leaf 0x15 existing. The official
+	// documentation only shows this working for exactly `x.xx` or `xxxx`
+	// cases, e.g., `2.50GHz` or `1300MHz`; this parser will accept other
+	// sizes.
+	hz := strings.LastIndex(model, "Hz")
+	if hz < 3 {
+		return -1
+	}
+	var multiplier int64
+	switch model[hz-1] {
+	case 'M':
+		multiplier = 1000 * 1000
+	case 'G':
+		multiplier = 1000 * 1000 * 1000
+	case 'T':
+		multiplier = 1000 * 1000 * 1000 * 1000
+	}
+	if multiplier == 0 {
+		return -1
+	}
+	freq := int64(0)
+	divisor := int64(0)
+	decimalShift := int64(1)
+	var i int
+	for i = hz - 2; i >= 0 && model[i] != ' '; i-- {
+		if model[i] >= '0' && model[i] <= '9' {
+			freq += int64(model[i]-'0') * decimalShift
+			decimalShift *= 10
+		} else if model[i] == '.' {
+			if divisor != 0 {
+				return -1
+			}
+			divisor = decimalShift
+		} else {
+			return -1
+		}
+	}
+	// we didn't find a space
+	if i < 0 {
+		return -1
+	}
+	if divisor != 0 {
+		return (freq * multiplier) / divisor
+	}
+	return freq * multiplier
 }
 
 // VM Will return true if the cpu id indicates we are in
