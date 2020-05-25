@@ -13,9 +13,11 @@ import (
 // obviously differ on each machine.
 func TestCPUID(t *testing.T) {
 	n := maxFunctionID()
-	t.Logf("Max Function:0x%x\n", n)
+	t.Logf("Max Function:0x%x", n)
 	n = maxExtendedFunction()
-	t.Logf("Max Extended Function:0x%x\n", n)
+	t.Logf("Max Extended Function:0x%x", n)
+	t.Log("VendorString:", cpu.vendorstring)
+	t.Log("VendorID:", cpu.vendorid)
 	t.Log("Name:", cpu.brandname)
 	t.Log("PhysicalCores:", cpu.physicalcores)
 	t.Log("ThreadsPerCore:", cpu.threadspercore)
