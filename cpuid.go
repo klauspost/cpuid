@@ -34,6 +34,8 @@ const (
 	XenHVM
 	Bhyve
 	Hygon
+	SiS
+	RDC
 )
 
 const (
@@ -177,6 +179,7 @@ var flagNames = map[Flags]string{
 type CPUInfo struct {
 	BrandName      string // Brand name reported by the CPU
 	VendorID       Vendor // Comparable CPU vendor ID
+	VendorString   string // Raw vendor string.
 	Features       Flags  // Features of the CPU
 	PhysicalCores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	ThreadsPerCore int    // Number of threads per physical core. Will be 1 if undetectable.
@@ -231,7 +234,7 @@ func Detect() {
 	CPU.ThreadsPerCore = threadsPerCore()
 	CPU.LogicalCores = logicalCores()
 	CPU.PhysicalCores = physicalCores()
-	CPU.VendorID = vendorID()
+	CPU.VendorID, CPU.VendorString = vendorID()
 	CPU.Hz = hertz(CPU.BrandName)
 	CPU.cacheSize()
 }
@@ -726,12 +729,14 @@ func brandName() string {
 
 func threadsPerCore() int {
 	mfi := maxFunctionID()
-	if mfi < 0x4 || (vendorID() != Intel && vendorID() != AMD) {
+	vend, _ := vendorID()
+
+	if mfi < 0x4 || (vend != Intel && vend != AMD) {
 		return 1
 	}
 
 	if mfi < 0xb {
-		if vendorID() != Intel {
+		if vend != Intel {
 			return 1
 		}
 		_, b, _, d := cpuid(1)
@@ -758,7 +763,8 @@ func threadsPerCore() int {
 
 func logicalCores() int {
 	mfi := maxFunctionID()
-	switch vendorID() {
+	v, _ := vendorID()
+	switch v {
 	case Intel:
 		// Use this on old Intel processors
 		if mfi < 0xb {
@@ -793,7 +799,8 @@ func familyModel() (int, int) {
 }
 
 func physicalCores() int {
-	switch vendorID() {
+	v, _ := vendorID()
+	switch v {
 	case Intel:
 		return logicalCores() / threadsPerCore()
 	case AMD, Hygon:
@@ -828,16 +835,20 @@ var vendorMapping = map[string]Vendor{
 	"XenVMMXenVMM": XenHVM,
 	"bhyve bhyve ": Bhyve,
 	"HygonGenuine": Hygon,
+	"Vortex86 SoC": SiS,
+	"SiS SiS SiS ": SiS,
+	"RiseRiseRise": SiS,
+	"Genuine  RDC": RDC,
 }
 
-func vendorID() Vendor {
+func vendorID() (Vendor, string) {
 	_, b, c, d := cpuid(0)
-	v := valAsString(b, d, c)
-	vend, ok := vendorMapping[string(v)]
+	v := string(valAsString(b, d, c))
+	vend, ok := vendorMapping[v]
 	if !ok {
-		return Other
+		return Other, v
 	}
-	return vend
+	return vend, v
 }
 
 func cacheLine() int {
@@ -860,7 +871,7 @@ func (c *CPUInfo) cacheSize() {
 	c.Cache.L1I = -1
 	c.Cache.L2 = -1
 	c.Cache.L3 = -1
-	vendor := vendorID()
+	vendor, _ := vendorID()
 	switch vendor {
 	case Intel:
 		if maxFunctionID() < 4 {
@@ -1015,7 +1026,7 @@ func hasSGX(available, lc bool) (rval SGXSupport) {
 
 func support() Flags {
 	mfi := maxFunctionID()
-	vend := vendorID()
+	vend, _ := vendorID()
 	if mfi < 0x1 {
 		return 0
 	}
@@ -1243,7 +1254,7 @@ func support() Flags {
 		   AV_CPU_FLAG_SSE2 and AV_CPU_FLAG_SSE2SLOW are both set in this case
 		   so that SSE2 is used unless explicitly disabled by checking
 		   AV_CPU_FLAG_SSE2SLOW. */
-		if vendorID() != Intel &&
+		if vend != Intel &&
 			rval&SSE2 != 0 && (c&0x00000040) == 0 {
 			rval |= SSE2SLOW
 		}
@@ -1259,7 +1270,7 @@ func support() Flags {
 			}
 		}
 
-		if vendorID() == Intel {
+		if vend == Intel {
 			family, model := familyModel()
 			if family == 6 && (model == 9 || model == 13 || model == 14) {
 				/* 6/9 (pentium-m "banias"), 6/13 (pentium-m "dothan"), and
