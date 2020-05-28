@@ -15,8 +15,9 @@ go:
   - 1.14.x
   - master
 
-script: 
- - go test ./...
+script:
+  - go vet ./...
+  - go test ./...
 
 stages:
   - gofmt
@@ -35,7 +36,6 @@ matrix:
         - diff <(gofmt -d .) <(printf "")
         - go install github.com/klauspost/asmfmt/cmd/asmfmt
         - diff <(asmfmt -d .) <(printf "")
-        - go vet ./...
     - stage: i386
       go: 1.14.x
       os: linux
