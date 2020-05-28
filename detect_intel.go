@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Klaus Post, released under MIT License. See LICENSE file.
 
-// +build 386,!gccgo amd64,!gccgo
+//+build 386,!gccgo amd64,!gccgo,!noasm,!appengine
 
 package cpuid
 
