@@ -21,3 +21,7 @@ func initCPU() {
 		return 0, 0, 0, 0
 	}
 }
+
+func supportArm64() (flags Flags) {
+	return
+}
