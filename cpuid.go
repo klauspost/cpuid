@@ -745,7 +745,7 @@ func (f Flags) String() string {
 	return strings.Join(f.Strings(), ",")
 }
 
-// Strings returns and array of the detected features.
+// Strings returns an array of the detected features.
 func (f Flags) Strings() []string {
 	r := make([]string, 0, 20)
 	for i := uint(0); i < 64; i++ {
@@ -764,7 +764,7 @@ func (f ArmFlags) String() string {
 	return strings.Join(f.Strings(), ",")
 }
 
-// Strings returns and array of the detected features.
+// Strings returns an array of the detected features.
 func (f ArmFlags) Strings() []string {
 	r := make([]string, 0, 20)
 	for i := uint(0); i < 64; i++ {
