@@ -275,6 +275,12 @@ func init() {
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
 func detect() {
+	// Set defaults
+	cpu.threadspercore = 1
+	cpu.cache.l1i = -1
+	cpu.cache.l1d = -1
+	cpu.cache.l2 = -1
+	cpu.cache.l3 = -1
 	addInfo(&cpu)
 }
 
@@ -724,7 +730,7 @@ func (c cpuInfo) vm() bool {
 // Flags contains detected cpu features and characteristics
 type flags uint64
 
-// Flags contains detected ARM cpu features and characteristics
+// ArmFlags contains detected ARM cpu features and characteristics
 type armflags uint64
 
 // String returns a string representation of the detected
