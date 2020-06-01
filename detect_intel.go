@@ -16,6 +16,18 @@ func initCPU() {
 	rdtscpAsm = asmRdtscpAsm
 }
 
-func supportArm() (f uint64) {
-	return
+func addInfo(c *CPUInfo) {
+	c.maxFunc = maxFunctionID()
+	c.maxExFunc = maxExtendedFunction()
+	c.BrandName = brandName()
+	c.CacheLine = cacheLine()
+	c.Family, c.Model = familyModel()
+	c.Features = support()
+	c.SGX = hasSGX(c.Features&SGX != 0, c.Features&SGXLC != 0)
+	c.ThreadsPerCore = threadsPerCore()
+	c.LogicalCores = logicalCores()
+	c.PhysicalCores = physicalCores()
+	c.VendorID, c.VendorString = vendorID()
+	c.Hz = hertz(c.BrandName)
+	c.cacheSize()
 }

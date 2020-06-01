@@ -22,8 +22,8 @@ import (
 	"unicode/utf8"
 )
 
-var inFiles = []string{"cpuid.go", "cpuid_test.go", "detect_arm64.go"}
-var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s", "detect_ref.go", "detect_intel.go"}
+var inFiles = []string{"cpuid.go", "cpuid_test.go", "detect_arm64.go", "detect_ref.go", "detect_intel.go"}
+var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s"}
 var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
 	initRewrite("CPUInfo -> cpuInfo"),
@@ -108,7 +108,7 @@ func main() {
 		// Remove package documentation and insert information
 		s := buf.String()
 		ind := strings.Index(buf.String(), "\npackage cpuid")
-		if i := strings.Index(buf.String(), "\n// +build "); i > 0 {
+		if i := strings.Index(buf.String(), "\n//+build "); i > 0 {
 			ind = i
 		}
 		s = s[ind:]

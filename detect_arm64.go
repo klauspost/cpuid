@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Klaus Post, released under MIT License. See LICENSE file.
 
-// +build arm64,!gccgo,!noasm,!appengine
+//+build arm64,!gccgo,!noasm,!appengine
 
 package cpuid
 
@@ -15,7 +15,7 @@ func initCPU() {
 	rdtscpAsm = func() (a, b, c, d uint32) { return 0, 0, 0, 0 }
 }
 
-func supportArm() (f uint64) {
+func addInfo(c *CPUInfo) {
 	// 	midr := getMidr()
 
 	// MIDR_EL1 - Main ID Register
@@ -64,23 +64,24 @@ func supportArm() (f uint64) {
 	// | EL0                          | [3-0]   |    n    |
 	// x--------------------------------------------------x
 
+	var f ArmFlags
 	// if procFeatures&(0xf<<48) != 0 {
 	// 	fmt.Println("DIT")
 	// }
 	if procFeatures&(0xf<<32) != 0 {
-		f |= ARM_SVE
+		f |= SVE
 	}
 	if procFeatures&(0xf<<20) != 15<<20 {
-		f |= ARM_ASIMD
+		f |= ASIMD
 		if procFeatures&(0xf<<20) == 1<<20 {
 			// https://developer.arm.com/docs/ddi0595/b/aarch64-system-registers/id_aa64pfr0_el1
 			// 0b0001 --> As for 0b0000, and also includes support for half-precision floating-point arithmetic.
-			f |= ARM_FPHP
-			f |= ARM_ASIMDHP
+			f |= FPHP
+			f |= ASIMDHP
 		}
 	}
 	if procFeatures&(0xf<<16) != 0 {
-		f |= ARM_FP
+		f |= FP
 	}
 
 	instAttrReg0, instAttrReg1 := getInstAttributes()
@@ -123,44 +124,44 @@ func supportArm() (f uint64) {
 	// 	fmt.Println("FHM")
 	// }
 	if instAttrReg0&(0xf<<44) != 0 {
-		f |= ARM_ASIMDDP
+		f |= ASIMDDP
 	}
 	if instAttrReg0&(0xf<<40) != 0 {
-		f |= ARM_SM4
+		f |= SM4
 	}
 	if instAttrReg0&(0xf<<36) != 0 {
-		f |= ARM_SM3
+		f |= SM3
 	}
 	if instAttrReg0&(0xf<<32) != 0 {
-		f |= ARM_SHA3
+		f |= SHA3
 	}
 	if instAttrReg0&(0xf<<28) != 0 {
-		f |= ARM_ASIMDRDM
+		f |= ASIMDRDM
 	}
 	if instAttrReg0&(0xf<<20) != 0 {
-		f |= ARM_ATOMICS
+		f |= ATOMICS
 	}
 	if instAttrReg0&(0xf<<16) != 0 {
-		f |= ARM_CRC32
+		f |= CRC32
 	}
 	if instAttrReg0&(0xf<<12) != 0 {
-		f |= ARM_SHA2
+		f |= SHA2
 	}
 	if instAttrReg0&(0xf<<12) == 2<<12 {
 		// https://developer.arm.com/docs/ddi0595/b/aarch64-system-registers/id_aa64isar0_el1
 		// 0b0010 --> As 0b0001, plus SHA512H, SHA512H2, SHA512SU0, and SHA512SU1 instructions implemented.
-		f |= ARM_SHA512
+		f |= SHA512
 	}
 	if instAttrReg0&(0xf<<8) != 0 {
-		f |= ARM_SHA1
+		f |= SHA1
 	}
 	if instAttrReg0&(0xf<<4) != 0 {
-		f |= ARM_AES
+		f |= AES
 	}
 	if instAttrReg0&(0xf<<4) == 2<<4 {
 		// https://developer.arm.com/docs/ddi0595/b/aarch64-system-registers/id_aa64isar0_el1
 		// 0b0010 --> As for 0b0001, plus PMULL/PMULL2 instructions operating on 64-bit data quantities.
-		f |= ARM_PMULL
+		f |= PMULL
 	}
 
 	// https://developer.arm.com/docs/ddi0595/b/aarch64-system-registers/id_aa64isar1_el1
@@ -190,16 +191,16 @@ func supportArm() (f uint64) {
 	// 	fmt.Println("GPI")
 	// }
 	if instAttrReg1&(0xf<<28) != 24 {
-		f |= ARM_GPA
+		f |= GPA
 	}
 	if instAttrReg1&(0xf<<20) != 0 {
-		f |= ARM_LRCPC
+		f |= LRCPC
 	}
 	if instAttrReg1&(0xf<<16) != 0 {
-		f |= ARM_FCMA
+		f |= FCMA
 	}
 	if instAttrReg1&(0xf<<12) != 0 {
-		f |= ARM_JSCVT
+		f |= JSCVT
 	}
 	// if instAttrReg1&(0xf<<8) != 0 {
 	// 	fmt.Println("API")
@@ -208,8 +209,7 @@ func supportArm() (f uint64) {
 	// 	fmt.Println("APA")
 	// }
 	if instAttrReg1&(0xf<<0) != 0 {
-		f |= ARM_DCPOP
+		f |= DCPOP
 	}
-
-	return
+	c.Arm = f
 }

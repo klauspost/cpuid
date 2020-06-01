@@ -1,4 +1,6 @@
-// Copyright (c) 2015 Klaus Post, released under MIT License. See LICENSE file.
+// Generated, DO NOT EDIT,
+// but copy it to your own project and rename the package.
+// See more at http://github.com/klauspost/cpuid
 
 //+build !amd64,!386,!arm64 gccgo noasm appengine
 
@@ -11,6 +13,4 @@ func initCPU() {
 	rdtscpAsm = func() (a, b, c, d uint32) { return 0, 0, 0, 0 }
 }
 
-func supportArm() (f uint64) {
-	return
-}
+func addInfo(info *cpuInfo) {}

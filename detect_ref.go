@@ -11,6 +11,4 @@ func initCPU() {
 	rdtscpAsm = func() (a, b, c, d uint32) { return 0, 0, 0, 0 }
 }
 
-func supportArm() (f uint64) {
-	return
-}
+func addInfo(info *CPUInfo) {}
