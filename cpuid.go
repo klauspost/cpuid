@@ -3,7 +3,7 @@
 // Package cpuid provides information about the CPU running the current program.
 //
 // CPU features are detected on startup, and kept for fast access through the life of the application.
-// Currently x86 / x64 (AMD64) is supported.
+// Currently x86 / x64 (AMD64) as well as arm64 is supported.
 //
 // You can access the CPU information by accessing the shared CPU variable of the cpuid library.
 //
@@ -175,12 +175,69 @@ var flagNames = map[Flags]string{
 
 }
 
+/* all special features for arm64 should be defined here */
+const (
+	/* extension instructions */
+	CPU_ARM64_FEATURE_FP = 1 << iota
+	CPU_ARM64_FEATURE_ASIMD
+	CPU_ARM64_FEATURE_EVTSTRM
+	CPU_ARM64_FEATURE_AES
+	CPU_ARM64_FEATURE_PMULL
+	CPU_ARM64_FEATURE_SHA1
+	CPU_ARM64_FEATURE_SHA2
+	CPU_ARM64_FEATURE_CRC32
+	CPU_ARM64_FEATURE_ATOMICS
+	CPU_ARM64_FEATURE_FPHP
+	CPU_ARM64_FEATURE_ASIMDHP
+	CPU_ARM64_FEATURE_CPUID
+	CPU_ARM64_FEATURE_ASIMDRDM
+	CPU_ARM64_FEATURE_JSCVT
+	CPU_ARM64_FEATURE_FCMA
+	CPU_ARM64_FEATURE_LRCPC
+	CPU_ARM64_FEATURE_DCPOP
+	CPU_ARM64_FEATURE_SHA3
+	CPU_ARM64_FEATURE_SM3
+	CPU_ARM64_FEATURE_SM4
+	CPU_ARM64_FEATURE_ASIMDDP
+	CPU_ARM64_FEATURE_SHA512
+	CPU_ARM64_FEATURE_SVE
+	CPU_ARM64_FEATURE_GPA
+)
+
+var flagNames_Arm64 = map[Flags]string{
+	CPU_ARM64_FEATURE_FP:       "FP",       // Single-precision and double-precision floating point
+	CPU_ARM64_FEATURE_ASIMD:    "ASIMD",    // Advanced SIMD
+	CPU_ARM64_FEATURE_EVTSTRM:  "EVTSTRM",  // Generic timer
+	CPU_ARM64_FEATURE_AES:      "AES",      // AES instructions
+	CPU_ARM64_FEATURE_PMULL:    "PMULL",    // Polynomial Multiply instructions (PMULL/PMULL2)
+	CPU_ARM64_FEATURE_SHA1:     "SHA1",     // SHA-1 instructions (SHA1C, etc)
+	CPU_ARM64_FEATURE_SHA2:     "SHA2",     // SHA-2 instructions (SHA256H, etc)
+	CPU_ARM64_FEATURE_CRC32:    "CRC32",    // CRC32/CRC32C instructions
+	CPU_ARM64_FEATURE_ATOMICS:  "ATOMICS",  // Large System Extensions (LSE)
+	CPU_ARM64_FEATURE_FPHP:     "FPHP",     // Half-precision floating point
+	CPU_ARM64_FEATURE_ASIMDHP:  "ASIMDHP",  // Advanced SIMD half-precision floating point
+	CPU_ARM64_FEATURE_CPUID:    "CPUID",    // Some CPU ID registers readable at user-level
+	CPU_ARM64_FEATURE_ASIMDRDM: "ASIMDRDM", // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+	CPU_ARM64_FEATURE_JSCVT:    "JSCVT",    // Javascript-style double->int convert (FJCVTZS)
+	CPU_ARM64_FEATURE_FCMA:     "FCMA",     // Floatin point complex number addition and multiplication
+	CPU_ARM64_FEATURE_LRCPC:    "LRCPC",    // Weaker release consistency (LDAPR, etc)
+	CPU_ARM64_FEATURE_DCPOP:    "DCPOP",    // Data cache clean to Point of Persistence (DC CVAP)
+	CPU_ARM64_FEATURE_SHA3:     "SHA3",     // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+	CPU_ARM64_FEATURE_SM3:      "SM3",      // SM3 instructions
+	CPU_ARM64_FEATURE_SM4:      "SM4",      // SM4 instructions
+	CPU_ARM64_FEATURE_ASIMDDP:  "ASIMDDP",  // SIMD Dot Product
+	CPU_ARM64_FEATURE_SHA512:   "SHA512",   // SHA512 instructions
+	CPU_ARM64_FEATURE_SVE:      "SVE",      // Scalable Vector Extension
+	CPU_ARM64_FEATURE_GPA:      "GPA",      // Generic Pointer Authentication
+}
+
 // CPUInfo contains information about the detected system CPU.
 type CPUInfo struct {
 	BrandName      string // Brand name reported by the CPU
 	VendorID       Vendor // Comparable CPU vendor ID
 	VendorString   string // Raw vendor string.
-	Features       Flags  // Features of the CPU
+	Features       Flags  // Features of the CPU (x64)
+	Arm64Features  Flags  // Features of the CPU (arm64)
 	PhysicalCores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	ThreadsPerCore int    // Number of threads per physical core. Will be 1 if undetectable.
 	LogicalCores   int    // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
@@ -230,6 +287,7 @@ func Detect() {
 	CPU.CacheLine = cacheLine()
 	CPU.Family, CPU.Model = familyModel()
 	CPU.Features = support()
+	CPU.Arm64Features = supportArm64()
 	CPU.SGX = hasSGX(CPU.Features&SGX != 0, CPU.Features&SGXLC != 0)
 	CPU.ThreadsPerCore = threadsPerCore()
 	CPU.LogicalCores = logicalCores()
@@ -1316,4 +1374,119 @@ func valAsString(values ...uint32) []byte {
 		}
 	}
 	return r
+}
+
+// Single-precision and double-precision floating point
+func (c CPUInfo) Arm64_FP() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_FP != 0
+}
+
+// Advanced SIMD
+func (c CPUInfo) Arm64_ASIMD() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_ASIMD != 0
+}
+
+// Generic timer
+func (c CPUInfo) Arm64_EVTSTRM() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_EVTSTRM != 0
+}
+
+// AES instructions
+func (c CPUInfo) Arm64_AES() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_AES != 0
+}
+
+// Polynomial Multiply instructions (PMULL/PMULL2)
+func (c CPUInfo) Arm64_PMULL() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_PMULL != 0
+}
+
+// SHA-1 instructions (SHA1C, etc)
+func (c CPUInfo) Arm64_SHA1() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SHA1 != 0
+}
+
+// SHA-2 instructions (SHA256H, etc)
+func (c CPUInfo) Arm64_SHA2() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SHA2 != 0
+}
+
+// CRC32/CRC32C instructions
+func (c CPUInfo) Arm64_CRC32() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_CRC32 != 0
+}
+
+// Large System Extensions (LSE)
+func (c CPUInfo) Arm64_ATOMICS() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_ATOMICS != 0
+}
+
+// Half-precision floating point
+func (c CPUInfo) Arm64_FPHP() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_FPHP != 0
+}
+
+// Advanced SIMD half-precision floating point
+func (c CPUInfo) Arm64_ASIMDHP() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_ASIMDHP != 0
+}
+
+// Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+func (c CPUInfo) Arm64_ASIMDRDM() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_ASIMDRDM != 0
+}
+
+// Javascript-style double->int convert (FJCVTZS)
+func (c CPUInfo) Arm64_JSCVT() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_JSCVT != 0
+}
+
+// Floatin point complex number addition and multiplication
+func (c CPUInfo) Arm64_FCMA() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_FCMA != 0
+}
+
+// Weaker release consistency (LDAPR, etc)
+func (c CPUInfo) Arm64_LRCPC() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_LRCPC != 0
+}
+
+// Data cache clean to Point of Persistence (DC CVAP)
+func (c CPUInfo) Arm64_DCPOP() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_DCPOP != 0
+}
+
+// SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+func (c CPUInfo) Arm64_SHA3() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SHA3 != 0
+}
+
+// SM3 instructions
+func (c CPUInfo) Arm64_SM3() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SM3 != 0
+}
+
+// SM4 instructions
+func (c CPUInfo) Arm64_SM4() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SM4 != 0
+}
+
+// SIMD Dot Product
+func (c CPUInfo) Arm64_ASIMDDP() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_ASIMDDP != 0
+}
+
+// SHA512 instructions
+func (c CPUInfo) Arm64_SHA512() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SHA512 != 0
+}
+
+// Scalable Vector Extension
+func (c CPUInfo) Arm64_SVE() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_SVE != 0
+}
+
+// Generic Pointer Authentication
+func (c CPUInfo) Arm64_GPA() bool {
+	return c.Arm64Features&CPU_ARM64_FEATURE_GPA != 0
 }

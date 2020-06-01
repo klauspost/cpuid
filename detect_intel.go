@@ -15,3 +15,7 @@ func initCPU() {
 	xgetbv = asmXgetbv
 	rdtscpAsm = asmRdtscpAsm
 }
+
+func supportArm64() (flags Flags) {
+	return
+}
