@@ -22,8 +22,8 @@ import (
 	"unicode/utf8"
 )
 
-var inFiles = []string{"cpuid.go", "cpuid_test.go"}
-var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s", "detect_ref.go", "detect_intel.go", "detect_arm64.go"}
+var inFiles = []string{"cpuid.go", "cpuid_test.go", "detect_arm64.go"}
+var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s", "detect_ref.go", "detect_intel.go"}
 var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
 	initRewrite("CPUInfo -> cpuInfo"),
@@ -113,7 +113,9 @@ func main() {
 			"// but copy it to your own project and rename the package.\n" +
 			"// See more at http://github.com/klauspost/cpuid\n" +
 			s
-
+		if !strings.HasPrefix(file, "cpuid") {
+			file = "cpuid_" + file
+		}
 		outputName := Package + string(os.PathSeparator) + file
 
 		err = ioutil.WriteFile(outputName, []byte(s), 0644)
