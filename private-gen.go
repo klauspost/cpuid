@@ -108,6 +108,9 @@ func main() {
 		// Remove package documentation and insert information
 		s := buf.String()
 		ind := strings.Index(buf.String(), "\npackage cpuid")
+		if i := strings.Index(buf.String(), "\n// +build "); i > 0 {
+			ind = i
+		}
 		s = s[ind:]
 		s = "// Generated, DO NOT EDIT,\n" +
 			"// but copy it to your own project and rename the package.\n" +

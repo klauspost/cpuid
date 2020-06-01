@@ -2,9 +2,9 @@
 // but copy it to your own project and rename the package.
 // See more at http://github.com/klauspost/cpuid
 
-package cpuid
-
 // +build arm64,!gccgo,!noasm,!appengine
+
+package cpuid
 
 func getMidr() (midr uint64)
 func getProcFeatures() (procFeatures uint64)
