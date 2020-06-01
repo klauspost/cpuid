@@ -1,5 +1,8 @@
 // +build ignore
 
+//go:generate go run private-gen.go
+//go:generate gofmt -w ./private
+
 package main
 
 import (
@@ -20,7 +23,7 @@ import (
 )
 
 var inFiles = []string{"cpuid.go", "cpuid_test.go"}
-var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "detect_ref.go", "detect_intel.go"}
+var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s", "detect_ref.go", "detect_intel.go", "detect_arm64.go"}
 var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
 	initRewrite("CPUInfo -> cpuInfo"),

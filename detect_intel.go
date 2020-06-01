@@ -16,6 +16,6 @@ func initCPU() {
 	rdtscpAsm = asmRdtscpAsm
 }
 
-func supportArm64() (flags Flags) {
+func supportArm() (f uint64) {
 	return
 }

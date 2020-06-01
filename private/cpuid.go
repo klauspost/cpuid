@@ -169,12 +169,69 @@ var flagNames = map[flags]string{
 
 }
 
+/* all special features for arm64 should be defined here */
+const (
+	/* extension instructions */
+	arm_fp = 1 << iota
+	arm_asimd
+	arm_evtstrm
+	arm_aes
+	arm_pmull
+	arm_sha1
+	arm_sha2
+	arm_crc32
+	arm_atomics
+	arm_fphp
+	arm_asimdhp
+	arm_cpuid
+	arm_asimdrdm
+	arm_jscvt
+	arm_fcma
+	arm_lrcpc
+	arm_dcpop
+	arm_sha3
+	arm_sm3
+	arm_sm4
+	arm_asimddp
+	arm_sha512
+	arm_sve
+	arm_gpa
+)
+
+var flagNamesArm = map[flags]string{
+	arm_fp:       "FP",       // Single-precision and double-precision floating point
+	arm_asimd:    "ASIMD",    // Advanced SIMD
+	arm_evtstrm:  "EVTSTRM",  // Generic timer
+	arm_aes:      "AES",      // AES instructions
+	arm_pmull:    "PMULL",    // Polynomial Multiply instructions (PMULL/PMULL2)
+	arm_sha1:     "SHA1",     // SHA-1 instructions (SHA1C, etc)
+	arm_sha2:     "SHA2",     // SHA-2 instructions (SHA256H, etc)
+	arm_crc32:    "CRC32",    // CRC32/CRC32C instructions
+	arm_atomics:  "ATOMICS",  // Large System Extensions (LSE)
+	arm_fphp:     "FPHP",     // Half-precision floating point
+	arm_asimdhp:  "ASIMDHP",  // Advanced SIMD half-precision floating point
+	arm_cpuid:    "CPUID",    // Some CPU ID registers readable at user-level
+	arm_asimdrdm: "ASIMDRDM", // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+	arm_jscvt:    "JSCVT",    // Javascript-style double->int convert (FJCVTZS)
+	arm_fcma:     "FCMA",     // Floatin point complex number addition and multiplication
+	arm_lrcpc:    "LRCPC",    // Weaker release consistency (LDAPR, etc)
+	arm_dcpop:    "DCPOP",    // Data cache clean to Point of Persistence (DC CVAP)
+	arm_sha3:     "SHA3",     // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+	arm_sm3:      "SM3",      // SM3 instructions
+	arm_sm4:      "SM4",      // SM4 instructions
+	arm_asimddp:  "ASIMDDP",  // SIMD Dot Product
+	arm_sha512:   "SHA512",   // SHA512 instructions
+	arm_sve:      "SVE",      // Scalable Vector Extension
+	arm_gpa:      "GPA",      // Generic Pointer Authentication
+}
+
 // CPUInfo contains information about the detected system CPU.
 type cpuInfo struct {
 	brandname      string // Brand name reported by the CPU
 	vendorid       vendor // Comparable CPU vendor ID
 	vendorstring   string // Raw vendor string.
-	features       flags  // Features of the CPU
+	features       flags  // Features of the CPU (x64)
+	arm            flags  // Features of the CPU (arm)
 	physicalcores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	threadspercore int    // Number of threads per physical core. Will be 1 if undetectable.
 	logicalcores   int    // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
@@ -224,6 +281,7 @@ func detect() {
 	cpu.cacheline = cacheLine()
 	cpu.family, cpu.model = familyModel()
 	cpu.features = support()
+	cpu.arm = flags(supportArm())
 	cpu.sgx = hasSGX(cpu.features&sgx != 0, cpu.features&sgxlc != 0)
 	cpu.threadspercore = threadsPerCore()
 	cpu.logicalcores = logicalCores()
@@ -1310,4 +1368,119 @@ func valAsString(values ...uint32) []byte {
 		}
 	}
 	return r
+}
+
+// Single-precision and double-precision floating point
+func (c cpuInfo) armfp() bool {
+	return c.arm&arm_fp != 0
+}
+
+// Advanced SIMD
+func (c cpuInfo) armasimd() bool {
+	return c.arm&arm_asimd != 0
+}
+
+// Generic timer
+func (c cpuInfo) armevtstrm() bool {
+	return c.arm&arm_evtstrm != 0
+}
+
+// AES instructions
+func (c cpuInfo) armaes() bool {
+	return c.arm&arm_aes != 0
+}
+
+// Polynomial Multiply instructions (PMULL/PMULL2)
+func (c cpuInfo) armpmull() bool {
+	return c.arm&arm_pmull != 0
+}
+
+// SHA-1 instructions (SHA1C, etc)
+func (c cpuInfo) armsha1() bool {
+	return c.arm&arm_sha1 != 0
+}
+
+// SHA-2 instructions (SHA256H, etc)
+func (c cpuInfo) armsha2() bool {
+	return c.arm&arm_sha2 != 0
+}
+
+// CRC32/CRC32C instructions
+func (c cpuInfo) armcrc32() bool {
+	return c.arm&arm_crc32 != 0
+}
+
+// Large System Extensions (LSE)
+func (c cpuInfo) armatomics() bool {
+	return c.arm&arm_atomics != 0
+}
+
+// Half-precision floating point
+func (c cpuInfo) armfphp() bool {
+	return c.arm&arm_fphp != 0
+}
+
+// Advanced SIMD half-precision floating point
+func (c cpuInfo) armasimdhp() bool {
+	return c.arm&arm_asimdhp != 0
+}
+
+// Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+func (c cpuInfo) armasimdrdm() bool {
+	return c.arm&arm_asimdrdm != 0
+}
+
+// Javascript-style double->int convert (FJCVTZS)
+func (c cpuInfo) armjscvt() bool {
+	return c.arm&arm_jscvt != 0
+}
+
+// Floatin point complex number addition and multiplication
+func (c cpuInfo) armfcma() bool {
+	return c.arm&arm_fcma != 0
+}
+
+// Weaker release consistency (LDAPR, etc)
+func (c cpuInfo) armlrcpc() bool {
+	return c.arm&arm_lrcpc != 0
+}
+
+// Data cache clean to Point of Persistence (DC CVAP)
+func (c cpuInfo) armdcpop() bool {
+	return c.arm&arm_dcpop != 0
+}
+
+// SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+func (c cpuInfo) armsha3() bool {
+	return c.arm&arm_sha3 != 0
+}
+
+// SM3 instructions
+func (c cpuInfo) armsm3() bool {
+	return c.arm&arm_sm3 != 0
+}
+
+// SM4 instructions
+func (c cpuInfo) armsm4() bool {
+	return c.arm&arm_sm4 != 0
+}
+
+// SIMD Dot Product
+func (c cpuInfo) armasimddp() bool {
+	return c.arm&arm_asimddp != 0
+}
+
+// SHA512 instructions
+func (c cpuInfo) armsha512() bool {
+	return c.arm&arm_sha512 != 0
+}
+
+// Scalable Vector Extension
+func (c cpuInfo) armsve() bool {
+	return c.arm&arm_sve != 0
+}
+
+// Generic Pointer Authentication
+func (c cpuInfo) armgpa() bool {
+	return c.arm&arm_gpa != 0
 }
