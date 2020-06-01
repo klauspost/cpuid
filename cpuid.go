@@ -730,7 +730,7 @@ func (c CPUInfo) VM() bool {
 // Flags contains detected cpu features and characteristics
 type Flags uint64
 
-// Flags contains detected ARM cpu features and characteristics
+// ArmFlags contains detected ARM cpu features and characteristics
 type ArmFlags uint64
 
 // String returns a string representation of the detected
