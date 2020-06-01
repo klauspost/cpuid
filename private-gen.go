@@ -1,5 +1,8 @@
 // +build ignore
 
+//go:generate go run private-gen.go
+//go:generate gofmt -w ./private
+
 package main
 
 import (
@@ -19,8 +22,8 @@ import (
 	"unicode/utf8"
 )
 
-var inFiles = []string{"cpuid.go", "cpuid_test.go"}
-var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "detect_ref.go", "detect_intel.go"}
+var inFiles = []string{"cpuid.go", "cpuid_test.go", "detect_arm64.go", "detect_ref.go", "detect_intel.go"}
+var copyFiles = []string{"cpuid_amd64.s", "cpuid_386.s", "cpuid_arm64.s"}
 var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
 	initRewrite("CPUInfo -> cpuInfo"),
@@ -105,12 +108,17 @@ func main() {
 		// Remove package documentation and insert information
 		s := buf.String()
 		ind := strings.Index(buf.String(), "\npackage cpuid")
+		if i := strings.Index(buf.String(), "\n//+build "); i > 0 {
+			ind = i
+		}
 		s = s[ind:]
 		s = "// Generated, DO NOT EDIT,\n" +
 			"// but copy it to your own project and rename the package.\n" +
 			"// See more at http://github.com/klauspost/cpuid\n" +
 			s
-
+		if !strings.HasPrefix(file, "cpuid") {
+			file = "cpuid_" + file
+		}
 		outputName := Package + string(os.PathSeparator) + file
 
 		err = ioutil.WriteFile(outputName, []byte(s), 0644)

@@ -5,23 +5,10 @@
 package cpuid
 
 func initCPU() {
-	cpuid = func(op uint32) (eax, ebx, ecx, edx uint32) {
-		return 0, 0, 0, 0
-	}
-
-	cpuidex = func(op, op2 uint32) (eax, ebx, ecx, edx uint32) {
-		return 0, 0, 0, 0
-	}
-
-	xgetbv = func(index uint32) (eax, edx uint32) {
-		return 0, 0
-	}
-
-	rdtscpAsm = func() (eax, ebx, ecx, edx uint32) {
-		return 0, 0, 0, 0
-	}
+	cpuid = func(uint32) (a, b, c, d uint32) { return 0, 0, 0, 0 }
+	cpuidex = func(x, y uint32) (a, b, c, d uint32) { return 0, 0, 0, 0 }
+	xgetbv = func(uint32) (a, b uint32) { return 0, 0 }
+	rdtscpAsm = func() (a, b, c, d uint32) { return 0, 0, 0, 0 }
 }
 
-func supportArm64() (flags Flags) {
-	return
-}
+func addInfo(info *CPUInfo) {}
