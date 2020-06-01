@@ -281,6 +281,12 @@ func init() {
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
 func Detect() {
+	// Set defaults
+	CPU.ThreadsPerCore = 1
+	CPU.Cache.L1I = -1
+	CPU.Cache.L1D = -1
+	CPU.Cache.L2 = -1
+	CPU.Cache.L3 = -1
 	addInfo(&CPU)
 }
 
