@@ -4,6 +4,8 @@
 
 package cpuid
 
+// +build arm64,!gccgo,!noasm,!appengine
+
 func getMidr() (midr uint64)
 func getProcFeatures() (procFeatures uint64)
 func getInstAttributes() (instAttrReg0, instAttrReg1 uint64)

@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Klaus Post, released under MIT License. See LICENSE file.
 
-// +build arm64,!gccgo,!noasm,!appengine
-
 package cpuid
+
+// +build arm64,!gccgo,!noasm,!appengine
 
 func getMidr() (midr uint64)
 func getProcFeatures() (procFeatures uint64)
