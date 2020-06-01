@@ -264,8 +264,7 @@ var rdtscpAsm func() (eax, ebx, ecx, edx uint32)
 // CPU contains information about the CPU as detected on startup,
 // or when Detect last was called.
 //
-// Use this as the primary entry point to you data,
-// this way queries are
+// Use this as the primary entry point to you data.
 var CPU CPUInfo
 
 func init() {
