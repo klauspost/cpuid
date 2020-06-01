@@ -2,7 +2,7 @@
 Package cpuid provides information about the CPU running the current program.
 
 CPU features are detected on startup, and kept for fast access through the life of the application.
-Currently x86 / x64 (AMD64/i386) and ARM (ARM^$) is supported, and no external C (cgo) code is used, which should make the library very easy to use.
+Currently x86 / x64 (AMD64/i386) and ARM (ARM64) is supported, and no external C (cgo) code is used, which should make the library very easy to use.
 
 You can access the CPU information by accessing the shared CPU variable of the cpuid library.
 
