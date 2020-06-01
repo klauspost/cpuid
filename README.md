@@ -12,7 +12,7 @@ Package home: https://github.com/klauspost/cpuid
 
 [1]: https://godoc.org/github.com/klauspost/cpuid?status.svg
 [2]: https://godoc.org/github.com/klauspost/cpuid
-[3]: https://travis-ci.org/klauspost/cpuid.svg
+[3]: https://travis-ci.org/klauspost/cpuid.svg?branch=master
 [4]: https://travis-ci.org/klauspost/cpuid
 
 # features
