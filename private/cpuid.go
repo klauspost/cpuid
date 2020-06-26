@@ -28,8 +28,6 @@ const (
 	xenhvm
 	bhyve
 	hygon
-	sis
-	rdc
 )
 
 const (
@@ -169,76 +167,18 @@ var flagNames = map[flags]string{
 
 }
 
-/* all special features for arm64 should be defined here */
-const (
-	/* extension instructions */
-	fp armflags = 1 << iota
-	asimd
-	evtstrm
-	aes
-	pmull
-	sha1
-	sha2
-	crc32
-	atomics
-	fphp
-	asimdhp
-	armcpuid
-	asimdrdm
-	jscvt
-	fcma
-	lrcpc
-	dcpop
-	sha3
-	sm3
-	sm4
-	asimddp
-	sha512
-	sve
-	gpa
-)
-
-var flagNamesArm = map[armflags]string{
-	fp:       "FP",       // Single-precision and double-precision floating point
-	asimd:    "ASIMD",    // Advanced SIMD
-	evtstrm:  "EVTSTRM",  // Generic timer
-	aes:      "AES",      // AES instructions
-	pmull:    "PMULL",    // Polynomial Multiply instructions (PMULL/PMULL2)
-	sha1:     "SHA1",     // SHA-1 instructions (SHA1C, etc)
-	sha2:     "SHA2",     // SHA-2 instructions (SHA256H, etc)
-	crc32:    "CRC32",    // CRC32/CRC32C instructions
-	atomics:  "ATOMICS",  // Large System Extensions (LSE)
-	fphp:     "FPHP",     // Half-precision floating point
-	asimdhp:  "ASIMDHP",  // Advanced SIMD half-precision floating point
-	armcpuid: "CPUID",    // Some CPU ID registers readable at user-level
-	asimdrdm: "ASIMDRDM", // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
-	jscvt:    "JSCVT",    // Javascript-style double->int convert (FJCVTZS)
-	fcma:     "FCMA",     // Floatin point complex number addition and multiplication
-	lrcpc:    "LRCPC",    // Weaker release consistency (LDAPR, etc)
-	dcpop:    "DCPOP",    // Data cache clean to Point of Persistence (DC CVAP)
-	sha3:     "SHA3",     // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
-	sm3:      "SM3",      // SM3 instructions
-	sm4:      "SM4",      // SM4 instructions
-	asimddp:  "ASIMDDP",  // SIMD Dot Product
-	sha512:   "SHA512",   // SHA512 instructions
-	sve:      "SVE",      // Scalable Vector Extension
-	gpa:      "GPA",      // Generic Pointer Authentication
-}
-
 // CPUInfo contains information about the detected system CPU.
 type cpuInfo struct {
-	brandname      string   // Brand name reported by the CPU
-	vendorid       vendor   // Comparable CPU vendor ID
-	vendorstring   string   // Raw vendor string.
-	features       flags    // Features of the CPU (x64)
-	arm            armflags // Features of the CPU (arm)
-	physicalcores  int      // Number of physical processor cores in your CPU. Will be 0 if undetectable.
-	threadspercore int      // Number of threads per physical core. Will be 1 if undetectable.
-	logicalcores   int      // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
-	family         int      // CPU family number
-	model          int      // CPU model number
-	cacheline      int      // Cache line size in bytes. Will be 0 if undetectable.
-	hz             int64    // Clock speed, if known
+	brandname      string // Brand name reported by the CPU
+	vendorid       vendor // Comparable CPU vendor ID
+	features       flags  // Features of the CPU
+	physicalcores  int    // Number of physical processor cores in your CPU. Will be 0 if undetectable.
+	threadspercore int    // Number of threads per physical core. Will be 1 if undetectable.
+	logicalcores   int    // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
+	family         int    // CPU family number
+	model          int    // CPU model number
+	cacheline      int    // Cache line size in bytes. Will be 0 if undetectable.
+	hz             int64  // Clock speed, if known
 	cache          struct {
 		l1i int // L1 Instruction Cache (per core or shared). Will be -1 if undetected
 		l1d int // L1 Data Cache (per core or shared). Will be -1 if undetected
@@ -258,7 +198,8 @@ var rdtscpAsm func() (eax, ebx, ecx, edx uint32)
 // CPU contains information about the CPU as detected on startup,
 // or when Detect last was called.
 //
-// Use this as the primary entry point to you data.
+// Use this as the primary entry point to you data,
+// this way queries are
 var cpu cpuInfo
 
 func init() {
@@ -274,13 +215,19 @@ func init() {
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
 func detect() {
-	// Set defaults
-	cpu.threadspercore = 1
-	cpu.cache.l1i = -1
-	cpu.cache.l1d = -1
-	cpu.cache.l2 = -1
-	cpu.cache.l3 = -1
-	addInfo(&cpu)
+	cpu.maxFunc = maxFunctionID()
+	cpu.maxExFunc = maxExtendedFunction()
+	cpu.brandname = brandName()
+	cpu.cacheline = cacheLine()
+	cpu.family, cpu.model = familyModel()
+	cpu.features = support()
+	cpu.sgx = hasSGX(cpu.features&sgx != 0, cpu.features&sgxlc != 0)
+	cpu.threadspercore = threadsPerCore()
+	cpu.logicalcores = logicalCores()
+	cpu.physicalcores = physicalCores()
+	cpu.vendorid = vendorID()
+	cpu.hz = hertz(cpu.brandname)
+	cpu.cacheSize()
 }
 
 // Generated here: http://play.golang.org/p/BxFH2Gdc0G
@@ -726,11 +673,8 @@ func (c cpuInfo) vm() bool {
 	return false
 }
 
-// Flags contains detected cpu features and characteristics
+// Flags contains detected cpu features and caracteristics
 type flags uint64
-
-// ArmFlags contains detected ARM cpu features and characteristics
-type armflags uint64
 
 // String returns a string representation of the detected
 // CPU features.
@@ -738,37 +682,20 @@ func (f flags) String() string {
 	return strings.Join(f.strings(), ",")
 }
 
-// Strings returns an array of the detected features.
+// Strings returns and array of the detected features.
 func (f flags) strings() []string {
+	s := support()
 	r := make([]string, 0, 20)
 	for i := uint(0); i < 64; i++ {
 		key := flags(1 << i)
 		val := flagNames[key]
-		if f&key != 0 {
+		if s&key != 0 {
 			r = append(r, val)
 		}
 	}
 	return r
 }
 
-// String returns a string representation of the detected
-// CPU features.
-func (f armflags) String() string {
-	return strings.Join(f.strings(), ",")
-}
-
-// Strings returns an array of the detected features.
-func (f armflags) strings() []string {
-	r := make([]string, 0, 20)
-	for i := uint(0); i < 64; i++ {
-		key := armflags(1 << i)
-		val := flagNamesArm[key]
-		if f&key != 0 {
-			r = append(r, val)
-		}
-	}
-	return r
-}
 func maxExtendedFunction() uint32 {
 	eax, _, _, _ := cpuid(0x80000000)
 	return eax
@@ -793,14 +720,12 @@ func brandName() string {
 
 func threadsPerCore() int {
 	mfi := maxFunctionID()
-	vend, _ := vendorID()
-
-	if mfi < 0x4 || (vend != intel && vend != amd) {
+	if mfi < 0x4 || (vendorID() != intel && vendorID() != amd) {
 		return 1
 	}
 
 	if mfi < 0xb {
-		if vend != intel {
+		if vendorID() != intel {
 			return 1
 		}
 		_, b, _, d := cpuid(1)
@@ -827,8 +752,7 @@ func threadsPerCore() int {
 
 func logicalCores() int {
 	mfi := maxFunctionID()
-	v, _ := vendorID()
-	switch v {
+	switch vendorID() {
 	case intel:
 		// Use this on old Intel processors
 		if mfi < 0xb {
@@ -863,8 +787,7 @@ func familyModel() (int, int) {
 }
 
 func physicalCores() int {
-	v, _ := vendorID()
-	switch v {
+	switch vendorID() {
 	case intel:
 		return logicalCores() / threadsPerCore()
 	case amd, hygon:
@@ -899,20 +822,16 @@ var vendorMapping = map[string]vendor{
 	"XenVMMXenVMM": xenhvm,
 	"bhyve bhyve ": bhyve,
 	"HygonGenuine": hygon,
-	"Vortex86 SoC": sis,
-	"SiS SiS SiS ": sis,
-	"RiseRiseRise": sis,
-	"Genuine  RDC": rdc,
 }
 
-func vendorID() (vendor, string) {
+func vendorID() vendor {
 	_, b, c, d := cpuid(0)
-	v := string(valAsString(b, d, c))
-	vend, ok := vendorMapping[v]
+	v := valAsString(b, d, c)
+	vend, ok := vendorMapping[string(v)]
 	if !ok {
-		return other, v
+		return other
 	}
-	return vend, v
+	return vend
 }
 
 func cacheLine() int {
@@ -935,7 +854,7 @@ func (c *cpuInfo) cacheSize() {
 	c.cache.l1i = -1
 	c.cache.l2 = -1
 	c.cache.l3 = -1
-	vendor, _ := vendorID()
+	vendor := vendorID()
 	switch vendor {
 	case intel:
 		if maxFunctionID() < 4 {
@@ -1090,7 +1009,7 @@ func hasSGX(available, lc bool) (rval sgxsupport) {
 
 func support() flags {
 	mfi := maxFunctionID()
-	vend, _ := vendorID()
+	vend := vendorID()
 	if mfi < 0x1 {
 		return 0
 	}
@@ -1318,7 +1237,7 @@ func support() flags {
 		   AV_CPU_FLAG_SSE2 and AV_CPU_FLAG_SSE2SLOW are both set in this case
 		   so that SSE2 is used unless explicitly disabled by checking
 		   AV_CPU_FLAG_SSE2SLOW. */
-		if vend != intel &&
+		if vendorID() != intel &&
 			rval&sse2 != 0 && (c&0x00000040) == 0 {
 			rval |= sse2slow
 		}
@@ -1334,7 +1253,7 @@ func support() flags {
 			}
 		}
 
-		if vend == intel {
+		if vendorID() == intel {
 			family, model := familyModel()
 			if family == 6 && (model == 9 || model == 13 || model == 14) {
 				/* 6/9 (pentium-m "banias"), 6/13 (pentium-m "dothan"), and
@@ -1380,119 +1299,4 @@ func valAsString(values ...uint32) []byte {
 		}
 	}
 	return r
-}
-
-// Single-precision and double-precision floating point
-func (c cpuInfo) armfp() bool {
-	return c.arm&fp != 0
-}
-
-// Advanced SIMD
-func (c cpuInfo) armasimd() bool {
-	return c.arm&asimd != 0
-}
-
-// Generic timer
-func (c cpuInfo) armevtstrm() bool {
-	return c.arm&evtstrm != 0
-}
-
-// AES instructions
-func (c cpuInfo) armaes() bool {
-	return c.arm&aes != 0
-}
-
-// Polynomial Multiply instructions (PMULL/PMULL2)
-func (c cpuInfo) armpmull() bool {
-	return c.arm&pmull != 0
-}
-
-// SHA-1 instructions (SHA1C, etc)
-func (c cpuInfo) armsha1() bool {
-	return c.arm&sha1 != 0
-}
-
-// SHA-2 instructions (SHA256H, etc)
-func (c cpuInfo) armsha2() bool {
-	return c.arm&sha2 != 0
-}
-
-// CRC32/CRC32C instructions
-func (c cpuInfo) armcrc32() bool {
-	return c.arm&crc32 != 0
-}
-
-// Large System Extensions (LSE)
-func (c cpuInfo) armatomics() bool {
-	return c.arm&atomics != 0
-}
-
-// Half-precision floating point
-func (c cpuInfo) armfphp() bool {
-	return c.arm&fphp != 0
-}
-
-// Advanced SIMD half-precision floating point
-func (c cpuInfo) armasimdhp() bool {
-	return c.arm&asimdhp != 0
-}
-
-// Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
-func (c cpuInfo) armasimdrdm() bool {
-	return c.arm&asimdrdm != 0
-}
-
-// Javascript-style double->int convert (FJCVTZS)
-func (c cpuInfo) armjscvt() bool {
-	return c.arm&jscvt != 0
-}
-
-// Floatin point complex number addition and multiplication
-func (c cpuInfo) armfcma() bool {
-	return c.arm&fcma != 0
-}
-
-// Weaker release consistency (LDAPR, etc)
-func (c cpuInfo) armlrcpc() bool {
-	return c.arm&lrcpc != 0
-}
-
-// Data cache clean to Point of Persistence (DC CVAP)
-func (c cpuInfo) armdcpop() bool {
-	return c.arm&dcpop != 0
-}
-
-// SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
-func (c cpuInfo) armsha3() bool {
-	return c.arm&sha3 != 0
-}
-
-// SM3 instructions
-func (c cpuInfo) armsm3() bool {
-	return c.arm&sm3 != 0
-}
-
-// SM4 instructions
-func (c cpuInfo) armsm4() bool {
-	return c.arm&sm4 != 0
-}
-
-// SIMD Dot Product
-func (c cpuInfo) armasimddp() bool {
-	return c.arm&asimddp != 0
-}
-
-// SHA512 instructions
-func (c cpuInfo) armsha512() bool {
-	return c.arm&sha512 != 0
-}
-
-// Scalable Vector Extension
-func (c cpuInfo) armsve() bool {
-	return c.arm&sve != 0
-}
-
-// Generic Pointer Authentication
-func (c cpuInfo) armgpa() bool {
-	return c.arm&gpa != 0
 }
