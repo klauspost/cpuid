@@ -2,7 +2,7 @@
 // but copy it to your own project and rename the package.
 // See more at http://github.com/klauspost/cpuid
 
-//+build 386,!gccgo amd64,!gccgo,!noasm,!appengine
+//+build 386,!gccgo,!noasm amd64,!gccgo,!noasm,!appengine
 
 package cpuid
 
