@@ -86,6 +86,10 @@ Package home: https://github.com/klauspost/cpuid
 
 ## ARM CPU features
 
+# ARM FEATURE DETECTION DISABLED!
+
+See [#52](https://github.com/klauspost/cpuid/issues/52).
+ 
 Currently only `arm64` platforms are implemented. 
 
 *  **FP**  Single-precision and double-precision floating point
