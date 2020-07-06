@@ -17,7 +17,9 @@ func initCPU() {
 
 func addInfo(c *CPUInfo) {
 	// ARM64 disabled for now.
-	return
+	if true {
+		return
+	}
 	// 	midr := getMidr()
 
 	// MIDR_EL1 - Main ID Register
