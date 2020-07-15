@@ -69,6 +69,9 @@ Package home: https://github.com/klauspost/cpuid
 *  **VPCLMULQDQ** (Carry-Less Multiplication Quadword)
 *  **AVX512BF16** (AVX-512 BFLOAT16 Instructions)
 *  **AVX512VP2INTERSECT** (AVX-512 Intersect for D/Q)
+*  **AMXBF16** (Tile computational operations on BFLOAT16 numbers)
+*  **AMXTILE** (Tile architecture)
+*  **AMXINT8** (Tile computational operations on 8-bit integers)
 *  **MPX** (Intel MPX (Memory Protection Extensions))
 *  **ERMS** (Enhanced REP MOVSB/STOSB)
 *  **RDTSCP** (RDTSCP Instruction)
@@ -89,8 +92,8 @@ Package home: https://github.com/klauspost/cpuid
 # ARM FEATURE DETECTION DISABLED!
 
 See [#52](https://github.com/klauspost/cpuid/issues/52).
- 
-Currently only `arm64` platforms are implemented. 
+
+Currently only `arm64` platforms are implemented.
 
 *  **FP**  Single-precision and double-precision floating point
 *  **ASIMD**  Advanced SIMD

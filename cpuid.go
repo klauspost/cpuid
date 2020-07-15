@@ -231,6 +231,19 @@ var flagNamesArm = map[ArmFlags]string{
 	GPA:      "GPA",      // Generic Pointer Authentication
 }
 
+// x86 Advanced Matrix Extensions features, in CPUInfo.AmxFeatures
+const (
+	AMXBF16 AmxFlags = 1 << iota // Tile computational operations on BFLOAT16 numbers
+	AMXTILE                      // Tile architecture
+	AMXINT8                      // Tile computational operations on 8-bit integers
+)
+
+var flagNamesAmx = map[AmxFlags]string{
+	AMXBF16: "AMXBF16", // Tile computational operations on BFLOAT16 numbers
+	AMXTILE: "AMXTILE", // Tile architecture
+	AMXINT8: "AMXINT8", // Tile computational operations on 8-bit integers
+}
+
 // CPUInfo contains information about the detected system CPU.
 type CPUInfo struct {
 	BrandName      string   // Brand name reported by the CPU
@@ -238,6 +251,7 @@ type CPUInfo struct {
 	VendorString   string   // Raw vendor string.
 	Features       Flags    // Features of the CPU (x64)
 	Arm            ArmFlags // Features of the CPU (arm)
+	AmxFeatures    AmxFlags // Features of the AMX (x86 Advanced Matrix Extension)
 	PhysicalCores  int      // Number of physical processor cores in your CPU. Will be 0 if undetectable.
 	ThreadsPerCore int      // Number of threads per physical core. Will be 1 if undetectable.
 	LogicalCores   int      // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
@@ -556,14 +570,29 @@ func (c CPUInfo) VPCLMULQDQ() bool {
 	return c.Features&VPCLMULQDQ != 0
 }
 
-// AVX512BF16 indicates support of
+// AVX512BF16 indicates support of AVX-512 BFLOAT16 Instruction
 func (c CPUInfo) AVX512BF16() bool {
 	return c.Features&AVX512BF16 != 0
 }
 
-// AVX512VP2INTERSECT indicates support of
+// AVX512VP2INTERSECT indicates support of AVX-512 Intersect for D/Q
 func (c CPUInfo) AVX512VP2INTERSECT() bool {
 	return c.Features&AVX512VP2INTERSECT != 0
+}
+
+// AMXBF16 indicates support of Tile computational operations on BFLOAT16 numbers
+func (c CPUInfo) AMXBF16() bool {
+	return c.AmxFeatures&AMXBF16 != 0
+}
+
+// AMXTILE indicates support of Tile architecture
+func (c CPUInfo) AMXTILE() bool {
+	return c.AmxFeatures&AMXTILE != 0
+}
+
+// AMXINT8 indicates support of Tile computational operations on 8-bit integers
+func (c CPUInfo) AMXINT8() bool {
+	return c.AmxFeatures&AMXINT8 != 0
 }
 
 // MPX indicates support of Intel MPX (Memory Protection Extensions)
@@ -738,6 +767,9 @@ type Flags uint64
 // ArmFlags contains detected ARM cpu features and characteristics
 type ArmFlags uint64
 
+// AmxFlags contains AMX (x86 Advanced Matrix extension) features
+type AmxFlags uint64
+
 // String returns a string representation of the detected
 // CPU features.
 func (f Flags) String() string {
@@ -775,6 +807,26 @@ func (f ArmFlags) Strings() []string {
 	}
 	return r
 }
+
+// String returns a string representation of the detected
+// x86 Advanced Matrix Extensions (AMX) features.
+func (f AmxFlags) String() string {
+	return strings.Join(f.Strings(), ",")
+}
+
+// Strings returns an array of the detected features.
+func (f AmxFlags) Strings() []string {
+	r := make([]string, 0, 20)
+	for i := uint(0); i < 64; i++ {
+		key := AmxFlags(1 << i)
+		val := flagNamesAmx[key]
+		if f&key != 0 {
+			r = append(r, val)
+		}
+	}
+	return r
+}
+
 func maxExtendedFunction() uint32 {
 	eax, _, _, _ := cpuid(0x80000000)
 	return eax
@@ -1094,70 +1146,71 @@ func hasSGX(available, lc bool) (rval SGXSupport) {
 	return
 }
 
-func support() Flags {
+func support() (Flags, AmxFlags) {
 	mfi := maxFunctionID()
 	vend, _ := vendorID()
 	if mfi < 0x1 {
-		return 0
+		return 0, 0
 	}
-	rval := uint64(0)
+	flags := uint64(0)
+	amxFlags := AmxFlags(0)
 	_, _, c, d := cpuid(1)
 	if (d & (1 << 15)) != 0 {
-		rval |= CMOV
+		flags |= CMOV
 	}
 	if (d & (1 << 23)) != 0 {
-		rval |= MMX
+		flags |= MMX
 	}
 	if (d & (1 << 25)) != 0 {
-		rval |= MMXEXT
+		flags |= MMXEXT
 	}
 	if (d & (1 << 25)) != 0 {
-		rval |= SSE
+		flags |= SSE
 	}
 	if (d & (1 << 26)) != 0 {
-		rval |= SSE2
+		flags |= SSE2
 	}
 	if (c & 1) != 0 {
-		rval |= SSE3
+		flags |= SSE3
 	}
 	if (c & (1 << 5)) != 0 {
-		rval |= VMX
+		flags |= VMX
 	}
 	if (c & 0x00000200) != 0 {
-		rval |= SSSE3
+		flags |= SSSE3
 	}
 	if (c & 0x00080000) != 0 {
-		rval |= SSE4
+		flags |= SSE4
 	}
 	if (c & 0x00100000) != 0 {
-		rval |= SSE42
+		flags |= SSE42
 	}
 	if (c & (1 << 25)) != 0 {
-		rval |= AESNI
+		flags |= AESNI
 	}
 	if (c & (1 << 1)) != 0 {
-		rval |= CLMUL
+		flags |= CLMUL
 	}
 	if c&(1<<23) != 0 {
-		rval |= POPCNT
+		flags |= POPCNT
 	}
 	if c&(1<<30) != 0 {
-		rval |= RDRAND
+		flags |= RDRAND
 	}
 	if c&(1<<29) != 0 {
-		rval |= F16C
+		flags |= F16C
 	}
 	if c&(1<<13) != 0 {
-		rval |= CX16
+		flags |= CX16
 	}
 	if vend == Intel && (d&(1<<28)) != 0 && mfi >= 4 {
 		if threadsPerCore() > 1 {
-			rval |= HTT
+			flags |= HTT
 		}
 	}
 	if vend == AMD && (d&(1<<28)) != 0 && mfi >= 4 {
 		if threadsPerCore() > 1 {
-			rval |= HTT
+			flags |= HTT
 		}
 	}
 	// Check XGETBV, OXSAVE and AVX bits
@@ -1165,9 +1218,9 @@ func support() Flags {
 		// Check for OS support
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {
-			rval |= AVX
+			flags |= AVX
 			if (c & 0x00001000) != 0 {
-				rval |= FMA3
+				flags |= FMA3
 			}
 		}
 	}
@@ -1176,47 +1229,47 @@ func support() Flags {
 	if mfi >= 7 {
 		_, ebx, ecx, edx := cpuidex(7, 0)
 		eax1, _, _, _ := cpuidex(7, 1)
-		if (rval&AVX) != 0 && (ebx&0x00000020) != 0 {
-			rval |= AVX2
+		if (flags&AVX) != 0 && (ebx&0x00000020) != 0 {
+			flags |= AVX2
 		}
 		if (ebx & 0x00000008) != 0 {
-			rval |= BMI1
+			flags |= BMI1
 			if (ebx & 0x00000100) != 0 {
-				rval |= BMI2
+				flags |= BMI2
 			}
 		}
 		if ebx&(1<<2) != 0 {
-			rval |= SGX
+			flags |= SGX
 		}
 		if ebx&(1<<4) != 0 {
-			rval |= HLE
+			flags |= HLE
 		}
 		if ebx&(1<<9) != 0 {
-			rval |= ERMS
+			flags |= ERMS
 		}
 		if ebx&(1<<11) != 0 {
-			rval |= RTM
+			flags |= RTM
 		}
 		if ebx&(1<<14) != 0 {
-			rval |= MPX
+			flags |= MPX
 		}
 		if ebx&(1<<18) != 0 {
-			rval |= RDSEED
+			flags |= RDSEED
 		}
 		if ebx&(1<<19) != 0 {
-			rval |= ADX
+			flags |= ADX
 		}
 		if ebx&(1<<29) != 0 {
-			rval |= SHA
+			flags |= SHA
 		}
 		if edx&(1<<26) != 0 {
-			rval |= IBPB
+			flags |= IBPB
 		}
 		if ecx&(1<<30) != 0 {
-			rval |= SGXLC
+			flags |= SGXLC
 		}
 		if edx&(1<<27) != 0 {
-			rval |= STIBP
+			flags |= STIBP
 		}
 
 		// Only detect AVX-512 features if XGETBV is supported
@@ -1229,61 +1282,70 @@ func support() Flags {
 			/// and that XCR0[2:1] = ‘11b’ (XMM state and YMM state are enabled by OS).
 			if (eax>>5)&7 == 7 && (eax>>1)&3 == 3 {
 				if ebx&(1<<16) != 0 {
-					rval |= AVX512F
+					flags |= AVX512F
 				}
 				if ebx&(1<<17) != 0 {
-					rval |= AVX512DQ
+					flags |= AVX512DQ
 				}
 				if ebx&(1<<21) != 0 {
-					rval |= AVX512IFMA
+					flags |= AVX512IFMA
 				}
 				if ebx&(1<<26) != 0 {
-					rval |= AVX512PF
+					flags |= AVX512PF
 				}
 				if ebx&(1<<27) != 0 {
-					rval |= AVX512ER
+					flags |= AVX512ER
 				}
 				if ebx&(1<<28) != 0 {
-					rval |= AVX512CD
+					flags |= AVX512CD
 				}
 				if ebx&(1<<30) != 0 {
-					rval |= AVX512BW
+					flags |= AVX512BW
 				}
 				if ebx&(1<<31) != 0 {
-					rval |= AVX512VL
+					flags |= AVX512VL
 				}
 				// ecx
 				if ecx&(1<<1) != 0 {
-					rval |= AVX512VBMI
+					flags |= AVX512VBMI
 				}
 				if ecx&(1<<6) != 0 {
-					rval |= AVX512VBMI2
+					flags |= AVX512VBMI2
 				}
 				if ecx&(1<<8) != 0 {
-					rval |= GFNI
+					flags |= GFNI
 				}
 				if ecx&(1<<9) != 0 {
-					rval |= VAES
+					flags |= VAES
 				}
 				if ecx&(1<<10) != 0 {
-					rval |= VPCLMULQDQ
+					flags |= VPCLMULQDQ
 				}
 				if ecx&(1<<11) != 0 {
-					rval |= AVX512VNNI
+					flags |= AVX512VNNI
 				}
 				if ecx&(1<<12) != 0 {
-					rval |= AVX512BITALG
+					flags |= AVX512BITALG
 				}
 				if ecx&(1<<14) != 0 {
-					rval |= AVX512VPOPCNTDQ
+					flags |= AVX512VPOPCNTDQ
 				}
 				// edx
 				if edx&(1<<8) != 0 {
-					rval |= AVX512VP2INTERSECT
+					flags |= AVX512VP2INTERSECT
+				}
+				if edx&(1<<22) != 0 {
+					amxFlags |= AMXBF16
+				}
+				if edx&(1<<24) != 0 {
+					amxFlags |= AMXTILE
+				}
+				if edx&(1<<25) != 0 {
+					amxFlags |= AMXINT8
 				}
 				// cpuid eax 07h,ecx=1
 				if eax1&(1<<5) != 0 {
-					rval |= AVX512BF16
+					flags |= AVX512BF16
 				}
 			}
 		}
@@ -1292,29 +1354,29 @@ func support() Flags {
 	if maxExtendedFunction() >= 0x80000001 {
 		_, _, c, d := cpuid(0x80000001)
 		if (c & (1 << 5)) != 0 {
-			rval |= LZCNT
-			rval |= POPCNT
+			flags |= LZCNT
+			flags |= POPCNT
 		}
 		if (d & (1 << 31)) != 0 {
-			rval |= AMD3DNOW
+			flags |= AMD3DNOW
 		}
 		if (d & (1 << 30)) != 0 {
-			rval |= AMD3DNOWEXT
+			flags |= AMD3DNOWEXT
 		}
 		if (d & (1 << 23)) != 0 {
-			rval |= MMX
+			flags |= MMX
 		}
 		if (d & (1 << 22)) != 0 {
-			rval |= MMXEXT
+			flags |= MMXEXT
 		}
 		if (c & (1 << 6)) != 0 {
-			rval |= SSE4A
+			flags |= SSE4A
 		}
 		if d&(1<<20) != 0 {
-			rval |= NX
+			flags |= NX
 		}
 		if d&(1<<27) != 0 {
-			rval |= RDTSCP
+			flags |= RDTSCP
 		}
 
 		/* Allow for selectively disabling SSE2 functions on AMD processors
@@ -1325,18 +1387,18 @@ func support() Flags {
 		   so that SSE2 is used unless explicitly disabled by checking
 		   AV_CPU_FLAG_SSE2SLOW. */
 		if vend != Intel &&
-			rval&SSE2 != 0 && (c&0x00000040) == 0 {
-			rval |= SSE2SLOW
+			flags&SSE2 != 0 && (c&0x00000040) == 0 {
+			flags |= SSE2SLOW
 		}
 
 		/* XOP and FMA4 use the AVX instruction coding scheme, so they can't be
 		 * used unless the OS has AVX support. */
-		if (rval & AVX) != 0 {
+		if (flags & AVX) != 0 {
 			if (c & 0x00000800) != 0 {
-				rval |= XOP
+				flags |= XOP
 			}
 			if (c & 0x00010000) != 0 {
-				rval |= FMA4
+				flags |= FMA4
 			}
 		}
 
@@ -1346,11 +1408,11 @@ func support() Flags {
 				/* 6/9 (pentium-m "banias"), 6/13 (pentium-m "dothan"), and
 				 * 6/14 (core1 "yonah") theoretically support sse2, but it's
 				 * usually slower than mmx. */
-				if (rval & SSE2) != 0 {
-					rval |= SSE2SLOW
+				if (flags & SSE2) != 0 {
+					flags |= SSE2SLOW
 				}
-				if (rval & SSE3) != 0 {
-					rval |= SSE3SLOW
+				if (flags & SSE3) != 0 {
+					flags |= SSE3SLOW
 				}
 			}
 			/* The Atom processor has SSSE3 support, which is useful in many cases,
@@ -1359,11 +1421,11 @@ func support() Flags {
 			 * SSSE3. This flag allows for selectively disabling certain SSSE3
 			 * functions on the Atom. */
 			if family == 6 && model == 28 {
-				rval |= ATOM
+				flags |= ATOM
 			}
 		}
 	}
-	return Flags(rval)
+	return Flags(flags), AmxFlags(amxFlags)
 }
 
 func valAsString(values ...uint32) []byte {
