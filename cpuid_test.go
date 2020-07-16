@@ -4,6 +4,7 @@ package cpuid
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -680,6 +681,36 @@ func TestAVX512_VP2INTERSECT(t *testing.T) {
 	t.Log("AVX512VP2INTERSECT Support:", got)
 }
 
+// TestAMXBF16 tests AMXBF16() function (Tile computational operations on BFLOAT16 numbers)
+func TestAMXBF16(t *testing.T) {
+	got := CPU.AMXBF16()
+	expected := CPU.AmxFeatures&AMXBF16 == AMXBF16
+	if got != expected {
+		t.Fatalf("AMXBF16: expected %v, got %v", expected, got)
+	}
+	t.Log("AMXBF16 Support:", got)
+}
+
+// TestAMXTILE tests AMXTILE() function (Tile architecture)
+func TestAMXTILE(t *testing.T) {
+	got := CPU.AMXTILE()
+	expected := CPU.AmxFeatures&AMXTILE == AMXTILE
+	if got != expected {
+		t.Fatalf("AMXTILE: expected %v, got %v", expected, got)
+	}
+	t.Log("AMXTILE Support:", got)
+}
+
+// TestAMXINT8 tests AMXINT8() function (Tile computational operations on 8-bit integers)
+func TestAMXINT8(t *testing.T) {
+	got := CPU.AMXINT8()
+	expected := CPU.AmxFeatures&AMXINT8 == AMXINT8
+	if got != expected {
+		t.Fatalf("AMXINT8: expected %v, got %v", expected, got)
+	}
+	t.Log("AMXINT8 Support:", got)
+}
+
 // TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
 func TestMPX(t *testing.T) {
 	got := CPU.MPX()
@@ -698,6 +729,18 @@ func TestERMS(t *testing.T) {
 		t.Fatalf("ERMS: expected %v, got %v", expected, got)
 	}
 	t.Log("ERMS Support:", got)
+}
+
+// TestAmxStrings tests AmxFlags.Strings()
+func TestAmxStrings(t *testing.T) {
+	af := AmxFlags(0)
+	af |= (AMXBF16 | AMXTILE | AMXINT8)
+	got := af.Strings()
+	expected := []string{"AMXBF16", "AMXTILE", "AMXINT8"}
+	if !reflect.DeepEqual(got, expected) {
+		t.Fatalf("AmxFlags Strings: expected %v, got %v", expected, got)
+	}
+	t.Log("AmxFlags Strings:", got)
 }
 
 // TestVendor writes the detected vendor. Will be 0 if unknown
