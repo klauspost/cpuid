@@ -23,6 +23,8 @@ func TestCPUID(t *testing.T) {
 	t.Log("LogicalCores:", CPU.LogicalCores)
 	t.Log("Family", CPU.Family, "Model:", CPU.Model)
 	t.Log("Features:", CPU.Features)
+	t.Log("ARM Features:", CPU.Arm)
+	t.Log("AMX Features:", CPU.AmxFeatures)
 	t.Log("Cacheline bytes:", CPU.CacheLine)
 	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
 	t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
