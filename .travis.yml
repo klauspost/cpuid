@@ -10,13 +10,14 @@ arch:
   - arm64
 
 go:
-  - 1.12.x
   - 1.13.x
   - 1.14.x
+  - 1.15.x
   - master
 
 script:
   - go vet ./...
+  - go test -test.v -test.run ^TestCPUID$
   - go test -race ./...
   - go test -tags=noasm ./...
 
