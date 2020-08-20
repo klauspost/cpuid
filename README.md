@@ -144,6 +144,8 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/klauspost/cpuid"
 )
 
@@ -154,7 +156,7 @@ func main() {
 	fmt.Println("ThreadsPerCore:", cpuid.CPU.ThreadsPerCore)
 	fmt.Println("LogicalCores:", cpuid.CPU.LogicalCores)
 	fmt.Println("Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model)
-	fmt.Println("Features:", cpuid.CPU.Features)
+	fmt.Println("Features:", fmt.Sprintf(strings.Join(cpuid.CPU.FeatureSet(), ",")))
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
 	fmt.Println("L1 Data Cache:", cpuid.CPU.Cache.L1D, "bytes")
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1D, "bytes")

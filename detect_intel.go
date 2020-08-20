@@ -22,8 +22,11 @@ func addInfo(c *CPUInfo) {
 	c.BrandName = brandName()
 	c.CacheLine = cacheLine()
 	c.Family, c.Model = familyModel()
-	c.Features, c.AmxFeatures = support()
-	c.SGX = hasSGX(c.Features&SGX != 0, c.Features&SGXLC != 0)
+	c.featureSet = support()
+	if c.featureSet != nil {
+		c.Features = c.featureSet[0]
+	}
+	c.SGX = hasSGX(c.featureSet.inSet(SGX), c.featureSet.inSet(SGXLC))
 	c.ThreadsPerCore = threadsPerCore()
 	c.LogicalCores = logicalCores()
 	c.PhysicalCores = physicalCores()
