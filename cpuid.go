@@ -109,6 +109,8 @@ const (
 	AMXTILE // Tile architecture
 	AMXINT8 // Tile computational operations on 8-bit integers
 
+	HYPERVISOR // This bit has been reserved by Intel & AMD for use by hypervisors
+
 	// Keep it last. It automatically defines the size of []FlagSet
 	LASTID
 )
@@ -183,6 +185,8 @@ var flagNames = map[Flags]string{
 	AMXBF16: "AMXBF16", // Tile computational operations on BFLOAT16 numbers
 	AMXTILE: "AMXTILE", // Tile architecture
 	AMXINT8: "AMXINT8", // Tile computational operations on 8-bit integers
+
+	HYPERVISOR: "HYPERVISOR", // This bit has been reserved by Intel & AMD for use by hypervisors
 }
 
 /* all special features for arm64 should be defined here */
@@ -756,14 +760,9 @@ func hertz(model string) int64 {
 }
 
 // VM Will return true if the cpu id indicates we are in
-// a virtual machine. This is only a hint, and will very likely
-// have many false negatives.
+// a virtual machine.
 func (c CPUInfo) VM() bool {
-	switch c.VendorID {
-	case MSVM, KVM, VMware, XenHVM, Bhyve:
-		return true
-	}
-	return false
+	return CPU.featureSet.inSet(HYPERVISOR)
 }
 
 // Flags contains detected cpu features and characteristics
@@ -1205,6 +1204,11 @@ func support() FlagSet {
 	}
 	if c&(1<<30) != 0 {
 		fs.set(RDRAND)
+	}
+	// This bit has been reserved by Intel & AMD for use by hypervisors,
+	// and indicates the presence of a hypervisor.
+	if c&(1<<31) != 0 {
+		fs.set(HYPERVISOR)
 	}
 	if c&(1<<29) != 0 {
 		fs.set(F16C)

@@ -810,7 +810,12 @@ func TestVIA(t *testing.T) {
 
 // Test VM function
 func TestVM(t *testing.T) {
-	t.Log("Vendor ID:", CPU.VM())
+	got := CPU.VM()
+	expected := CPU.featureSet.inSet(HYPERVISOR)
+	if got != expected {
+		t.Fatalf("TestVM: expected %v, got %v", expected, got)
+	}
+	t.Log("TestVM:", got)
 }
 
 // TSX returns true if cpu supports transactional sync extensions.
