@@ -111,6 +111,15 @@ const (
 
 	HYPERVISOR // This bit has been reserved by Intel & AMD for use by hypervisors
 
+	WAITPKG   // TPAUSE, UMONITOR, UMWAIT
+	SERIALIZE // Serialize Instruction Execution
+	TSXLDTRK  // Intel TSX Suspend Load Address Tracking
+	WBNOINVD  // Write Back and Do Not Invalidate Cache
+	MOVDIRI   // Move Doubleword as Direct Store
+	MOVDIR64B // Move 64 Bytes as Direct Store
+	ENQCMD    // Enqueue Command
+	CLDEMOTE  // Cache Line Demote
+
 	// Keep it last. It automatically defines the size of []FlagSet
 	LASTID
 )
@@ -187,6 +196,15 @@ var flagNames = map[Flags]string{
 	AMXINT8: "AMXINT8", // Tile computational operations on 8-bit integers
 
 	HYPERVISOR: "HYPERVISOR", // This bit has been reserved by Intel & AMD for use by hypervisors
+
+	WAITPKG:   "WAITPKG",   // TPAUSE, UMONITOR, UMWAIT
+	SERIALIZE: "SERIALIZE", // Serialize Instruction Execution
+	TSXLDTRK:  "TSXLDTRK",  // Intel TSX Suspend Load Address Tracking
+	WBNOINVD:  "WBNOINVD",  // Write Back and Do Not Invalidate Cache
+	MOVDIRI:   "MOVDIRI",   // Move Doubleword as Direct Store
+	MOVDIR64B: "MOVDIR64B", // Move 64 Bytes as Direct Store
+	ENQCMD:    "ENQCMD",    // Enqueue Command
+	CLDEMOTE:  "CLDEMOTE",  // Cache Line Demote
 }
 
 /* all special features for arm64 should be defined here */
@@ -594,6 +612,46 @@ func (c CPUInfo) AMXTILE() bool {
 // AMXINT8 indicates support of Tile computational operations on 8-bit integers
 func (c CPUInfo) AMXINT8() bool {
 	return c.featureSet.inSet(AMXINT8)
+}
+
+// WAITPKG indicates support of TPAUSE, UMONITOR, UMWAIT
+func (c CPUInfo) WAITPKG() bool {
+	return c.featureSet.inSet(WAITPKG)
+}
+
+// SERIALIZE indicates support of Serialize Instruction Execution
+func (c CPUInfo) SERIALIZE() bool {
+	return c.featureSet.inSet(SERIALIZE)
+}
+
+// TSXLDTRK indicates support of Intel TSX Suspend Load Address Tracking
+func (c CPUInfo) TSXLDTRK() bool {
+	return c.featureSet.inSet(TSXLDTRK)
+}
+
+// WBNOINVD indicates support of Write Back and Do Not Invalidate Cache
+func (c CPUInfo) WBNOINVD() bool {
+	return c.featureSet.inSet(WBNOINVD)
+}
+
+// MOVDIRI indicates support of Move Doubleword as Direct Store
+func (c CPUInfo) MOVDIRI() bool {
+	return c.featureSet.inSet(MOVDIRI)
+}
+
+// MOVDIR64B indicates support of Move 64 Bytes as Direct Store
+func (c CPUInfo) MOVDIR64B() bool {
+	return c.featureSet.inSet(MOVDIR64B)
+}
+
+// ENQCMD indicates support of Enqueue Command
+func (c CPUInfo) ENQCMD() bool {
+	return c.featureSet.inSet(ENQCMD)
+}
+
+// CLDEMOTE indicates support of Cache Line Demote
+func (c CPUInfo) CLDEMOTE() bool {
+	return c.featureSet.inSet(CLDEMOTE)
 }
 
 // MPX indicates support of Intel MPX (Memory Protection Extensions)
@@ -1245,6 +1303,7 @@ func support() FlagSet {
 		if fs.inSet(AVX) && (ebx&0x00000020) != 0 {
 			fs.set(AVX2)
 		}
+		// CPUID.(EAX=7, ECX=0).EBX
 		if (ebx & 0x00000008) != 0 {
 			fs.set(BMI1)
 			if (ebx & 0x00000100) != 0 {
@@ -1275,11 +1334,34 @@ func support() FlagSet {
 		if ebx&(1<<29) != 0 {
 			fs.set(SHA)
 		}
-		if edx&(1<<26) != 0 {
-			fs.set(IBPB)
+		// CPUID.(EAX=7, ECX=0).ECX
+		if ecx&(1<<5) != 0 {
+			fs.set(WAITPKG)
+		}
+		if ecx&(1<<25) != 0 {
+			fs.set(CLDEMOTE)
+		}
+		if ecx&(1<<27) != 0 {
+			fs.set(MOVDIRI)
+		}
+		if ecx&(1<<28) != 0 {
+			fs.set(MOVDIR64B)
+		}
+		if ecx&(1<<29) != 0 {
+			fs.set(ENQCMD)
 		}
 		if ecx&(1<<30) != 0 {
 			fs.set(SGXLC)
+		}
+		// CPUID.(EAX=7, ECX=0).EDX
+		if edx&(1<<14) != 0 {
+			fs.set(SERIALIZE)
+		}
+		if edx&(1<<16) != 0 {
+			fs.set(TSXLDTRK)
+		}
+		if edx&(1<<26) != 0 {
+			fs.set(IBPB)
 		}
 		if edx&(1<<27) != 0 {
 			fs.set(STIBP)
@@ -1356,7 +1438,7 @@ func support() FlagSet {
 				if edx&(1<<25) != 0 {
 					fs.set(AMXINT8)
 				}
-				// cpuid eax 07h,ecx=1
+				// eax1 = CPUID.(EAX=7, ECX=1).EAX
 				if eax1&(1<<5) != 0 {
 					fs.set(AVX512BF16)
 				}
@@ -1436,6 +1518,12 @@ func support() FlagSet {
 			if family == 6 && model == 28 {
 				fs.set(ATOM)
 			}
+		}
+	}
+	if maxExtendedFunction() >= 0x80000008 {
+		_, b, _, _ := cpuid(0x80000008)
+		if (b & (1 << 9)) != 0 {
+			fs.set(WBNOINVD)
 		}
 	}
 

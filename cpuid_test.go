@@ -713,6 +713,86 @@ func TestAMXINT8(t *testing.T) {
 	t.Log("AMXINT8 Support:", got)
 }
 
+// TestWAITPKG tests WAITPKG() function (TPAUSE, UMONITOR, UMWAIT)
+func TestWAITPKG(t *testing.T) {
+	got := CPU.WAITPKG()
+	expected := CPU.featureSet.inSet(WAITPKG)
+	if got != expected {
+		t.Fatalf("WAITPKG: expected %v, got %v", expected, got)
+	}
+	t.Log("WAITPKG Support:", got)
+}
+
+// TestSERIALIZE tests SERIALIZE() function (Serialize Instruction Execution)
+func TestSERIALIZE(t *testing.T) {
+	got := CPU.SERIALIZE()
+	expected := CPU.featureSet.inSet(SERIALIZE)
+	if got != expected {
+		t.Fatalf("SERIALIZE: expected %v, got %v", expected, got)
+	}
+	t.Log("SERIALIZE Support:", got)
+}
+
+// TestTSXLDTRK tests TSXLDTRK() function (Intel TSX Suspend Load Address Tracking)
+func TestTSXLDTRK(t *testing.T) {
+	got := CPU.TSXLDTRK()
+	expected := CPU.featureSet.inSet(TSXLDTRK)
+	if got != expected {
+		t.Fatalf("TSXLDTRK: expected %v, got %v", expected, got)
+	}
+	t.Log("TSXLDTRK Support:", got)
+}
+
+// TestWBNOINVD tests WBNOINVD() function (Write Back and Do Not Invalidate Cache)
+func TestWBNOINVD(t *testing.T) {
+	got := CPU.WBNOINVD()
+	expected := CPU.featureSet.inSet(WBNOINVD)
+	if got != expected {
+		t.Fatalf("WBNOINVD: expected %v, got %v", expected, got)
+	}
+	t.Log("WBNOINVD Support:", got)
+}
+
+// TestMOVDIRI tests MOVDIRI() function (Move Doubleword as Direct Store)
+func TestMOVDIRI(t *testing.T) {
+	got := CPU.MOVDIRI()
+	expected := CPU.featureSet.inSet(MOVDIRI)
+	if got != expected {
+		t.Fatalf("MOVDIRI: expected %v, got %v", expected, got)
+	}
+	t.Log("MOVDIRI Support:", got)
+}
+
+// TestMOVDIR64B tests MOVDIR64B() function (Move 64 Bytes as Direct Store)
+func TestMOVDIR64B(t *testing.T) {
+	got := CPU.MOVDIR64B()
+	expected := CPU.featureSet.inSet(MOVDIR64B)
+	if got != expected {
+		t.Fatalf("MOVDIR64B: expected %v, got %v", expected, got)
+	}
+	t.Log("MOVDIR64B Support:", got)
+}
+
+// TestENQCMD tests ENQCMD() function (Enqueue Command)
+func TestENQCMD(t *testing.T) {
+	got := CPU.ENQCMD()
+	expected := CPU.featureSet.inSet(ENQCMD)
+	if got != expected {
+		t.Fatalf("ENQCMD: expected %v, got %v", expected, got)
+	}
+	t.Log("ENQCMD Support:", got)
+}
+
+// TestCLDEMOTE tests CLDEMOTE() function (Cache Line Demote)
+func TestCLDEMOTE(t *testing.T) {
+	got := CPU.CLDEMOTE()
+	expected := CPU.featureSet.inSet(CLDEMOTE)
+	if got != expected {
+		t.Fatalf("CLDEMOTE: expected %v, got %v", expected, got)
+	}
+	t.Log("CLDEMOTE Support:", got)
+}
+
 // TestMPX tests MPX() function (Intel MPX (Memory Protection Extensions))
 func TestMPX(t *testing.T) {
 	got := CPU.MPX()
