@@ -199,10 +199,10 @@ func TestMocks(t *testing.T) {
 			}
 		}
 
-		if CPU.ThreadsPerCore > 1 && !CPU.HTT() {
+		if CPU.ThreadsPerCore > 1 && !CPU.Supports(HTT) {
 			t.Fatalf("Hyperthreading not detected")
 		}
-		if CPU.ThreadsPerCore == 1 && CPU.HTT() {
+		if CPU.ThreadsPerCore == 1 && CPU.Supports(HTT) {
 			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
 		}
 		restore()

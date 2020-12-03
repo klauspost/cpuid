@@ -116,6 +116,15 @@ const (
 	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
 	XOP                                 // Bulldozer XOP functions
+	IBS                                 // Instruction Based Sampling (AMD)
+	IBSFFV
+	IBSFETCHSAM
+	IBSOPSAM
+	IBSRDWROPCNT
+	IBSOPCNT
+	IBSBRNTRGT
+	IBSOPCNTEXT
+	IBSRIPINVALIDCHK
 
 	// ARM features:
 	FP       // Single-precision and double-precision floating point
@@ -142,7 +151,6 @@ const (
 	SHA512   // SHA512 instructions
 	SVE      // Scalable Vector Extension
 	GPA      // Generic Pointer Authentication
-
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
 )
@@ -222,380 +230,9 @@ func (c *CPUInfo) Disable(ids ...FeatureID) bool {
 	return true
 }
 
-// Cmov indicates support of CMOV instructions
-func (c CPUInfo) Cmov() bool {
-	return c.featureSet.inSet(CMOV)
-}
-
-// Amd3dnow indicates support of AMD 3DNOW! instructions
-func (c CPUInfo) Amd3dnow() bool {
-	return c.featureSet.inSet(AMD3DNOW)
-}
-
-// Amd3dnowExt indicates support of AMD 3DNOW! Extended instructions
-func (c CPUInfo) Amd3dnowExt() bool {
-	return c.featureSet.inSet(AMD3DNOWEXT)
-}
-
-// VMX indicates support of VMX
-func (c CPUInfo) VMX() bool {
-	return c.featureSet.inSet(VMX)
-}
-
-// MMX indicates support of MMX instructions
-func (c CPUInfo) MMX() bool {
-	return c.featureSet.inSet(MMX)
-}
-
-// MMXExt indicates support of MMXEXT instructions
-// (SSE integer functions or AMD MMX ext)
-func (c CPUInfo) MMXExt() bool {
-	return c.featureSet.inSet(MMXEXT)
-}
-
-// SSE indicates support of SSE instructions
-func (c CPUInfo) SSE() bool {
-	return c.featureSet.inSet(SSE)
-}
-
-// SSE2 indicates support of SSE 2 instructions
-func (c CPUInfo) SSE2() bool {
-	return c.featureSet.inSet(SSE2)
-}
-
-// SSE3 indicates support of SSE 3 instructions
-func (c CPUInfo) SSE3() bool {
-	return c.featureSet.inSet(SSE3)
-}
-
-// SSSE3 indicates support of SSSE 3 instructions
-func (c CPUInfo) SSSE3() bool {
-	return c.featureSet.inSet(SSSE3)
-}
-
-// SSE4 indicates support of SSE 4 (also called SSE 4.1) instructions
-func (c CPUInfo) SSE4() bool {
-	return c.featureSet.inSet(SSE4)
-}
-
-// SSE42 indicates support of SSE4.2 instructions
-func (c CPUInfo) SSE42() bool {
-	return c.featureSet.inSet(SSE42)
-}
-
-// AVX indicates support of AVX instructions
-// and operating system support of AVX instructions
-func (c CPUInfo) AVX() bool {
-	return c.featureSet.inSet(AVX)
-}
-
-// AVX2 indicates support of AVX2 instructions
-func (c CPUInfo) AVX2() bool {
-	return c.featureSet.inSet(AVX2)
-}
-
-// FMA3 indicates support of FMA3 instructions
-func (c CPUInfo) FMA3() bool {
-	return c.featureSet.inSet(FMA3)
-}
-
-// FMA4 indicates support of FMA4 instructions
-func (c CPUInfo) FMA4() bool {
-	return c.featureSet.inSet(FMA4)
-}
-
-// XOP indicates support of XOP instructions
-func (c CPUInfo) XOP() bool {
-	return c.featureSet.inSet(XOP)
-}
-
-// F16C indicates support of F16C instructions
-func (c CPUInfo) F16C() bool {
-	return c.featureSet.inSet(F16C)
-}
-
-// BMI1 indicates support of BMI1 instructions
-func (c CPUInfo) BMI1() bool {
-	return c.featureSet.inSet(BMI1)
-}
-
-// BMI2 indicates support of BMI2 instructions
-func (c CPUInfo) BMI2() bool {
-	return c.featureSet.inSet(BMI2)
-}
-
-// TBM indicates support of TBM instructions
-// (AMD Trailing Bit Manipulation)
-func (c CPUInfo) TBM() bool {
-	return c.featureSet.inSet(TBM)
-}
-
-// Lzcnt indicates support of LZCNT instruction
-func (c CPUInfo) Lzcnt() bool {
-	return c.featureSet.inSet(LZCNT)
-}
-
-// Popcnt indicates support of POPCNT instruction
-func (c CPUInfo) Popcnt() bool {
-	return c.featureSet.inSet(POPCNT)
-}
-
-// HTT indicates the processor has Hyperthreading enabled
-func (c CPUInfo) HTT() bool {
-	return c.featureSet.inSet(HTT)
-}
-
-// AesNi indicates support of AES-NI instructions
-// (Advanced Encryption Standard New Instructions)
-func (c CPUInfo) AesNi() bool {
-	return c.featureSet.inSet(AESNI)
-}
-
-// Clmul indicates support of CLMUL instructions
-// (Carry-less Multiplication)
-func (c CPUInfo) Clmul() bool {
-	return c.featureSet.inSet(CLMUL)
-}
-
-// NX indicates support of NX (No-Execute) bit
-func (c CPUInfo) NX() bool {
-	return c.featureSet.inSet(NX)
-}
-
-// SSE4A indicates support of AMD Barcelona microarchitecture SSE4a instructions
-func (c CPUInfo) SSE4A() bool {
-	return c.featureSet.inSet(SSE4A)
-}
-
-// HLE indicates support of Hardware Lock Elision
-func (c CPUInfo) HLE() bool {
-	return c.featureSet.inSet(HLE)
-}
-
-// RTM indicates support of Restricted Transactional Memory
-func (c CPUInfo) RTM() bool {
-	return c.featureSet.inSet(RTM)
-}
-
-// Rdrand indicates support of RDRAND instruction is available
-func (c CPUInfo) Rdrand() bool {
-	return c.featureSet.inSet(RDRAND)
-}
-
-// Rdseed indicates support of RDSEED instruction is available
-func (c CPUInfo) Rdseed() bool {
-	return c.featureSet.inSet(RDSEED)
-}
-
-// ADX indicates support of Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
-func (c CPUInfo) ADX() bool {
-	return c.featureSet.inSet(ADX)
-}
-
-// SHA indicates support of Intel SHA Extensions
-func (c CPUInfo) SHA() bool {
-	return c.featureSet.inSet(SHA)
-}
-
-// AVX512F indicates support of AVX-512 Foundation
-func (c CPUInfo) AVX512F() bool {
-	return c.featureSet.inSet(AVX512F)
-}
-
-// AVX512DQ indicates support of AVX-512 Doubleword and Quadword Instructions
-func (c CPUInfo) AVX512DQ() bool {
-	return c.featureSet.inSet(AVX512DQ)
-}
-
-// AVX512IFMA indicates support of AVX-512 Integer Fused Multiply-Add Instructions
-func (c CPUInfo) AVX512IFMA() bool {
-	return c.featureSet.inSet(AVX512IFMA)
-}
-
-// AVX512PF indicates support of AVX-512 Prefetch Instructions
-func (c CPUInfo) AVX512PF() bool {
-	return c.featureSet.inSet(AVX512PF)
-}
-
-// AVX512ER indicates support of AVX-512 Exponential and Reciprocal Instructions
-func (c CPUInfo) AVX512ER() bool {
-	return c.featureSet.inSet(AVX512ER)
-}
-
-// AVX512CD indicates support of AVX-512 Conflict Detection Instructions
-func (c CPUInfo) AVX512CD() bool {
-	return c.featureSet.inSet(AVX512CD)
-}
-
-// AVX512BW indicates support of AVX-512 Byte and Word Instructions
-func (c CPUInfo) AVX512BW() bool {
-	return c.featureSet.inSet(AVX512BW)
-}
-
-// AVX512VL indicates support of AVX-512 Vector Length Extensions
-func (c CPUInfo) AVX512VL() bool {
-	return c.featureSet.inSet(AVX512VL)
-}
-
-// AVX512VBMI indicates support of AVX-512 Vector Bit Manipulation Instructions
-func (c CPUInfo) AVX512VBMI() bool {
-	return c.featureSet.inSet(AVX512VBMI)
-}
-
-// AVX512VBMI2 indicates support of AVX-512 Vector Bit Manipulation Instructions, Version 2
-func (c CPUInfo) AVX512VBMI2() bool {
-	return c.featureSet.inSet(AVX512VBMI2)
-}
-
-// AVX512VNNI indicates support of AVX-512 Vector Neural Network Instructions
-func (c CPUInfo) AVX512VNNI() bool {
-	return c.featureSet.inSet(AVX512VNNI)
-}
-
-// AVX512VPOPCNTDQ indicates support of AVX-512 Vector Population Count Doubleword and Quadword
-func (c CPUInfo) AVX512VPOPCNTDQ() bool {
-	return c.featureSet.inSet(AVX512VPOPCNTDQ)
-}
-
-// GFNI indicates support of Galois Field New Instructions
-func (c CPUInfo) GFNI() bool {
-	return c.featureSet.inSet(GFNI)
-}
-
-// VAES indicates support of Vector AES
-func (c CPUInfo) VAES() bool {
-	return c.featureSet.inSet(VAES)
-}
-
-// AVX512BITALG indicates support of AVX-512 Bit Algorithms
-func (c CPUInfo) AVX512BITALG() bool {
-	return c.featureSet.inSet(AVX512BITALG)
-}
-
-// VPCLMULQDQ indicates support of Carry-Less Multiplication Quadword
-func (c CPUInfo) VPCLMULQDQ() bool {
-	return c.featureSet.inSet(VPCLMULQDQ)
-}
-
-// AVX512BF16 indicates support of AVX-512 BFLOAT16 Instruction
-func (c CPUInfo) AVX512BF16() bool {
-	return c.featureSet.inSet(AVX512BF16)
-}
-
-// AVX512VP2INTERSECT indicates support of AVX-512 Intersect for D/Q
-func (c CPUInfo) AVX512VP2INTERSECT() bool {
-	return c.featureSet.inSet(AVX512VP2INTERSECT)
-}
-
-// AMXBF16 indicates support of Tile computational operations on BFLOAT16 numbers
-func (c CPUInfo) AMXBF16() bool {
-	return c.featureSet.inSet(AMXBF16)
-}
-
-// AMXTILE indicates support of Tile architecture
-func (c CPUInfo) AMXTILE() bool {
-	return c.featureSet.inSet(AMXTILE)
-}
-
-// AMXINT8 indicates support of Tile computational operations on 8-bit integers
-func (c CPUInfo) AMXINT8() bool {
-	return c.featureSet.inSet(AMXINT8)
-}
-
-// WAITPKG indicates support of TPAUSE, UMONITOR, UMWAIT
-func (c CPUInfo) WAITPKG() bool {
-	return c.featureSet.inSet(WAITPKG)
-}
-
-// SERIALIZE indicates support of Serialize Instruction Execution
-func (c CPUInfo) SERIALIZE() bool {
-	return c.featureSet.inSet(SERIALIZE)
-}
-
-// TSXLDTRK indicates support of Intel TSX Suspend Load Address Tracking
-func (c CPUInfo) TSXLDTRK() bool {
-	return c.featureSet.inSet(TSXLDTRK)
-}
-
-// WBNOINVD indicates support of Write Back and Do Not Invalidate Cache
-func (c CPUInfo) WBNOINVD() bool {
-	return c.featureSet.inSet(WBNOINVD)
-}
-
-// MOVDIRI indicates support of Move Doubleword as Direct Store
-func (c CPUInfo) MOVDIRI() bool {
-	return c.featureSet.inSet(MOVDIRI)
-}
-
-// MOVDIR64B indicates support of Move 64 Bytes as Direct Store
-func (c CPUInfo) MOVDIR64B() bool {
-	return c.featureSet.inSet(MOVDIR64B)
-}
-
-// ENQCMD indicates support of Enqueue Command
-func (c CPUInfo) ENQCMD() bool {
-	return c.featureSet.inSet(ENQCMD)
-}
-
-// CLDEMOTE indicates support of Cache Line Demote
-func (c CPUInfo) CLDEMOTE() bool {
-	return c.featureSet.inSet(CLDEMOTE)
-}
-
-// MPX indicates support of Intel MPX (Memory Protection Extensions)
-func (c CPUInfo) MPX() bool {
-	return c.featureSet.inSet(MPX)
-}
-
-// ERMS indicates support of Enhanced REP MOVSB/STOSB
-func (c CPUInfo) ERMS() bool {
-	return c.featureSet.inSet(ERMS)
-}
-
-// RDTSCP Instruction is available.
-func (c CPUInfo) RDTSCP() bool {
-	return c.featureSet.inSet(RDTSCP)
-}
-
-// CX16 indicates if CMPXCHG16B instruction is available.
-func (c CPUInfo) CX16() bool {
-	return c.featureSet.inSet(CX16)
-}
-
-// TSX is split into HLE (Hardware Lock Elision) and RTM (Restricted Transactional Memory) detection.
-// So TSX simply checks that.
-func (c CPUInfo) TSX() bool {
-	return c.featureSet.inSet(HLE) && c.featureSet.inSet(RTM)
-}
-
-// Intel returns true if vendor is recognized as Intel
-func (c CPUInfo) Intel() bool {
-	return c.VendorID == Intel
-}
-
-// AMD returns true if vendor is recognized as AMD
-func (c CPUInfo) AMD() bool {
-	return c.VendorID == AMD
-}
-
-// Hygon returns true if vendor is recognized as Hygon
-func (c CPUInfo) Hygon() bool {
-	return c.VendorID == Hygon
-}
-
-// Transmeta returns true if vendor is recognized as Transmeta
-func (c CPUInfo) Transmeta() bool {
-	return c.VendorID == Transmeta
-}
-
-// NSC returns true if vendor is recognized as National Semiconductor
-func (c CPUInfo) NSC() bool {
-	return c.VendorID == NSC
-}
-
-// VIA returns true if vendor is recognized as VIA
-func (c CPUInfo) VIA() bool {
-	return c.VendorID == VIA
+// IsVendor returns true if vendor is recognized as Intel
+func (c CPUInfo) IsVendor(v Vendor) bool {
+	return c.VendorID == v
 }
 
 func (c CPUInfo) FeatureSet() []string {
@@ -610,7 +247,7 @@ func (c CPUInfo) FeatureSet() []string {
 // Uses the RDTSCP instruction. The value 0 is returned
 // if the CPU does not support the instruction.
 func (c CPUInfo) RTCounter() uint64 {
-	if !c.RDTSCP() {
+	if !c.Supports(RDTSCP) {
 		return 0
 	}
 	a, _, _, d := rdtscpAsm()
@@ -622,7 +259,7 @@ func (c CPUInfo) RTCounter() uint64 {
 // about the current cpu/core the code is running on.
 // If the RDTSCP instruction isn't supported on the CPU, the value 0 is returned.
 func (c CPUInfo) Ia32TscAux() uint32 {
-	if !c.RDTSCP() {
+	if !c.Supports(RDTSCP) {
 		return 0
 	}
 	_, _, ecx, _ := rdtscpAsm()
@@ -1298,6 +935,9 @@ func support() flagSet {
 			fs.set(LZCNT)
 			fs.set(POPCNT)
 		}
+		if (c & (1 << 10)) != 0 {
+			fs.set(IBS)
+		}
 		if (d & (1 << 31)) != 0 {
 			fs.set(AMD3DNOW)
 		}
@@ -1347,6 +987,34 @@ func support() flagSet {
 		_, b, _, _ := cpuid(0x80000008)
 		if (b & (1 << 9)) != 0 {
 			fs.set(WBNOINVD)
+		}
+	}
+
+	if maxExtendedFunction() >= 0x8000001b && fs.inSet(IBS) {
+		eax, _, _, _ := cpuid(0x8000001b)
+		if (eax>>0)&1 == 1 {
+			fs.set(IBSFFV)
+		}
+		if (eax>>1)&1 == 1 {
+			fs.set(IBSFETCHSAM)
+		}
+		if (eax>>2)&1 == 1 {
+			fs.set(IBSOPSAM)
+		}
+		if (eax>>3)&1 == 1 {
+			fs.set(IBSRDWROPCNT)
+		}
+		if (eax>>4)&1 == 1 {
+			fs.set(IBSOPCNT)
+		}
+		if (eax>>5)&1 == 1 {
+			fs.set(IBSBRNTRGT)
+		}
+		if (eax>>6)&1 == 1 {
+			fs.set(IBSOPCNTEXT)
+		}
+		if (eax>>7)&1 == 1 {
+			fs.set(IBSRIPINVALIDCHK)
 		}
 	}
 
