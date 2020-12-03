@@ -28,7 +28,7 @@ var fileSet = token.NewFileSet()
 var reWrites = []rewrite{
 	initRewrite("CPUInfo -> cpuInfo"),
 	initRewrite("Vendor -> vendor"),
-	initRewrite("Flags -> flags"),
+	initRewrite("flags -> flags"),
 	initRewrite("Detect -> detect"),
 	initRewrite("CPU -> cpu"),
 }

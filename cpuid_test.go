@@ -4,7 +4,6 @@ package cpuid
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -24,7 +23,6 @@ func TestCPUID(t *testing.T) {
 	t.Log("LogicalCores:", CPU.LogicalCores)
 	t.Log("Family", CPU.Family, "Model:", CPU.Model)
 	t.Log("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
-	t.Log("ARM Features:", CPU.Arm)
 	t.Log("Cacheline bytes:", CPU.CacheLine)
 	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
 	t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
@@ -391,36 +389,6 @@ func TestClmul(t *testing.T) {
 		t.Fatalf("Clmul: expected %v, got %v", expected, got)
 	}
 	t.Log("CLMUL Support:", got)
-}
-
-// TestSSE2Slow tests SSE2Slow() function
-func TestSSE2Slow(t *testing.T) {
-	got := CPU.SSE2Slow()
-	expected := CPU.featureSet.inSet(SSE2SLOW)
-	if got != expected {
-		t.Fatalf("SSE2Slow: expected %v, got %v", expected, got)
-	}
-	t.Log("SSE2SLOW Support:", got)
-}
-
-// TestSSE3Slow tests SSE3slow() function
-func TestSSE3Slow(t *testing.T) {
-	got := CPU.SSE3Slow()
-	expected := CPU.featureSet.inSet(SSE3SLOW)
-	if got != expected {
-		t.Fatalf("SSE3slow: expected %v, got %v", expected, got)
-	}
-	t.Log("SSE3SLOW Support:", got)
-}
-
-// TestAtom tests Atom() function
-func TestAtom(t *testing.T) {
-	got := CPU.Atom()
-	expected := CPU.featureSet.inSet(ATOM)
-	if got != expected {
-		t.Fatalf("Atom: expected %v, got %v", expected, got)
-	}
-	t.Log("ATOM Support:", got)
 }
 
 // TestNX tests NX() function (NX (No-Execute) bit)
@@ -813,16 +781,6 @@ func TestERMS(t *testing.T) {
 	t.Log("ERMS Support:", got)
 }
 
-// Tests that the new FeatureSet() is compatible with the legacy
-// Features' Stringer.
-func TestX86FeaturesCompat(t *testing.T) {
-	s := strings.Split(fmt.Sprint(CPU.Features), ",")
-	f := CPU.FeatureSet()
-	if !reflect.DeepEqual(s, f[:len(s)]) {
-		t.Fatalf("Legacy Features (Stringer) differs from FeatureSet():\nexpected: %v\nbut got:  %v", s, f[:len(s)])
-	}
-}
-
 // TestVendor writes the detected vendor. Will be 0 if unknown
 func TestVendor(t *testing.T) {
 	t.Log("Vendor ID:", CPU.VendorID)
@@ -960,42 +918,3 @@ func ExampleCPUInfo_Ia32TscAux() {
 	core := ecx & 0xFFF
 	fmt.Println("Chip, Core:", chip, core)
 }
-
-/*
-func TestPhysical(t *testing.T) {
-	var test16 = "CPUID 00000000: 0000000d-756e6547-6c65746e-49656e69 \nCPUID 00000001: 000206d7-03200800-1fbee3ff-bfebfbff   \nCPUID 00000002: 76035a01-00f0b2ff-00000000-00ca0000   \nCPUID 00000003: 00000000-00000000-00000000-00000000   \nCPUID 00000004: 3c004121-01c0003f-0000003f-00000000   \nCPUID 00000004: 3c004122-01c0003f-0000003f-00000000   \nCPUID 00000004: 3c004143-01c0003f-000001ff-00000000   \nCPUID 00000004: 3c07c163-04c0003f-00003fff-00000006   \nCPUID 00000005: 00000040-00000040-00000003-00021120   \nCPUID 00000006: 00000075-00000002-00000009-00000000   \nCPUID 00000007: 00000000-00000000-00000000-00000000   \nCPUID 00000008: 00000000-00000000-00000000-00000000   \nCPUID 00000009: 00000001-00000000-00000000-00000000   \nCPUID 0000000a: 07300403-00000000-00000000-00000603   \nCPUID 0000000b: 00000000-00000000-00000003-00000003   \nCPUID 0000000b: 00000005-00000010-00000201-00000003   \nCPUID 0000000c: 00000000-00000000-00000000-00000000   \nCPUID 0000000d: 00000007-00000340-00000340-00000000   \nCPUID 0000000d: 00000001-00000000-00000000-00000000   \nCPUID 0000000d: 00000100-00000240-00000000-00000000   \nCPUID 80000000: 80000008-00000000-00000000-00000000   \nCPUID 80000001: 00000000-00000000-00000001-2c100800   \nCPUID 80000002: 20202020-49202020-6c65746e-20295228   \nCPUID 80000003: 6e6f6558-20295228-20555043-322d3545   \nCPUID 80000004: 20303636-20402030-30322e32-007a4847   \nCPUID 80000005: 00000000-00000000-00000000-00000000   \nCPUID 80000006: 00000000-00000000-01006040-00000000   \nCPUID 80000007: 00000000-00000000-00000000-00000100   \nCPUID 80000008: 0000302e-00000000-00000000-00000000"
-	restore := mockCPU([]byte(test16))
-	Detect()
-	t.Log("Name:", CPU.BrandName)
-	n := maxFunctionID()
-	t.Logf("Max Function:0x%x\n", n)
-	n = maxExtendedFunction()
-	t.Logf("Max Extended Function:0x%x\n", n)
-	t.Log("PhysicalCores:", CPU.PhysicalCores)
-	t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
-	t.Log("LogicalCores:", CPU.LogicalCores)
-	t.Log("Family", CPU.Family, "Model:", CPU.Model)
-	t.Log("Features:", CPU.Features)
-	t.Log("Cacheline bytes:", CPU.CacheLine)
-	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
-	t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
-	t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
-	t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
-	if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
-		if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
-			t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
-				CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
-		}
-	}
-
-	if CPU.ThreadsPerCore > 1 && !CPU.HTT() {
-		t.Fatalf("Hyperthreading not detected")
-	}
-	if CPU.ThreadsPerCore == 1 && CPU.HTT() {
-		t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
-	}
-	restore()
-	Detect()
-	TestCPUID(t)
-}
-*/
