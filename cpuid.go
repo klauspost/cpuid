@@ -200,7 +200,7 @@ var CPU CPUInfo
 
 func init() {
 	initCPU()
-	Detect(true)
+	Detect()
 }
 
 // Detect will re-detect current CPU info.
@@ -210,15 +210,16 @@ func init() {
 // you should not need to call this function.
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
-func Detect(safe bool) {
+func Detect() {
 	// Set defaults
 	CPU.ThreadsPerCore = 1
 	CPU.Cache.L1I = -1
 	CPU.Cache.L1D = -1
 	CPU.Cache.L2 = -1
 	CPU.Cache.L3 = -1
+	safe := true
 	if detectArmFlag != nil {
-		safe = *detectArmFlag
+		safe = !*detectArmFlag
 	}
 	addInfo(&CPU, safe)
 	if disableFlag != nil {
@@ -230,6 +231,15 @@ func Detect(safe bool) {
 			}
 		}
 	}
+}
+
+// DetectARM will detect ARM64 features.
+// This is NOT done automatically since it can potentially crash
+// if the OS does not handle the command.
+// If in the future this can be done safely this function may not
+// do anything.
+func DetectARM() {
+	addInfo(&CPU, false)
 }
 
 var detectArmFlag *bool

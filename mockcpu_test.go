@@ -173,7 +173,7 @@ func TestMocks(t *testing.T) {
 		rc.Close()
 		t.Log("Opening", f.FileInfo().Name())
 		restore := mockCPU(content)
-		Detect(true)
+		Detect()
 		t.Log("Name:", CPU.BrandName)
 		n := maxFunctionID()
 		t.Logf("Max Function:0x%x", n)
@@ -207,6 +207,6 @@ func TestMocks(t *testing.T) {
 		}
 		restore()
 	}
-	Detect(true)
+	Detect()
 
 }

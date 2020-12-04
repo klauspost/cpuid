@@ -17,6 +17,7 @@ func TestLastID(t *testing.T) {
 // There is no real way to test a CPU identifier, since results will
 // obviously differ on each machine.
 func TestCPUID(t *testing.T) {
+	DetectARM()
 	n := maxFunctionID()
 	t.Logf("Max Function:0x%x", n)
 	n = maxExtendedFunction()
