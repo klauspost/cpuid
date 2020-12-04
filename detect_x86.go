@@ -16,7 +16,7 @@ func initCPU() {
 	rdtscpAsm = asmRdtscpAsm
 }
 
-func addInfo(c *CPUInfo) {
+func addInfo(c *CPUInfo, safe bool) {
 	c.maxFunc = maxFunctionID()
 	c.maxExFunc = maxExtendedFunction()
 	c.BrandName = brandName()

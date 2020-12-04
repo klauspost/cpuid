@@ -11,6 +11,7 @@
 package cpuid
 
 import (
+	"flag"
 	"math"
 	"strings"
 )
@@ -41,9 +42,13 @@ const (
 //go:generate stringer -type=FeatureID
 
 // FeatureID is the ID of a specific cpu feature.
-type FeatureID uint
+type FeatureID int
 
 const (
+	// Keep index -1 as unknown
+	UNKNOWN = -1
+
+	// Add features
 	ADX                FeatureID = iota // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
 	AESNI                               // Advanced Encryption Standard New Instructions
 	AMD3DNOW                            // AMD 3DNOW
@@ -84,6 +89,15 @@ const (
 	HTT                                 // Hyperthreading (enabled)
 	HYPERVISOR                          // This bit has been reserved by Intel & AMD for use by hypervisors
 	IBPB                                // Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
+	IBS                                 // Instruction Based Sampling (AMD)
+	IBSBRNTRGT                          // Instruction Based Sampling Feature (AMD)
+	IBSFETCHSAM                         // Instruction Based Sampling Feature (AMD)
+	IBSFFV                              // Instruction Based Sampling Feature (AMD)
+	IBSOPCNT                            // Instruction Based Sampling Feature (AMD)
+	IBSOPCNTEXT                         // Instruction Based Sampling Feature (AMD)
+	IBSOPSAM                            // Instruction Based Sampling Feature (AMD)
+	IBSRDWROPCNT                        // Instruction Based Sampling Feature (AMD)
+	IBSRIPINVALIDCHK                    // Instruction Based Sampling Feature (AMD)
 	LZCNT                               // LZCNT instruction
 	MMX                                 // standard MMX
 	MMXEXT                              // SSE integer functions or AMD MMX ext
@@ -116,43 +130,37 @@ const (
 	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
 	XOP                                 // Bulldozer XOP functions
-	IBS                                 // Instruction Based Sampling (AMD)
-	IBSFFV
-	IBSFETCHSAM
-	IBSOPSAM
-	IBSRDWROPCNT
-	IBSOPCNT
-	IBSBRNTRGT
-	IBSOPCNTEXT
-	IBSRIPINVALIDCHK
 
 	// ARM features:
-	FP       // Single-precision and double-precision floating point
-	ASIMD    // Advanced SIMD
-	EVTSTRM  // Generic timer
 	AES      // AES instructions
+	ARMCPUID // Some CPU ID registers readable at user-level
+	ASIMD    // Advanced SIMD
+	ASIMDDP  // SIMD Dot Product
+	ASIMDHP  // Advanced SIMD half-precision floating point
+	ASIMDRDM // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+	ATOMICS  // Large System Extensions (LSE)
+	CRC32    // CRC32/CRC32C instructions
+	DCPOP    // Data cache clean to Point of Persistence (DC CVAP)
+	EVTSTRM  // Generic timer
+	FCMA     // Floatin point complex number addition and multiplication
+	FP       // Single-precision and double-precision floating point
+	FPHP     // Half-precision floating point
+	GPA      // Generic Pointer Authentication
+	JSCVT    // Javascript-style double->int convert (FJCVTZS)
+	LRCPC    // Weaker release consistency (LDAPR, etc)
 	PMULL    // Polynomial Multiply instructions (PMULL/PMULL2)
 	SHA1     // SHA-1 instructions (SHA1C, etc)
 	SHA2     // SHA-2 instructions (SHA256H, etc)
-	CRC32    // CRC32/CRC32C instructions
-	ATOMICS  // Large System Extensions (LSE)
-	FPHP     // Half-precision floating point
-	ASIMDHP  // Advanced SIMD half-precision floating point
-	ARMCPUID // Some CPU ID registers readable at user-level
-	ASIMDRDM // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
-	JSCVT    // Javascript-style double->int convert (FJCVTZS)
-	FCMA     // Floatin point complex number addition and multiplication
-	LRCPC    // Weaker release consistency (LDAPR, etc)
-	DCPOP    // Data cache clean to Point of Persistence (DC CVAP)
 	SHA3     // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+	SHA512   // SHA512 instructions
 	SM3      // SM3 instructions
 	SM4      // SM4 instructions
-	ASIMDDP  // SIMD Dot Product
-	SHA512   // SHA512 instructions
 	SVE      // Scalable Vector Extension
-	GPA      // Generic Pointer Authentication
+
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
+
+	firstID FeatureID = UNKNOWN + 1
 )
 
 // CPUInfo contains information about the detected system CPU.
@@ -167,7 +175,7 @@ type CPUInfo struct {
 	Family         int     // CPU family number
 	Model          int     // CPU model number
 	CacheLine      int     // Cache line size in bytes. Will be 0 if undetectable.
-	Hz             int64   // Clock speed, if known
+	Hz             int64   // Clock speed, if known, 0 otherwise
 	Cache          struct {
 		L1I int // L1 Instruction Cache (per core or shared). Will be -1 if undetected
 		L1D int // L1 Data Cache (per core or shared). Will be -1 if undetected
@@ -192,7 +200,7 @@ var CPU CPUInfo
 
 func init() {
 	initCPU()
-	Detect()
+	Detect(true)
 }
 
 // Detect will re-detect current CPU info.
@@ -202,14 +210,37 @@ func init() {
 // you should not need to call this function.
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
-func Detect() {
+func Detect(safe bool) {
 	// Set defaults
 	CPU.ThreadsPerCore = 1
 	CPU.Cache.L1I = -1
 	CPU.Cache.L1D = -1
 	CPU.Cache.L2 = -1
 	CPU.Cache.L3 = -1
-	addInfo(&CPU)
+	if detectArmFlag != nil {
+		safe = *detectArmFlag
+	}
+	addInfo(&CPU, safe)
+	if disableFlag != nil {
+		s := strings.Split(*disableFlag, ",")
+		for _, feat := range s {
+			feat := ParseFeature(strings.TrimSpace(feat))
+			if feat != UNKNOWN {
+				CPU.featureSet.unset(feat)
+			}
+		}
+	}
+}
+
+var detectArmFlag *bool
+var disableFlag *string
+
+// Flags will enable flags.
+// This must be called *before* flag.Parse AND
+// Detect must be called after the flags have been parsed.
+func Flags() {
+	disableFlag = flag.String("cpu.disable", "", "disable cpu features; comma separated list")
+	detectArmFlag = flag.Bool("cpu.arm", false, "allow ARM features to be detected; can potentially crash")
 }
 
 // Supports returns whether the CPU supports all of the requested features.
@@ -346,20 +377,53 @@ func (c CPUInfo) VM() bool {
 // flags contains detected cpu features and characteristics
 type flags uint64
 
-// flagSet contains detected cpu features and characteristics in an array of flags
-type flagSet [(lastID + 63) / 64]flags
+// log2(bits_in_uint64)
+const flagBitsLog2 = 6
+const flagBits = 1 << flagBitsLog2
+const flagMask = flagBits - 1
 
-func (s flagSet) inSet(offset FeatureID) bool {
-	return s[offset>>6]&(1<<(offset&63)) != 0
+// flagSet contains detected cpu features and characteristics in an array of flags
+type flagSet [(lastID + flagMask) / flagBits]flags
+
+func (s flagSet) inSet(feat FeatureID) bool {
+	return s[feat>>flagBitsLog2]&(1<<(feat&flagMask)) != 0
 }
 
-func (s *flagSet) set(offset FeatureID) {
-	s[offset>>6] |= 1 << (offset & 63)
+func (s *flagSet) set(feat FeatureID) {
+	s[feat>>flagBitsLog2] |= 1 << (feat & flagMask)
+}
+
+// setIf will set a feature if boolean is true.
+func (s *flagSet) setIf(cond bool, features ...FeatureID) {
+	if cond {
+		for _, offset := range features {
+			s[offset>>flagBitsLog2] |= 1 << (offset & flagMask)
+		}
+	}
 }
 
 func (s *flagSet) unset(offset FeatureID) {
-	bit := flags(1 << (offset & 63))
-	s[offset>>6] = s[offset>>6] & ^bit
+	bit := flags(1 << (offset & flagMask))
+	s[offset>>flagBitsLog2] = s[offset>>flagBitsLog2] & ^bit
+}
+
+// or with another flagset.
+func (s *flagSet) or(other flagSet) {
+	for i, v := range other[:] {
+		s[i] |= v
+	}
+}
+
+// ParseFeature will parse the string and return the ID of the matching feature.
+// Will return UNKNOWN if not found.
+func ParseFeature(s string) FeatureID {
+	s = strings.ToUpper(s)
+	for i := firstID; i < lastID; i++ {
+		if i.String() == s {
+			return i
+		}
+	}
+	return UNKNOWN
 }
 
 // Strings returns an array of the detected features for FlagsSet.
@@ -368,7 +432,7 @@ func (s flagSet) Strings() []string {
 		return []string{""}
 	}
 	r := make([]string, 0)
-	for i := FeatureID(0); i < lastID; i++ {
+	for i := firstID; i < lastID; i++ {
 		if s.inSet(i) {
 			r = append(r, i.String())
 		}
@@ -704,48 +768,21 @@ func support() flagSet {
 	}
 
 	_, _, c, d := cpuid(1)
-	if (d & (1 << 15)) != 0 {
-		fs.set(CMOV)
-	}
-	if (d & (1 << 23)) != 0 {
-		fs.set(MMX)
-	}
-	if (d & (1 << 25)) != 0 {
-		fs.set(MMXEXT)
-	}
-	if (d & (1 << 25)) != 0 {
-		fs.set(SSE)
-	}
-	if (d & (1 << 26)) != 0 {
-		fs.set(SSE2)
-	}
-	if (c & 1) != 0 {
-		fs.set(SSE3)
-	}
-	if (c & (1 << 5)) != 0 {
-		fs.set(VMX)
-	}
-	if (c & 0x00000200) != 0 {
-		fs.set(SSSE3)
-	}
-	if (c & 0x00080000) != 0 {
-		fs.set(SSE4)
-	}
-	if (c & 0x00100000) != 0 {
-		fs.set(SSE42)
-	}
-	if (c & (1 << 25)) != 0 {
-		fs.set(AESNI)
-	}
-	if (c & (1 << 1)) != 0 {
-		fs.set(CLMUL)
-	}
-	if c&(1<<23) != 0 {
-		fs.set(POPCNT)
-	}
-	if c&(1<<30) != 0 {
-		fs.set(RDRAND)
-	}
+	fs.setIf((d&(1<<15)) != 0, CMOV)
+	fs.setIf((d&(1<<23)) != 0, MMX)
+	fs.setIf((d&(1<<25)) != 0, MMXEXT)
+	fs.setIf((d&(1<<25)) != 0, SSE)
+	fs.setIf((d&(1<<26)) != 0, SSE2)
+	fs.setIf((c&1) != 0, SSE3)
+	fs.setIf((c&(1<<5)) != 0, VMX)
+	fs.setIf((c&0x00000200) != 0, SSSE3)
+	fs.setIf((c&0x00080000) != 0, SSE4)
+	fs.setIf((c&0x00100000) != 0, SSE42)
+	fs.setIf((c&(1<<25)) != 0, AESNI)
+	fs.setIf((c&(1<<1)) != 0, CLMUL)
+	fs.setIf(c&(1<<23) != 0, POPCNT)
+	fs.setIf(c&(1<<30) != 0, RDRAND)
+
 	// This bit has been reserved by Intel & AMD for use by hypervisors,
 	// and indicates the presence of a hypervisor.
 	if c&(1<<31) != 0 {
