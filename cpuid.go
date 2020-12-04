@@ -491,6 +491,15 @@ func threadsPerCore() int {
 	}
 	_, b, _, _ := cpuidex(0xb, 0)
 	if b&0xffff == 0 {
+		if vend == AMD {
+			// Workaround for AMD returning 0, assume 2 if >= Zen 2
+			// It will be more correct than not.
+			fam, _ := familyModel()
+			_, _, _, d := cpuid(1)
+			if (d&(1<<28)) != 0 && fam >= 23 {
+				return 2
+			}
+		}
 		return 1
 	}
 	return int(b & 0xffff)
@@ -544,11 +553,13 @@ func physicalCores() int {
 		if lc > 0 && tpc > 0 {
 			return lc / tpc
 		}
-		// The following is inaccurate on AMD EPYC 7742 64-Core Processor
 
+		// The following is inaccurate on AMD EPYC 7742 64-Core Processor
 		if maxExtendedFunction() >= 0x80000008 {
 			_, _, c, _ := cpuid(0x80000008)
-			return int(c&0xff) + 1
+			if c&0xff > 0 {
+				return int(c&0xff) + 1
+			}
 		}
 	}
 	return 0
@@ -997,34 +1008,17 @@ func support() flagSet {
 			fs.set(RDTSCP)
 		}
 
-		/* Allow for selectively disabling SSE2 functions on AMD processors
-		   with SSE2 support but not SSE4a. This includes Athlon64, some
-		   Opteron, and some Sempron processors. MMX, SSE, or 3DNow! are faster
-		   than SSE2 often enough to utilize this special-case flag.
-		   AV_CPU_FLAG_SSE2 and AV_CPU_FLAG_SSE2SLOW are both set in this case
-		   so that SSE2 is used unless explicitly disabled by checking
-		   AV_CPU_FLAG_SSE2SLOW. */
-		if vend != Intel &&
-			fs.inSet(SSE2) && (c&0x00000040) == 0 {
-		}
-
 		/* XOP and FMA4 use the AVX instruction coding scheme, so they can't be
 		 * used unless the OS has AVX support. */
 		if fs.inSet(AVX) {
-			if (c & 0x00000800) != 0 {
-				fs.set(XOP)
-			}
-			if (c & 0x00010000) != 0 {
-				fs.set(FMA4)
-			}
+			fs.setIf((c&0x00000800) != 0, XOP)
+			fs.setIf((c&0x00010000) != 0, FMA4)
 		}
 
 	}
 	if maxExtendedFunction() >= 0x80000008 {
 		_, b, _, _ := cpuid(0x80000008)
-		if (b & (1 << 9)) != 0 {
-			fs.set(WBNOINVD)
-		}
+		fs.setIf((b&(1<<9)) != 0, WBNOINVD)
 	}
 
 	if maxExtendedFunction() >= 0x8000001b && fs.inSet(IBS) {
