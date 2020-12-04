@@ -132,7 +132,7 @@ func addInfo(c *CPUInfo, safe bool) {
 	// 0b0010 --> As 0b0001, plus SHA512H, SHA512H2, SHA512SU0, and SHA512SU1 instructions implemented.
 	f.setIf(instAttrReg0&(0xf<<12) == 2<<12, SHA512)
 	f.setIf(instAttrReg0&(0xf<<8) != 0, SHA1)
-	f.setIf(instAttrReg0&(0xf<<4) != 0, AES)
+	f.setIf(instAttrReg0&(0xf<<4) != 0, AESARM)
 	// https://developer.arm.com/docs/ddi0595/b/aarch64-system-registers/id_aa64isar0_el1
 	// 0b0010 --> As for 0b0001, plus PMULL/PMULL2 instructions operating on 64-bit data quantities.
 	f.setIf(instAttrReg0&(0xf<<4) == 2<<4, PMULL)

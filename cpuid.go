@@ -132,7 +132,7 @@ const (
 	XOP                                 // Bulldozer XOP functions
 
 	// ARM features:
-	AES      // AES instructions
+	AESARM   // AES instructions
 	ARMCPUID // Some CPU ID registers readable at user-level
 	ASIMD    // Advanced SIMD
 	ASIMDDP  // SIMD Dot Product
@@ -806,24 +806,15 @@ func support() flagSet {
 
 	// This bit has been reserved by Intel & AMD for use by hypervisors,
 	// and indicates the presence of a hypervisor.
-	if c&(1<<31) != 0 {
-		fs.set(HYPERVISOR)
-	}
-	if c&(1<<29) != 0 {
-		fs.set(F16C)
-	}
-	if c&(1<<13) != 0 {
-		fs.set(CX16)
-	}
+	fs.setIf(c&(1<<31) != 0, HYPERVISOR)
+	fs.setIf(c&(1<<29) != 0, F16C)
+	fs.setIf(c&(1<<13) != 0, CX16)
+
 	if vend == Intel && (d&(1<<28)) != 0 && mfi >= 4 {
-		if threadsPerCore() > 1 {
-			fs.set(HTT)
-		}
+		fs.setIf(threadsPerCore() > 1, HTT)
 	}
 	if vend == AMD && (d&(1<<28)) != 0 && mfi >= 4 {
-		if threadsPerCore() > 1 {
-			fs.set(HTT)
-		}
+		fs.setIf(threadsPerCore() > 1, HTT)
 	}
 	// Check XGETBV, OXSAVE and AVX bits
 	if c&(1<<26) != 0 && c&(1<<27) != 0 && c&(1<<28) != 0 {
@@ -831,9 +822,7 @@ func support() flagSet {
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {
 			fs.set(AVX)
-			if (c & 0x00001000) != 0 {
-				fs.set(FMA3)
-			}
+			fs.setIf((c&0x00001000) != 0, FMA3)
 		}
 	}
 
@@ -847,66 +836,28 @@ func support() flagSet {
 		// CPUID.(EAX=7, ECX=0).EBX
 		if (ebx & 0x00000008) != 0 {
 			fs.set(BMI1)
-			if (ebx & 0x00000100) != 0 {
-				fs.set(BMI2)
-			}
+			fs.setIf((ebx&0x00000100) != 0, BMI2)
 		}
-		if ebx&(1<<2) != 0 {
-			fs.set(SGX)
-		}
-		if ebx&(1<<4) != 0 {
-			fs.set(HLE)
-		}
-		if ebx&(1<<9) != 0 {
-			fs.set(ERMS)
-		}
-		if ebx&(1<<11) != 0 {
-			fs.set(RTM)
-		}
-		if ebx&(1<<14) != 0 {
-			fs.set(MPX)
-		}
-		if ebx&(1<<18) != 0 {
-			fs.set(RDSEED)
-		}
-		if ebx&(1<<19) != 0 {
-			fs.set(ADX)
-		}
-		if ebx&(1<<29) != 0 {
-			fs.set(SHA)
-		}
+		fs.setIf(ebx&(1<<2) != 0, SGX)
+		fs.setIf(ebx&(1<<4) != 0, HLE)
+		fs.setIf(ebx&(1<<9) != 0, ERMS)
+		fs.setIf(ebx&(1<<11) != 0, RTM)
+		fs.setIf(ebx&(1<<14) != 0, MPX)
+		fs.setIf(ebx&(1<<18) != 0, RDSEED)
+		fs.setIf(ebx&(1<<19) != 0, ADX)
+		fs.setIf(ebx&(1<<29) != 0, SHA)
 		// CPUID.(EAX=7, ECX=0).ECX
-		if ecx&(1<<5) != 0 {
-			fs.set(WAITPKG)
-		}
-		if ecx&(1<<25) != 0 {
-			fs.set(CLDEMOTE)
-		}
-		if ecx&(1<<27) != 0 {
-			fs.set(MOVDIRI)
-		}
-		if ecx&(1<<28) != 0 {
-			fs.set(MOVDIR64B)
-		}
-		if ecx&(1<<29) != 0 {
-			fs.set(ENQCMD)
-		}
-		if ecx&(1<<30) != 0 {
-			fs.set(SGXLC)
-		}
+		fs.setIf(ecx&(1<<5) != 0, WAITPKG)
+		fs.setIf(ecx&(1<<25) != 0, CLDEMOTE)
+		fs.setIf(ecx&(1<<27) != 0, MOVDIRI)
+		fs.setIf(ecx&(1<<28) != 0, MOVDIR64B)
+		fs.setIf(ecx&(1<<29) != 0, ENQCMD)
+		fs.setIf(ecx&(1<<30) != 0, SGXLC)
 		// CPUID.(EAX=7, ECX=0).EDX
-		if edx&(1<<14) != 0 {
-			fs.set(SERIALIZE)
-		}
-		if edx&(1<<16) != 0 {
-			fs.set(TSXLDTRK)
-		}
-		if edx&(1<<26) != 0 {
-			fs.set(IBPB)
-		}
-		if edx&(1<<27) != 0 {
-			fs.set(STIBP)
-		}
+		fs.setIf(edx&(1<<14) != 0, SERIALIZE)
+		fs.setIf(edx&(1<<16) != 0, TSXLDTRK)
+		fs.setIf(edx&(1<<26) != 0, IBPB)
+		fs.setIf(edx&(1<<27) != 0, STIBP)
 
 		// Only detect AVX-512 features if XGETBV is supported
 		if c&((1<<26)|(1<<27)) == (1<<26)|(1<<27) {
@@ -917,72 +868,30 @@ func support() flagSet {
 			// ZMM16-ZMM31 state are enabled by OS)
 			/// and that XCR0[2:1] = ‘11b’ (XMM state and YMM state are enabled by OS).
 			if (eax>>5)&7 == 7 && (eax>>1)&3 == 3 {
-				if ebx&(1<<16) != 0 {
-					fs.set(AVX512F)
-				}
-				if ebx&(1<<17) != 0 {
-					fs.set(AVX512DQ)
-				}
-				if ebx&(1<<21) != 0 {
-					fs.set(AVX512IFMA)
-				}
-				if ebx&(1<<26) != 0 {
-					fs.set(AVX512PF)
-				}
-				if ebx&(1<<27) != 0 {
-					fs.set(AVX512ER)
-				}
-				if ebx&(1<<28) != 0 {
-					fs.set(AVX512CD)
-				}
-				if ebx&(1<<30) != 0 {
-					fs.set(AVX512BW)
-				}
-				if ebx&(1<<31) != 0 {
-					fs.set(AVX512VL)
-				}
+				fs.setIf(ebx&(1<<16) != 0, AVX512F)
+				fs.setIf(ebx&(1<<17) != 0, AVX512DQ)
+				fs.setIf(ebx&(1<<21) != 0, AVX512IFMA)
+				fs.setIf(ebx&(1<<26) != 0, AVX512PF)
+				fs.setIf(ebx&(1<<27) != 0, AVX512ER)
+				fs.setIf(ebx&(1<<28) != 0, AVX512CD)
+				fs.setIf(ebx&(1<<30) != 0, AVX512BW)
+				fs.setIf(ebx&(1<<31) != 0, AVX512VL)
 				// ecx
-				if ecx&(1<<1) != 0 {
-					fs.set(AVX512VBMI)
-				}
-				if ecx&(1<<6) != 0 {
-					fs.set(AVX512VBMI2)
-				}
-				if ecx&(1<<8) != 0 {
-					fs.set(GFNI)
-				}
-				if ecx&(1<<9) != 0 {
-					fs.set(VAES)
-				}
-				if ecx&(1<<10) != 0 {
-					fs.set(VPCLMULQDQ)
-				}
-				if ecx&(1<<11) != 0 {
-					fs.set(AVX512VNNI)
-				}
-				if ecx&(1<<12) != 0 {
-					fs.set(AVX512BITALG)
-				}
-				if ecx&(1<<14) != 0 {
-					fs.set(AVX512VPOPCNTDQ)
-				}
+				fs.setIf(ecx&(1<<1) != 0, AVX512VBMI)
+				fs.setIf(ecx&(1<<6) != 0, AVX512VBMI2)
+				fs.setIf(ecx&(1<<8) != 0, GFNI)
+				fs.setIf(ecx&(1<<9) != 0, VAES)
+				fs.setIf(ecx&(1<<10) != 0, VPCLMULQDQ)
+				fs.setIf(ecx&(1<<11) != 0, AVX512VNNI)
+				fs.setIf(ecx&(1<<12) != 0, AVX512BITALG)
+				fs.setIf(ecx&(1<<14) != 0, AVX512VPOPCNTDQ)
 				// edx
-				if edx&(1<<8) != 0 {
-					fs.set(AVX512VP2INTERSECT)
-				}
-				if edx&(1<<22) != 0 {
-					fs.set(AMXBF16)
-				}
-				if edx&(1<<24) != 0 {
-					fs.set(AMXTILE)
-				}
-				if edx&(1<<25) != 0 {
-					fs.set(AMXINT8)
-				}
+				fs.setIf(edx&(1<<8) != 0, AVX512VP2INTERSECT)
+				fs.setIf(edx&(1<<22) != 0, AMXBF16)
+				fs.setIf(edx&(1<<24) != 0, AMXTILE)
+				fs.setIf(edx&(1<<25) != 0, AMXINT8)
 				// eax1 = CPUID.(EAX=7, ECX=1).EAX
-				if eax1&(1<<5) != 0 {
-					fs.set(AVX512BF16)
-				}
+				fs.setIf(eax1&(1<<5) != 0, AVX512BF16)
 			}
 		}
 	}
@@ -993,30 +902,14 @@ func support() flagSet {
 			fs.set(LZCNT)
 			fs.set(POPCNT)
 		}
-		if (c & (1 << 10)) != 0 {
-			fs.set(IBS)
-		}
-		if (d & (1 << 31)) != 0 {
-			fs.set(AMD3DNOW)
-		}
-		if (d & (1 << 30)) != 0 {
-			fs.set(AMD3DNOWEXT)
-		}
-		if (d & (1 << 23)) != 0 {
-			fs.set(MMX)
-		}
-		if (d & (1 << 22)) != 0 {
-			fs.set(MMXEXT)
-		}
-		if (c & (1 << 6)) != 0 {
-			fs.set(SSE4A)
-		}
-		if d&(1<<20) != 0 {
-			fs.set(NX)
-		}
-		if d&(1<<27) != 0 {
-			fs.set(RDTSCP)
-		}
+		fs.setIf((c&(1<<10)) != 0, IBS)
+		fs.setIf((d&(1<<31)) != 0, AMD3DNOW)
+		fs.setIf((d&(1<<30)) != 0, AMD3DNOWEXT)
+		fs.setIf((d&(1<<23)) != 0, MMX)
+		fs.setIf((d&(1<<22)) != 0, MMXEXT)
+		fs.setIf((c&(1<<6)) != 0, SSE4A)
+		fs.setIf(d&(1<<20) != 0, NX)
+		fs.setIf(d&(1<<27) != 0, RDTSCP)
 
 		/* XOP and FMA4 use the AVX instruction coding scheme, so they can't be
 		 * used unless the OS has AVX support. */
@@ -1033,30 +926,14 @@ func support() flagSet {
 
 	if maxExtendedFunction() >= 0x8000001b && fs.inSet(IBS) {
 		eax, _, _, _ := cpuid(0x8000001b)
-		if (eax>>0)&1 == 1 {
-			fs.set(IBSFFV)
-		}
-		if (eax>>1)&1 == 1 {
-			fs.set(IBSFETCHSAM)
-		}
-		if (eax>>2)&1 == 1 {
-			fs.set(IBSOPSAM)
-		}
-		if (eax>>3)&1 == 1 {
-			fs.set(IBSRDWROPCNT)
-		}
-		if (eax>>4)&1 == 1 {
-			fs.set(IBSOPCNT)
-		}
-		if (eax>>5)&1 == 1 {
-			fs.set(IBSBRNTRGT)
-		}
-		if (eax>>6)&1 == 1 {
-			fs.set(IBSOPCNTEXT)
-		}
-		if (eax>>7)&1 == 1 {
-			fs.set(IBSRIPINVALIDCHK)
-		}
+		fs.setIf((eax>>0)&1 == 1, IBSFFV)
+		fs.setIf((eax>>1)&1 == 1, IBSFETCHSAM)
+		fs.setIf((eax>>2)&1 == 1, IBSOPSAM)
+		fs.setIf((eax>>3)&1 == 1, IBSRDWROPCNT)
+		fs.setIf((eax>>4)&1 == 1, IBSOPCNT)
+		fs.setIf((eax>>5)&1 == 1, IBSBRNTRGT)
+		fs.setIf((eax>>6)&1 == 1, IBSOPCNTEXT)
+		fs.setIf((eax>>7)&1 == 1, IBSRIPINVALIDCHK)
 	}
 
 	return fs
@@ -1101,7 +978,7 @@ func (c CPUInfo) ArmEVTSTRM() bool {
 
 // AES instructions
 func (c CPUInfo) ArmAES() bool {
-	return c.featureSet.inSet(AES)
+	return c.featureSet.inSet(AESARM)
 }
 
 // Polynomial Multiply instructions (PMULL/PMULL2)
