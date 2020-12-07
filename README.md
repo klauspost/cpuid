@@ -36,7 +36,7 @@ func main() {
 	fmt.Println("PhysicalCores:", CPU.PhysicalCores)
 	fmt.Println("ThreadsPerCore:", CPU.ThreadsPerCore)
 	fmt.Println("LogicalCores:", CPU.LogicalCores)
-	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID", CPU.VendorID)
+	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID:", CPU.VendorID)
 	fmt.Println("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
 	fmt.Println("Cacheline bytes:", CPU.CacheLine)
 	fmt.Println("L1 Data Cache:", CPU.Cache.L1D, "bytes")
@@ -59,7 +59,7 @@ Name: AMD Ryzen 9 3950X 16-Core Processor
 PhysicalCores: 16
 ThreadsPerCore: 2
 LogicalCores: 32
-Family 23 Model: 113 Vendor ID AMD
+Family 23 Model: 113 Vendor ID: AMD
 Features: ADX,AESNI,AVX,AVX2,BMI1,BMI2,CLMUL,CMOV,CX16,F16C,FMA3,HTT,HYPERVISOR,LZCNT,MMX,MMXEXT,NX,POPCNT,RDRAND,RDSEED,RDTSCP,SHA,SSE,SSE2,SSE3,SSE4,SSE42,SSE4A,SSSE3
 Cacheline bytes: 64
 L1 Data Cache: 32768 bytes

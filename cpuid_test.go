@@ -51,7 +51,7 @@ func TestExample(t *testing.T) {
 	fmt.Println("PhysicalCores:", CPU.PhysicalCores)
 	fmt.Println("ThreadsPerCore:", CPU.ThreadsPerCore)
 	fmt.Println("LogicalCores:", CPU.LogicalCores)
-	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID", CPU.VendorID)
+	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID:", CPU.VendorID)
 	fmt.Println("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
 	fmt.Println("Cacheline bytes:", CPU.CacheLine)
 	fmt.Println("L1 Data Cache:", CPU.Cache.L1D, "bytes")
