@@ -75,6 +75,7 @@ const (
 	AVX512VNNI                          // AVX-512 Vector Neural Network Instructions
 	AVX512VP2INTERSECT                  // AVX-512 Intersect for D/Q
 	AVX512VPOPCNTDQ                     // AVX-512 Vector Population Count Doubleword and Quadword
+	AVXSLOW                             // Indicates the CPU performs 2 128 bit operations instead of one.
 	BMI1                                // Bit Manipulation Instruction Set 1
 	BMI2                                // Bit Manipulation Instruction Set 2
 	CLDEMOTE                            // Cache Line Demote
@@ -800,6 +801,7 @@ func support() flagSet {
 	if mfi < 0x1 {
 		return fs
 	}
+	family, model := familyModel()
 
 	_, _, c, d := cpuid(1)
 	fs.setIf((d&(1<<15)) != 0, CMOV)
@@ -836,6 +838,14 @@ func support() flagSet {
 		if (eax & 0x6) == 0x6 {
 			fs.set(AVX)
 			fs.setIf((c&0x00001000) != 0, FMA3)
+			switch vend {
+			case Intel:
+				// Older than Haswell.
+				fs.setIf(family == 6 && model < 60, AVXSLOW)
+			case AMD:
+				// Older than Zen 2
+				fs.setIf(family < 23 || (family == 23 && model < 49), AVXSLOW)
+			}
 		}
 	}
 
