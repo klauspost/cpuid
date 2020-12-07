@@ -4,6 +4,8 @@
 
 package cpuid
 
+import "runtime"
+
 func getMidr() (midr uint64)
 func getProcFeatures() (procFeatures uint64)
 func getInstAttributes() (instAttrReg0, instAttrReg1 uint64)
@@ -16,8 +18,15 @@ func initCPU() {
 }
 
 func addInfo(c *CPUInfo, safe bool) {
+	// Seems to be safe to assume on ARM64
+	c.CacheLine = 64
+	if detectOS(c) {
+		// We could detect values from OS, fine.
+		return
+	}
+
 	// ARM64 disabled since it may crash if interrupt is not intercepted by OS.
-	if safe {
+	if safe && runtime.GOOS != "freebsd" {
 		return
 	}
 	// 	midr := getMidr()
