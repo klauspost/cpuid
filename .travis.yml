@@ -21,10 +21,6 @@ script:
   - go test -race ./...
   - go test -tags=noasm ./...
 
-stages:
-  - gofmt
-  - test
-
 matrix:
   allow_failures:
     - go: 'master'
