@@ -250,7 +250,7 @@ var disableFlag *string
 // Flags will enable flags.
 // This must be called *before* flag.Parse AND
 // Detect must be called after the flags have been parsed.
-// Not that this means that any detection used in init() functions
+// Note that this means that any detection used in init() functions
 // will not contain these flags.
 func Flags() {
 	disableFlag = flag.String("cpu.disable", "", "disable cpu features; comma separated list")
@@ -271,6 +271,15 @@ func (c CPUInfo) Supports(ids ...FeatureID) bool {
 func (c *CPUInfo) Disable(ids ...FeatureID) bool {
 	for _, id := range ids {
 		c.featureSet.unset(id)
+	}
+	return true
+}
+
+// Enable will disable one or several features even if they were undetected.
+// This is of course not recommended for obvious reasons.
+func (c *CPUInfo) Enable(ids ...FeatureID) bool {
+	for _, id := range ids {
+		c.featureSet.set(id)
 	}
 	return true
 }

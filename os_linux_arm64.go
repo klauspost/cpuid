@@ -42,26 +42,31 @@ const (
 var hwcap uint
 
 func detectOS(c *CPUInfo) bool {
+	if hwcap == 0 {
+		// It may be wrong, allow unsafe if defined.
+		return false
+	}
 	// HWCap was populated by the runtime from the auxiliary vector.
 	// Use HWCap information since reading aarch64 system registers
 	// is not supported in user space on older linux kernels.
-	c.featureSet.setIf(isSet(hwcap, hwcap_FP), FP)
-	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMD), ASIMD)
 	c.featureSet.setIf(isSet(hwcap, hwcap_AES), AESARM)
+	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMD), ASIMD)
+	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDDP), ASIMDDP)
+	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDHP), ASIMDHP)
+	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDRDM), ASIMDRDM)
+	c.featureSet.setIf(isSet(hwcap, hwcap_CPUID), ARMCPUID)
+	c.featureSet.setIf(isSet(hwcap, hwcap_CRC32), CRC32)
+	c.featureSet.setIf(isSet(hwcap, hwcap_DCPOP), DCPOP)
+	c.featureSet.setIf(isSet(hwcap, hwcap_EVTSTRM), EVTSTRM)
+	c.featureSet.setIf(isSet(hwcap, hwcap_FCMA), FCMA)
+	c.featureSet.setIf(isSet(hwcap, hwcap_FP), FP)
+	c.featureSet.setIf(isSet(hwcap, hwcap_FPHP), FPHP)
+	c.featureSet.setIf(isSet(hwcap, hwcap_JSCVT), JSCVT)
+	c.featureSet.setIf(isSet(hwcap, hwcap_LRCPC), LRCPC)
 	c.featureSet.setIf(isSet(hwcap, hwcap_PMULL), PMULL)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA1), SHA1)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA2), SHA2)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA3), SHA3)
-	c.featureSet.setIf(isSet(hwcap, hwcap_CRC32), CRC32)
-	c.featureSet.setIf(isSet(hwcap, hwcap_CPUID), ARMCPUID)
-	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDDP), ASIMDDP)
-	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDHP), ASIMDHP)
-	c.featureSet.setIf(isSet(hwcap, hwcap_ASIMDRDM), ASIMDRDM)
-	c.featureSet.setIf(isSet(hwcap, hwcap_DCPOP), DCPOP)
-	c.featureSet.setIf(isSet(hwcap, hwcap_EVTSTRM), EVTSTRM)
-	c.featureSet.setIf(isSet(hwcap, hwcap_FCMA), FCMA)
-	c.featureSet.setIf(isSet(hwcap, hwcap_JSCVT), JSCVT)
-	c.featureSet.setIf(isSet(hwcap, hwcap_LRCPC), LRCPC)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA512), SHA512)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SM3), SM3)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SM4), SM4)
@@ -72,7 +77,7 @@ func detectOS(c *CPUInfo) bool {
 	// TODO(elias.naur): Only disable the optimization on bad chipsets on android.
 	c.featureSet.setIf(isSet(hwcap, hwcap_ATOMICS) && runtime.GOOS != "android", ATOMICS)
 
-	return hwcap != 0
+	return true
 }
 
 func isSet(hwc uint, value uint) bool {

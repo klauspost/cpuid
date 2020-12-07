@@ -8,16 +8,15 @@ You can access the CPU information by accessing the shared CPU variable of the c
 
 Package home: https://github.com/klauspost/cpuid
 
-[![GoDoc][1]][2] [![Build Status][3]][4]
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/klauspost/cpuid)](https://pkg.go.dev/github.com/klauspost/cpuid)
+[![Build Status][3]][4]
 
-[1]: https://godoc.org/github.com/klauspost/cpuid?status.svg
-[2]: https://godoc.org/github.com/klauspost/cpuid
 [3]: https://travis-ci.org/klauspost/cpuid.svg?branch=master
 [4]: https://travis-ci.org/klauspost/cpuid
 
 ## installing
 
-```go get github.com/klauspost/cpuid/v2```
+`go get -u github.com/klauspost/cpuid/v2`
 
 ## example
 
@@ -45,7 +44,7 @@ func main() {
 	fmt.Println("L2 Cache:", cpuid.CPU.Cache.L2, "bytes")
 	fmt.Println("L3 Cache:", cpuid.CPU.Cache.L3, "bytes")
 
-	// Test if we have a specific features:
+	// Test if we have these specific features:
 	if cpuid.CPU.Supports(cpuid.SSE, cpuid.SSE2) {
 		fmt.Println("We have Streaming SIMD 2 Extensions")
 	}
@@ -67,12 +66,51 @@ We have Streaming SIMD 2 Extensions
 
 ## ARM64 feature detection
 
- -> TODO
+Not all operating systems provide ARM features directly 
+and there is no safe way to do so for the rest.
+
+However, a `DetectARM()` can be used if you are able to control your deployment,
+it will detect CPU features. 
+Otherwise a flag for detecting unsafe ARM features can be added. See below.
  
+Note that currently only features are detected on ARM, 
+no additional information is currently available. 
+
 ## Adding flags
 
- -> TODO
- 
+It is possible to add flags that affects cpu detection.
+
+For this the `Flags()` command is provided.
+
+This must be called *before* `flag.Parse()` AND after the flags have been parsed `Detect()` must be called.
+
+This means that any detection used in `init()` functions will not contain these flags.
+
+Example:
+
+```Go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"strings"
+
+	"github.com/klauspost/cpuid/v2"
+)
+
+func main() {
+	cpuid.Flags()
+	flag.Parse()
+	cpuid.Detect()
+
+	// Test if we have these specific features:
+	if cpuid.CPU.Supports(cpuid.SSE, cpuid.SSE2) {
+		fmt.Println("We have Streaming SIMD 2 Extensions")
+	}
+}
+```
+
 # license
 
 This code is published under an MIT license. See LICENSE file for more information.
