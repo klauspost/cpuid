@@ -27,25 +27,26 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/klauspost/cpuid/v2"
+	. "github.com/klauspost/cpuid/v2"
 )
 
 func main() {
 	// Print basic CPU information:
-	fmt.Println("Name:", cpuid.CPU.BrandName)
-	fmt.Println("PhysicalCores:", cpuid.CPU.PhysicalCores)
-	fmt.Println("ThreadsPerCore:", cpuid.CPU.ThreadsPerCore)
-	fmt.Println("LogicalCores:", cpuid.CPU.LogicalCores)
-	fmt.Println("Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model)
-	fmt.Println("Features:", fmt.Sprintf(strings.Join(cpuid.CPU.FeatureSet(), ",")))
-	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
-	fmt.Println("L1 Data Cache:", cpuid.CPU.Cache.L1D, "bytes")
-	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1D, "bytes")
-	fmt.Println("L2 Cache:", cpuid.CPU.Cache.L2, "bytes")
-	fmt.Println("L3 Cache:", cpuid.CPU.Cache.L3, "bytes")
+	fmt.Println("Name:", CPU.BrandName)
+	fmt.Println("PhysicalCores:", CPU.PhysicalCores)
+	fmt.Println("ThreadsPerCore:", CPU.ThreadsPerCore)
+	fmt.Println("LogicalCores:", CPU.LogicalCores)
+	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID", CPU.VendorID)
+	fmt.Println("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
+	fmt.Println("Cacheline bytes:", CPU.CacheLine)
+	fmt.Println("L1 Data Cache:", CPU.Cache.L1D, "bytes")
+	fmt.Println("L1 Instruction Cache:", CPU.Cache.L1D, "bytes")
+	fmt.Println("L2 Cache:", CPU.Cache.L2, "bytes")
+	fmt.Println("L3 Cache:", CPU.Cache.L3, "bytes")
+	fmt.Println("Frequency", CPU.Hz, "hz")
 
 	// Test if we have these specific features:
-	if cpuid.CPU.Supports(cpuid.SSE, cpuid.SSE2) {
+	if CPU.Supports(SSE, SSE2) {
 		fmt.Println("We have Streaming SIMD 2 Extensions")
 	}
 }
@@ -54,13 +55,18 @@ func main() {
 Sample output:
 ```
 >go run main.go
-Name: Intel(R) Core(TM) i5-2540M CPU @ 2.60GHz
-PhysicalCores: 2
+Name: AMD Ryzen 9 3950X 16-Core Processor
+PhysicalCores: 16
 ThreadsPerCore: 2
-LogicalCores: 4
-Family 6 Model: 42
-Features: CMOV,MMX,MMXEXT,SSE,SSE2,SSE3,SSSE3,SSE4.1,SSE4.2,AVX,AESNI,CLMUL
+LogicalCores: 32
+Family 23 Model: 113 Vendor ID AMD
+Features: ADX,AESNI,AVX,AVX2,BMI1,BMI2,CLMUL,CMOV,CX16,F16C,FMA3,HTT,HYPERVISOR,LZCNT,MMX,MMXEXT,NX,POPCNT,RDRAND,RDSEED,RDTSCP,SHA,SSE,SSE2,SSE3,SSE4,SSE42,SSE4A,SSSE3
 Cacheline bytes: 64
+L1 Data Cache: 32768 bytes
+L1 Instruction Cache: 32768 bytes
+L2 Cache: 524288 bytes
+L3 Cache: 16777216 bytes
+Frequency 0 hz
 We have Streaming SIMD 2 Extensions
 ```
 

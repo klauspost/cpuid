@@ -23,7 +23,7 @@ func TestLastVendorID(t *testing.T) {
 // There is no real way to test a CPU identifier, since results will
 // obviously differ on each machine.
 func TestCPUID(t *testing.T) {
-	DetectARM()
+	Detect()
 	n := maxFunctionID()
 	t.Logf("Max Function:0x%x", n)
 	n = maxExtendedFunction()
@@ -44,6 +44,27 @@ func TestCPUID(t *testing.T) {
 	t.Log("Hz:", CPU.Hz, "Hz")
 }
 
+func TestExample(t *testing.T) {
+	Detect()
+	// Print basic CPU information:
+	fmt.Println("Name:", CPU.BrandName)
+	fmt.Println("PhysicalCores:", CPU.PhysicalCores)
+	fmt.Println("ThreadsPerCore:", CPU.ThreadsPerCore)
+	fmt.Println("LogicalCores:", CPU.LogicalCores)
+	fmt.Println("Family", CPU.Family, "Model:", CPU.Model, "Vendor ID", CPU.VendorID)
+	fmt.Println("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
+	fmt.Println("Cacheline bytes:", CPU.CacheLine)
+	fmt.Println("L1 Data Cache:", CPU.Cache.L1D, "bytes")
+	fmt.Println("L1 Instruction Cache:", CPU.Cache.L1D, "bytes")
+	fmt.Println("L2 Cache:", CPU.Cache.L2, "bytes")
+	fmt.Println("L3 Cache:", CPU.Cache.L3, "bytes")
+	fmt.Println("Frequency", CPU.Hz, "hz")
+
+	// Test if we have these specific features:
+	if CPU.Supports(SSE, SSE2) {
+		fmt.Println("We have Streaming SIMD 2 Extensions")
+	}
+}
 func TestDumpCPUID(t *testing.T) {
 	n := int(maxFunctionID())
 	for i := 0; i <= n; i++ {

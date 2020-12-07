@@ -351,7 +351,7 @@ func hertz(model string) int64 {
 	// sizes.
 	hz := strings.LastIndex(model, "Hz")
 	if hz < 3 {
-		return -1
+		return 0
 	}
 	var multiplier int64
 	switch model[hz-1] {
@@ -363,7 +363,7 @@ func hertz(model string) int64 {
 		multiplier = 1000 * 1000 * 1000 * 1000
 	}
 	if multiplier == 0 {
-		return -1
+		return 0
 	}
 	freq := int64(0)
 	divisor := int64(0)
@@ -375,16 +375,16 @@ func hertz(model string) int64 {
 			decimalShift *= 10
 		} else if model[i] == '.' {
 			if divisor != 0 {
-				return -1
+				return 0
 			}
 			divisor = decimalShift
 		} else {
-			return -1
+			return 0
 		}
 	}
 	// we didn't find a space
 	if i < 0 {
-		return -1
+		return 0
 	}
 	if divisor != 0 {
 		return (freq * multiplier) / divisor
