@@ -23,7 +23,7 @@ import (
 type Vendor int
 
 const (
-	Other Vendor = iota
+	VendorUnknown Vendor = iota
 	Intel
 	AMD
 	VIA
@@ -37,9 +37,11 @@ const (
 	Hygon
 	SiS
 	RDC
+
+	lastVendor
 )
 
-//go:generate stringer -type=FeatureID
+//go:generate stringer -type=FeatureID,Vendor
 
 // FeatureID is the ID of a specific cpu feature.
 type FeatureID int
@@ -248,6 +250,8 @@ var disableFlag *string
 // Flags will enable flags.
 // This must be called *before* flag.Parse AND
 // Detect must be called after the flags have been parsed.
+// Not that this means that any detection used in init() functions
+// will not contain these flags.
 func Flags() {
 	disableFlag = flag.String("cpu.disable", "", "disable cpu features; comma separated list")
 	detectArmFlag = flag.Bool("cpu.arm", false, "allow ARM features to be detected; can potentially crash")
@@ -602,7 +606,7 @@ func vendorID() (Vendor, string) {
 	v := string(valAsString(b, d, c))
 	vend, ok := vendorMapping[v]
 	if !ok {
-		return Other, v
+		return VendorUnknown, v
 	}
 	return vend, v
 }

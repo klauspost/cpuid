@@ -14,6 +14,12 @@ func TestLastID(t *testing.T) {
 	}
 }
 
+func TestLastVendorID(t *testing.T) {
+	if lastVendor.String() != "lastVendor" {
+		t.Fatal("stringer not updated, run go generate")
+	}
+}
+
 // There is no real way to test a CPU identifier, since results will
 // obviously differ on each machine.
 func TestCPUID(t *testing.T) {
