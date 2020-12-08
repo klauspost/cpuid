@@ -70,14 +70,26 @@ Frequency 0 hz
 We have Streaming SIMD 2 Extensions
 ```
 
+# usage
+
+The `cpuid.CPU` provides access to CPU features. Use `cpuid.CPU.Supports()` to access CPU features.
+
+Note that for some cpu/os combinations some features will not be detected.
+`amd64` has rather good support and should work reliably on all platforms.
+
+Note that hypervisors may not pass through all CPU features.
+
 ## ARM64 feature detection
 
 Not all operating systems provide ARM features directly 
 and there is no safe way to do so for the rest.
 
-However, a `DetectARM()` can be used if you are able to control your deployment,
-it will detect CPU features. 
-Otherwise a flag for detecting unsafe ARM features can be added. See below.
+Currently `arm64/linux` and `arm64/freebsd` should be quite reliable. 
+`arm64/darwin` adds features expected from the M1 processor, but a lot remains undetected.
+
+A `DetectARM()` can be used if you are able to control your deployment,
+it will detect CPU features, but may crash if the OS doesn't intercept the calls.
+A `-cpu.arm` flag for detecting unsafe ARM features can be added. See below.
  
 Note that currently only features are detected on ARM, 
 no additional information is currently available. 
