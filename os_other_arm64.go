@@ -2,7 +2,6 @@
 
 // +build arm64
 // +build !linux
-// +build !android
 // +build !darwin
 
 package cpuid

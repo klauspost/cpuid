@@ -5,9 +5,6 @@
 // license that can be found in the LICENSE file located
 // here https://github.com/golang/sys/blob/master/LICENSE
 
-//+build arm64
-//+build linux android
-
 package cpuid
 
 import (
@@ -137,7 +134,7 @@ func isSet(hwc uint, value uint) bool {
 }
 
 //go:noescape
-//go:linkname sched_getaffinity runtime·sched_getaffinity
+//go:linkname sched_getaffinity runtime.sched_getaffinity
 func sched_getaffinity(pid, len uintptr, buf *byte) int32
 
 func getproccount() int32 {
