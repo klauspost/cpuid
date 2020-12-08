@@ -2,8 +2,11 @@ language: go
 
 os:
   - linux
+  - osx
+  - windows
 
 arch:
+  - amd64
   - arm64
 
 go:

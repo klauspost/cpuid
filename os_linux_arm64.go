@@ -12,7 +12,6 @@ package cpuid
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io/ioutil"
 	"runtime"
 	_ "unsafe" //required for go:linkname
@@ -51,8 +50,6 @@ var hwcap uint
 
 func detectOS(c *CPUInfo) bool {
 	if hwcap == 0 {
-		//FIXME: Remove
-		fmt.Println("No hwcap, fallback")
 		// We did not get values from the runtime.
 		// Try reading /proc/self/auxv
 
@@ -93,7 +90,6 @@ func detectOS(c *CPUInfo) bool {
 			}
 		}
 		if hwcap == 0 {
-			fmt.Println("No fallback")
 			return false
 		}
 	}
