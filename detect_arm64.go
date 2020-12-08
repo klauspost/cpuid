@@ -20,10 +20,7 @@ func initCPU() {
 func addInfo(c *CPUInfo, safe bool) {
 	// Seems to be safe to assume on ARM64
 	c.CacheLine = 64
-	if detectOS(c) {
-		// We could detect values from OS, fine.
-		return
-	}
+	detectOS(c)
 
 	// ARM64 disabled since it may crash if interrupt is not intercepted by OS.
 	if safe && !c.Supports(ARMCPUID) && runtime.GOOS != "freebsd" {
