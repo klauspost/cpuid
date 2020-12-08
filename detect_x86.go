@@ -16,16 +16,13 @@ func initCPU() {
 	rdtscpAsm = asmRdtscpAsm
 }
 
-func addInfo(c *CPUInfo) {
+func addInfo(c *CPUInfo, safe bool) {
 	c.maxFunc = maxFunctionID()
 	c.maxExFunc = maxExtendedFunction()
 	c.BrandName = brandName()
 	c.CacheLine = cacheLine()
 	c.Family, c.Model = familyModel()
 	c.featureSet = support()
-	if c.featureSet != nil {
-		c.Features = c.featureSet[0]
-	}
 	c.SGX = hasSGX(c.featureSet.inSet(SGX), c.featureSet.inSet(SGXLC))
 	c.ThreadsPerCore = threadsPerCore()
 	c.LogicalCores = logicalCores()

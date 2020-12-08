@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"sort"
 	"strings"
 	"testing"
@@ -150,7 +151,7 @@ func mockCPU(def []byte) func() {
 			panic(fmt.Sprintf("XGETBV not supported %v", fakeID))
 		}
 		// We don't have any data to return, unfortunately
-		return 0, 0
+		return math.MaxUint32, math.MaxUint32
 	}
 	return restorer
 }
@@ -199,10 +200,10 @@ func TestMocks(t *testing.T) {
 			}
 		}
 
-		if CPU.ThreadsPerCore > 1 && !CPU.HTT() {
+		if CPU.ThreadsPerCore > 1 && !CPU.Supports(HTT) {
 			t.Fatalf("Hyperthreading not detected")
 		}
-		if CPU.ThreadsPerCore == 1 && CPU.HTT() {
+		if CPU.ThreadsPerCore == 1 && CPU.Supports(HTT) {
 			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
 		}
 		restore()
