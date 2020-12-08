@@ -16,7 +16,9 @@ Package home: https://github.com/klauspost/cpuid
 
 ## installing
 
-`go get -u github.com/klauspost/cpuid/v2`
+`go get -u github.com/klauspost/cpuid/v2` using modules. 
+
+Drop `v2` for others.
 
 ## example
 
@@ -79,7 +81,7 @@ Note that for some cpu/os combinations some features will not be detected.
 
 Note that hypervisors may not pass through all CPU features.
 
-## ARM64 feature detection
+## arm64 feature detection
 
 Not all operating systems provide ARM features directly 
 and there is no safe way to do so for the rest.
@@ -94,7 +96,7 @@ A `-cpu.arm` flag for detecting unsafe ARM features can be added. See below.
 Note that currently only features are detected on ARM, 
 no additional information is currently available. 
 
-## Adding flags
+## flags
 
 It is possible to add flags that affects cpu detection.
 
