@@ -8,7 +8,7 @@ You can access the CPU information by accessing the shared CPU variable of the c
 
 Package home: https://github.com/klauspost/cpuid
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/klauspost/cpuid)](https://pkg.go.dev/github.com/klauspost/cpuid)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/klauspost/cpuid)](https://pkg.go.dev/github.com/klauspost/cpuid/v2)
 [![Build Status][3]][4]
 
 [3]: https://travis-ci.org/klauspost/cpuid.svg?branch=master
