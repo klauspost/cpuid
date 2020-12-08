@@ -46,7 +46,7 @@ const (
 	hwcap_ASIMDFHM = 1 << 23
 )
 
-//go:linkname hwcap interval/cpu.HWCap
+//go:linkname hwcap internal/cpu.HWCap
 var hwcap uint
 
 func detectOS(c *CPUInfo) bool {
