@@ -1,11 +1,18 @@
 // Copyright (c) 2020 Klaus Post, released under MIT License. See LICENSE file.
 
+// Copyright 2018 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file located
+// here https://github.com/golang/sys/blob/master/LICENSE
+
 //+build arm64
 //+build linux android
 
 package cpuid
 
 import (
+	"encoding/binary"
+	"io/ioutil"
 	"runtime"
 	_ "unsafe" //required for go:linkname
 )
@@ -38,14 +45,55 @@ const (
 	hwcap_ASIMDFHM = 1 << 23
 )
 
-//go:linkname hwcap interval/cpu.HWCap
+//go:linkname hwcap internal/cpu.HWCap
 var hwcap uint
 
 func detectOS(c *CPUInfo) bool {
 	if hwcap == 0 {
-		// It may be wrong, allow unsafe if defined.
-		return false
+		// We did not get values from the runtime.
+		// Try reading /proc/self/auxv
+
+		// From https://github.com/golang/sys
+		const (
+			_AT_HWCAP  = 16
+			_AT_HWCAP2 = 26
+
+			uintSize = int(32 << (^uint(0) >> 63))
+		)
+
+		buf, err := ioutil.ReadFile("/proc/self/auxv")
+		if err != nil {
+			// e.g. on android /proc/self/auxv is not accessible, so silently
+			// ignore the error and leave Initialized = false. On some
+			// architectures (e.g. arm64) doinit() implements a fallback
+			// readout and will set Initialized = true again.
+			return false
+		}
+		bo := binary.LittleEndian
+		for len(buf) >= 2*(uintSize/8) {
+			var tag, val uint
+			switch uintSize {
+			case 32:
+				tag = uint(bo.Uint32(buf[0:]))
+				val = uint(bo.Uint32(buf[4:]))
+				buf = buf[8:]
+			case 64:
+				tag = uint(bo.Uint64(buf[0:]))
+				val = uint(bo.Uint64(buf[8:]))
+				buf = buf[16:]
+			}
+			switch tag {
+			case _AT_HWCAP:
+				hwcap = val
+			case _AT_HWCAP2:
+				// Not used
+			}
+		}
+		if hwcap == 0 {
+			return false
+		}
 	}
+
 	// HWCap was populated by the runtime from the auxiliary vector.
 	// Use HWCap information since reading aarch64 system registers
 	// is not supported in user space on older linux kernels.
