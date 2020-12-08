@@ -38,6 +38,19 @@ const (
 	SiS
 	RDC
 
+	Ampere
+	ARM
+	Broadcom
+	Cavium
+	DEC
+	Fujitsu
+	Infineon
+	Motorola
+	NVIDIA
+	AMCC
+	Qualcomm
+	Marvell
+
 	lastVendor
 )
 

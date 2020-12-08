@@ -146,12 +146,24 @@ func _() {
 	_ = x[Hygon-11]
 	_ = x[SiS-12]
 	_ = x[RDC-13]
-	_ = x[lastVendor-14]
+	_ = x[Ampere-14]
+	_ = x[ARM-15]
+	_ = x[Broadcom-16]
+	_ = x[Cavium-17]
+	_ = x[DEC-18]
+	_ = x[Fujitsu-19]
+	_ = x[Infineon-20]
+	_ = x[Motorola-21]
+	_ = x[NVIDIA-22]
+	_ = x[AMCC-23]
+	_ = x[Qualcomm-24]
+	_ = x[Marvell-25]
+	_ = x[lastVendor-26]
 }
 
-const _Vendor_name = "VendorUnknownIntelAMDVIATransmetaNSCKVMMSVMVMwareXenHVMBhyveHygonSiSRDClastVendor"
+const _Vendor_name = "VendorUnknownIntelAMDVIATransmetaNSCKVMMSVMVMwareXenHVMBhyveHygonSiSRDCAmpereARMBroadcomCaviumDECFujitsuInfineonMotorolaNVIDIAAMCCQualcommMarvelllastVendor"
 
-var _Vendor_index = [...]uint8{0, 13, 18, 21, 24, 33, 36, 39, 43, 49, 55, 60, 65, 68, 71, 81}
+var _Vendor_index = [...]uint8{0, 13, 18, 21, 24, 33, 36, 39, 43, 49, 55, 60, 65, 68, 71, 77, 80, 88, 94, 97, 104, 112, 120, 126, 130, 138, 145, 155}
 
 func (i Vendor) String() string {
 	if i < 0 || i >= Vendor(len(_Vendor_index)-1) {
