@@ -5,16 +5,13 @@
 // license that can be found in the LICENSE file located
 // here https://github.com/golang/sys/blob/master/LICENSE
 
-//+build arm64
-//+build linux android
-
 package cpuid
 
 import (
 	"encoding/binary"
 	"io/ioutil"
 	"runtime"
-	_ "unsafe" //required for go:linkname
+	"unsafe"
 )
 
 // HWCAP bits.
@@ -49,6 +46,10 @@ const (
 var hwcap uint
 
 func detectOS(c *CPUInfo) bool {
+	// For now assuming no hyperthreading is reasonable.
+	c.LogicalCores = int(getproccount())
+	c.PhysicalCores = c.LogicalCores
+	c.ThreadsPerCore = 1
 	if hwcap == 0 {
 		// We did not get values from the runtime.
 		// Try reading /proc/self/auxv
@@ -130,4 +131,31 @@ func detectOS(c *CPUInfo) bool {
 
 func isSet(hwc uint, value uint) bool {
 	return hwc&value != 0
+}
+
+//go:noescape
+//go:linkname sched_getaffinity runtime.sched_getaffinity
+func sched_getaffinity(pid, len uintptr, buf *byte) int32
+
+func getproccount() int32 {
+	// This buffer is huge (8 kB) but we are on the system stack
+	// and there should be plenty of space (64 kB).
+	// Also this is a leaf, so we're not holding up the memory for long.
+	const maxCPUs = 64 * 1024
+	var buf [maxCPUs / 8]byte
+	r := sched_getaffinity(0, unsafe.Sizeof(buf), &buf[0])
+	if r < 0 {
+		return 0
+	}
+	n := int32(0)
+	for _, v := range buf[:r] {
+		for v != 0 {
+			n += int32(v & 1)
+			v >>= 1
+		}
+	}
+	if n == 0 {
+		n = 1
+	}
+	return n
 }
