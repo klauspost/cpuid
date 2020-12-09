@@ -844,8 +844,9 @@ func support() flagSet {
 	if vend == AMD && (d&(1<<28)) != 0 && mfi >= 4 {
 		fs.setIf(threadsPerCore() > 1, HTT)
 	}
-	// Check XGETBV, OXSAVE and AVX bits
-	if c&(1<<26) != 0 && c&(1<<27) != 0 && c&(1<<28) != 0 {
+	// Check XGETBV/XSAVE (26), OXSAVE (27) and AVX (28) bits
+	const avxCheck = 1<<26 | 1<<27 | 1<<28
+	if c&avxCheck == avxCheck {
 		// Check for OS support
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {
@@ -861,7 +862,9 @@ func support() flagSet {
 		}
 	}
 	// FMA3 can be used with SSE registers, so no OS support is strictly needed.
-	fs.setIf((c&0x00001000) != 0, FMA3)
+	// fma3 and OSXSAVE needed.
+	const fma3Check = 1<<12 | 1<<27
+	fs.setIf(c&fma3Check == fma3Check, FMA3)
 
 	// Check AVX2, AVX2 requires OS support, but BMI1/2 don't.
 	if mfi >= 7 {
