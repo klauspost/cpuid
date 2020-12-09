@@ -85,7 +85,7 @@ const (
 	ENQCMD                              // Enqueue Command
 	ERMS                                // Enhanced REP MOVSB/STOSB
 	F16C                                // Half-precision floating-point conversion
-	FMA3                                // Intel FMA 3
+	FMA3                                // Intel FMA 3. Does not imply AVX.
 	FMA4                                // Bulldozer FMA4 functions
 	GFNI                                // Galois Field New Instructions
 	HLE                                 // Hardware Lock Elision
@@ -837,7 +837,6 @@ func support() flagSet {
 		eax, _ := xgetbv(0)
 		if (eax & 0x6) == 0x6 {
 			fs.set(AVX)
-			fs.setIf((c&0x00001000) != 0, FMA3)
 			switch vend {
 			case Intel:
 				// Older than Haswell.
@@ -848,6 +847,8 @@ func support() flagSet {
 			}
 		}
 	}
+	// FMA3 can be used with SSE registers, so no OS support is strictly needed.
+	fs.setIf((c&0x00001000) != 0, FMA3)
 
 	// Check AVX2, AVX2 requires OS support, but BMI1/2 don't.
 	if mfi >= 7 {
