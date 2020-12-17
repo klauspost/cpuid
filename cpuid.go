@@ -12,7 +12,9 @@ package cpuid
 
 import (
 	"flag"
+	"fmt"
 	"math"
+	"os"
 	"strings"
 )
 
@@ -238,6 +240,11 @@ func Detect() {
 		safe = !*detectArmFlag
 	}
 	addInfo(&CPU, safe)
+	if displayFeats != nil && *displayFeats {
+		fmt.Println("cpu features:", CPU.FeatureSet())
+		// Exit with non-zero so tests will print value.
+		os.Exit(1)
+	}
 	if disableFlag != nil {
 		s := strings.Split(*disableFlag, ",")
 		for _, feat := range s {
@@ -259,6 +266,7 @@ func DetectARM() {
 }
 
 var detectArmFlag *bool
+var displayFeats *bool
 var disableFlag *string
 
 // Flags will enable flags.
@@ -268,6 +276,7 @@ var disableFlag *string
 // will not contain these flags.
 func Flags() {
 	disableFlag = flag.String("cpu.disable", "", "disable cpu features; comma separated list")
+	displayFeats = flag.Bool("cpu.features", false, "lists cpu features and exits")
 	detectArmFlag = flag.Bool("cpu.arm", false, "allow ARM features to be detected; can potentially crash")
 }
 
