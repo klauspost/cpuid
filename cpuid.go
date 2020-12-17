@@ -241,7 +241,7 @@ func Detect() {
 	}
 	addInfo(&CPU, safe)
 	if displayFeats != nil && *displayFeats {
-		fmt.Println("cpu features:", CPU.FeatureSet())
+		fmt.Println("cpu features:", strings.Join(CPU.FeatureSet(), ","))
 		// Exit with non-zero so tests will print value.
 		os.Exit(1)
 	}
