@@ -281,6 +281,12 @@ func (c CPUInfo) Supports(ids ...FeatureID) bool {
 	return true
 }
 
+// Has allows for checking a single feature.
+// Should be inlined by the compiler.
+func (c CPUInfo) Has(id FeatureID) bool {
+	return c.featureSet.inSet(id)
+}
+
 // Disable will disable one or several features.
 func (c *CPUInfo) Disable(ids ...FeatureID) bool {
 	for _, id := range ids {
