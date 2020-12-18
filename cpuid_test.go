@@ -134,6 +134,41 @@ func TestSGX(t *testing.T) {
 	}
 }
 
+func TestHas(t *testing.T) {
+	Detect()
+	defer Detect()
+	feats := CPU.FeatureSet()
+	for _, feat := range feats {
+		f := ParseFeature(feat)
+		if f == UNKNOWN {
+			t.Error("Got unknown feature:", feat)
+			continue
+		}
+		if !CPU.Has(f) {
+			t.Error("CPU.Has returned false, want true")
+		}
+		if !CPU.Supports(f) {
+			t.Error("CPU.Supports returned false, want true")
+		}
+		// Disable it.
+		CPU.Disable(f)
+		if CPU.Has(f) {
+			t.Error("CPU.Has returned true, want false")
+		}
+		if CPU.Supports(f) {
+			t.Error("CPU.Supports returned true, want false")
+		}
+		// Reenable
+		CPU.Enable(f)
+		if !CPU.Has(f) {
+			t.Error("CPU.Has returned false, want true")
+		}
+		if !CPU.Supports(f) {
+			t.Error("CPU.Supports returned false, want true")
+		}
+	}
+}
+
 // TestSGXLC tests SGX Launch Control detection
 func TestSGXLC(t *testing.T) {
 	got := CPU.SGX.LaunchControl
