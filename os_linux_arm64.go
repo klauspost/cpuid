@@ -140,7 +140,7 @@ func getproccount() int32 {
 	// This buffer is huge (8 kB) but we are on the system stack
 	// and there should be plenty of space (64 kB).
 	// Also this is a leaf, so we're not holding up the memory for long.
-	const maxCPUs = 64 * 1024
+	const maxCPUs = 128 * 1024
 	var buf [maxCPUs / 8]byte
 	r := sched_getaffinity(0, maxCPUs/8, &buf[0])
 	if r < 0 {
