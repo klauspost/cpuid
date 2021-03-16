@@ -11,7 +11,6 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 	"runtime"
-	"unsafe"
 )
 
 // HWCAP bits.
@@ -143,7 +142,7 @@ func getproccount() int32 {
 	// Also this is a leaf, so we're not holding up the memory for long.
 	const maxCPUs = 64 * 1024
 	var buf [maxCPUs / 8]byte
-	r := sched_getaffinity(0, unsafe.Sizeof(buf), &buf[0])
+	r := sched_getaffinity(0, maxCPUs/8, &buf[0])
 	if r < 0 {
 		return 0
 	}
