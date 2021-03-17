@@ -19,6 +19,7 @@ go:
 script:
   - go vet ./...
   - go test -test.v -test.run ^TestCPUID$
+  - go test -tags=nounsafe -test.v -test.run ^TestCPUID$
   - go test -race ./...
   - go test -tags=noasm ./...
 
@@ -27,7 +28,7 @@ matrix:
     - go: 'master'
   fast_finish: true
   include:
-    - stage: gofmt
+    - stage: other
       go: 1.15.x
       os: linux
       arch: amd64
@@ -36,19 +37,14 @@ matrix:
         - diff <(gofmt -d ./private) <(printf "")
         - go install github.com/klauspost/asmfmt/cmd/asmfmt
         - diff <(asmfmt -d .) <(printf "")
-    - stage: i386
+    - stage: other
       go: 1.15.x
       os: linux
       arch: amd64
       script:
         - GOOS=linux GOARCH=386 go test .
-    - stage: buildotherprev
-      go: 1.15.x
-      os: linux
-      arch: amd64
-      script:
         - ./test-architectures.sh
-    - stage: buildother
+    - stage: other
       go: 1.16.x
       os: linux
       arch: amd64
