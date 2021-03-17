@@ -39,10 +39,10 @@ matrix:
       script:
         - diff <(gofmt -d .) <(printf "")
         - diff <(gofmt -d ./private) <(printf "")
-        - GO111MODULE=off go get github.com/klauspost/asmfmt&&go install github.com/klauspost/asmfmt/cmd/asmfmt
-        - diff <(asmfmt -d .) <(printf "")
         - curl -sfL https://git.io/goreleaser | VERSION=v0.157.0 sh -s -- check # check goreleaser config for deprecations
         - curl -sL https://git.io/goreleaser | VERSION=v0.157.0 sh -s -- --snapshot --skip-publish --rm-dist
+        - go get github.com/klauspost/asmfmt&&go install github.com/klauspost/asmfmt/cmd/asmfmt
+        - diff <(asmfmt -d .) <(printf "")
     - stage: other
       go: 1.16.x
       os: linux
