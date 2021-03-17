@@ -43,20 +43,10 @@ matrix:
         - curl -sL https://git.io/goreleaser | VERSION=v0.157.0 sh -s -- --snapshot --skip-publish --rm-dist
         - go get github.com/klauspost/asmfmt&&go install github.com/klauspost/asmfmt/cmd/asmfmt
         - diff <(asmfmt -d .) <(printf "")
-    - stage: other
-      go: 1.16.x
-      os: linux
-      arch: amd64
-      script:
         - GOOS=linux GOARCH=386 go test .
-    - stage: other
-      go: 1.15.x
-      os: linux
-      arch: amd64
-      script:
         - ./test-architectures.sh
     - stage: other
-      go: 1.16.x
+      go: 1.15.x
       os: linux
       arch: amd64
       script:
