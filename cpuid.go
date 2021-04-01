@@ -32,8 +32,10 @@ const (
 	VIA
 	Transmeta
 	NSC
-	KVM  // Kernel-based Virtual Machine
-	MSVM // Microsoft Hyper-V or Windows Virtual PC
+	// Kernel-based Virtual Machine
+	KVM
+	// Microsoft Hyper-V or Windows Virtual PC
+	MSVM
 	VMware
 	XenHVM
 	Bhyve
@@ -57,7 +59,7 @@ const (
 	lastVendor
 )
 
-//go:generate stringer -type=FeatureID,Vendor
+//go:generate stringer -type=FeatureID,Vendor -linecomment
 
 // FeatureID is the ID of a specific cpu feature.
 type FeatureID int
@@ -66,115 +68,220 @@ const (
 	// Keep index -1 as unknown
 	UNKNOWN = -1
 
-	// Add features
-	ADX                FeatureID = iota // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
-	AESNI                               // Advanced Encryption Standard New Instructions
-	AMD3DNOW                            // AMD 3DNOW
-	AMD3DNOWEXT                         // AMD 3DNowExt
-	AMXBF16                             // Tile computational operations on BFLOAT16 numbers
-	AMXINT8                             // Tile computational operations on 8-bit integers
-	AMXTILE                             // Tile architecture
-	AVX                                 // AVX functions
-	AVX2                                // AVX2 functions
-	AVX512BF16                          // AVX-512 BFLOAT16 Instructions
-	AVX512BITALG                        // AVX-512 Bit Algorithms
-	AVX512BW                            // AVX-512 Byte and Word Instructions
-	AVX512CD                            // AVX-512 Conflict Detection Instructions
-	AVX512DQ                            // AVX-512 Doubleword and Quadword Instructions
-	AVX512ER                            // AVX-512 Exponential and Reciprocal Instructions
-	AVX512F                             // AVX-512 Foundation
-	AVX512IFMA                          // AVX-512 Integer Fused Multiply-Add Instructions
-	AVX512PF                            // AVX-512 Prefetch Instructions
-	AVX512VBMI                          // AVX-512 Vector Bit Manipulation Instructions
-	AVX512VBMI2                         // AVX-512 Vector Bit Manipulation Instructions, Version 2
-	AVX512VL                            // AVX-512 Vector Length Extensions
-	AVX512VNNI                          // AVX-512 Vector Neural Network Instructions
-	AVX512VP2INTERSECT                  // AVX-512 Intersect for D/Q
-	AVX512VPOPCNTDQ                     // AVX-512 Vector Population Count Doubleword and Quadword
-	AVXSLOW                             // Indicates the CPU performs 2 128 bit operations instead of one.
-	BMI1                                // Bit Manipulation Instruction Set 1
-	BMI2                                // Bit Manipulation Instruction Set 2
-	CLDEMOTE                            // Cache Line Demote
-	CLMUL                               // Carry-less Multiplication
-	CMOV                                // i686 CMOV
-	CX16                                // CMPXCHG16B Instruction
-	ENQCMD                              // Enqueue Command
-	ERMS                                // Enhanced REP MOVSB/STOSB
-	F16C                                // Half-precision floating-point conversion
-	FMA3                                // Intel FMA 3. Does not imply AVX.
-	FMA4                                // Bulldozer FMA4 functions
-	GFNI                                // Galois Field New Instructions
-	HLE                                 // Hardware Lock Elision
-	HTT                                 // Hyperthreading (enabled)
-	HYPERVISOR                          // This bit has been reserved by Intel & AMD for use by hypervisors
-	IBPB                                // Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
-	IBS                                 // Instruction Based Sampling (AMD)
-	IBSBRNTRGT                          // Instruction Based Sampling Feature (AMD)
-	IBSFETCHSAM                         // Instruction Based Sampling Feature (AMD)
-	IBSFFV                              // Instruction Based Sampling Feature (AMD)
-	IBSOPCNT                            // Instruction Based Sampling Feature (AMD)
-	IBSOPCNTEXT                         // Instruction Based Sampling Feature (AMD)
-	IBSOPSAM                            // Instruction Based Sampling Feature (AMD)
-	IBSRDWROPCNT                        // Instruction Based Sampling Feature (AMD)
-	IBSRIPINVALIDCHK                    // Instruction Based Sampling Feature (AMD)
-	LZCNT                               // LZCNT instruction
-	MMX                                 // standard MMX
-	MMXEXT                              // SSE integer functions or AMD MMX ext
-	MOVDIR64B                           // Move 64 Bytes as Direct Store
-	MOVDIRI                             // Move Doubleword as Direct Store
-	MPX                                 // Intel MPX (Memory Protection Extensions)
-	NX                                  // NX (No-Execute) bit
-	POPCNT                              // POPCNT instruction
-	RDRAND                              // RDRAND instruction is available
-	RDSEED                              // RDSEED instruction is available
-	RDTSCP                              // RDTSCP Instruction
-	RTM                                 // Restricted Transactional Memory
-	SERIALIZE                           // Serialize Instruction Execution
-	SGX                                 // Software Guard Extensions
-	SGXLC                               // Software Guard Extensions Launch Control
-	SHA                                 // Intel SHA Extensions
-	SSE                                 // SSE functions
-	SSE2                                // P4 SSE functions
-	SSE3                                // Prescott SSE3 functions
-	SSE4                                // Penryn SSE4.1 functions
-	SSE42                               // Nehalem SSE4.2 functions
-	SSE4A                               // AMD Barcelona microarchitecture SSE4a instructions
-	SSSE3                               // Conroe SSSE3 functions
-	STIBP                               // Single Thread Indirect Branch Predictors
-	TBM                                 // AMD Trailing Bit Manipulation
-	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
-	VAES                                // Vector AES
-	VMX                                 // Virtual Machine Extensions
-	VPCLMULQDQ                          // Carry-Less Multiplication Quadword
-	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
-	WBNOINVD                            // Write Back and Do Not Invalidate Cache
-	XOP                                 // Bulldozer XOP functions
+	// Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
+	ADX FeatureID = iota
+	// Advanced Encryption Standard New Instructions
+	AESNI
+	// AMD 3DNOW
+	AMD3DNOW
+	// AMD 3DNowExt
+	AMD3DNOWEXT
+	// Tile computational operations on BFLOAT16 numbers
+	AMXBF16
+	// Tile computational operations on 8-bit integers
+	AMXINT8
+	// Tile architecture
+	AMXTILE
+	// AVX functions
+	AVX
+	// AVX2 functions
+	AVX2
+	// AVX-512 BFLOAT16 Instructions
+	AVX512BF16
+	// AVX-512 Bit Algorithms
+	AVX512BITALG
+	// AVX-512 Byte and Word Instructions
+	AVX512BW
+	// AVX-512 Conflict Detection Instructions
+	AVX512CD
+	// AVX-512 Doubleword and Quadword Instructions
+	AVX512DQ
+	// AVX-512 Exponential and Reciprocal Instructions
+	AVX512ER
+	// AVX-512 Foundation
+	AVX512F
+	// AVX-512 Integer Fused Multiply-Add Instructions
+	AVX512IFMA
+	// AVX-512 Prefetch Instructions
+	AVX512PF
+	// AVX-512 Vector Bit Manipulation Instructions
+	AVX512VBMI
+	// AVX-512 Vector Bit Manipulation Instructions, Version 2
+	AVX512VBMI2
+	// AVX-512 Vector Length Extensions
+	AVX512VL
+	// AVX-512 Vector Neural Network Instructions
+	AVX512VNNI
+	// AVX-512 Intersect for D/Q
+	AVX512VP2INTERSECT
+	// AVX-512 Vector Population Count Doubleword and Quadword
+	AVX512VPOPCNTDQ
+	// Indicates the CPU performs 2 128 bit operations instead of one.
+	AVXSLOW
+	// Bit Manipulation Instruction Set 1
+	BMI1
+	// Bit Manipulation Instruction Set 2
+	BMI2
+	// Cache Line Demote
+	CLDEMOTE
+	// Carry-less Multiplication
+	CLMUL
+	// i686 CMOV
+	CMOV
+	// CMPXCHG16B Instruction
+	CX16
+	// Enqueue Command
+	ENQCMD
+	// Enhanced REP MOVSB/STOSB
+	ERMS
+	// Half-precision floating-point conversion
+	F16C
+	// Intel FMA 3. Does not imply AVX.
+	FMA3
+	// Bulldozer FMA4 functions
+	FMA4
+	// Galois Field New Instructions
+	GFNI
+	// Hardware Lock Elision
+	HLE
+	// Hyperthreading (enabled)
+	HTT
+	// This bit has been reserved by Intel & AMD for use by hypervisors
+	HYPERVISOR
+	// Indirect Branch Restricted Speculation (IBRS) and Indirect Branch Predictor Barrier (IBPB)
+	IBPB
+	// Instruction Based Sampling (AMD)
+	IBS
+	// Instruction Based Sampling Feature (AMD)
+	IBSBRNTRGT
+	// Instruction Based Sampling Feature (AMD)
+	IBSFETCHSAM
+	// Instruction Based Sampling Feature (AMD)
+	IBSFFV
+	// Instruction Based Sampling Feature (AMD)
+	IBSOPCNT
+	// Instruction Based Sampling Feature (AMD)
+	IBSOPCNTEXT
+	// Instruction Based Sampling Feature (AMD)
+	IBSOPSAM
+	// Instruction Based Sampling Feature (AMD)
+	IBSRDWROPCNT
+	// Instruction Based Sampling Feature (AMD)
+	IBSRIPINVALIDCHK
+	// LZCNT instruction
+	LZCNT
+	// standard MMX
+	MMX
+	// SSE integer functions or AMD MMX ext
+	MMXEXT
+	// Move 64 Bytes as Direct Store
+	MOVDIR64B
+	// Move Doubleword as Direct Store
+	MOVDIRI
+	// Intel MPX (Memory Protection Extensions)
+	MPX
+	// NX (No-Execute) bit
+	NX
+	// POPCNT instruction
+	POPCNT
+	// RDRAND instruction is available
+	RDRAND
+	// RDSEED instruction is available
+	RDSEED
+	// RDTSCP Instruction
+	RDTSCP
+	// Restricted Transactional Memory
+	RTM
+	// Serialize Instruction Execution
+	SERIALIZE
+	// Software Guard Extensions
+	SGX
+	// Software Guard Extensions Launch Control
+	SGXLC
+	// Intel SHA Extensions
+	SHA
+	// SSE functions
+	SSE
+	// P4 SSE functions
+	SSE2
+	// Prescott SSE3 functions
+	SSE3
+	// SSE4.1 Penryn SSE4.1 functions
+	SSE4 // SSE4.1
+	// Nehalem SSE4.2 functions
+	SSE42 // SSE4.2
+	// AMD Barcelona microarchitecture SSE4a instructions
+	SSE4A
+	// Conroe SSSE3 functions
+	SSSE3
+	// Single Thread Indirect Branch Predictors
+	STIBP
+	// AMD Trailing Bit Manipulation
+	TBM
+	// Intel TSX Suspend Load Address Tracking
+	TSXLDTRK
+	// Vector AES
+	VAES
+	// Virtual Machine Extensions
+	VMX
+	// Carry-Less Multiplication Quadword
+	VPCLMULQDQ
+	// TPAUSE, UMONITOR, UMWAIT
+	WAITPKG
+	// Write Back and Do Not Invalidate Cache
+	WBNOINVD
+	// Bulldozer XOP functions
+	XOP
 
 	// ARM features:
-	AESARM   // AES instructions
-	ARMCPUID // Some CPU ID registers readable at user-level
-	ASIMD    // Advanced SIMD
-	ASIMDDP  // SIMD Dot Product
-	ASIMDHP  // Advanced SIMD half-precision floating point
-	ASIMDRDM // Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
-	ATOMICS  // Large System Extensions (LSE)
-	CRC32    // CRC32/CRC32C instructions
-	DCPOP    // Data cache clean to Point of Persistence (DC CVAP)
-	EVTSTRM  // Generic timer
-	FCMA     // Floatin point complex number addition and multiplication
-	FP       // Single-precision and double-precision floating point
-	FPHP     // Half-precision floating point
-	GPA      // Generic Pointer Authentication
-	JSCVT    // Javascript-style double->int convert (FJCVTZS)
-	LRCPC    // Weaker release consistency (LDAPR, etc)
-	PMULL    // Polynomial Multiply instructions (PMULL/PMULL2)
-	SHA1     // SHA-1 instructions (SHA1C, etc)
-	SHA2     // SHA-2 instructions (SHA256H, etc)
-	SHA3     // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
-	SHA512   // SHA512 instructions
-	SM3      // SM3 instructions
-	SM4      // SM4 instructions
-	SVE      // Scalable Vector Extension
+	// AES instructions
+	AESARM
+	// Some CPU ID registers readable at user-level
+	ARMCPUID
+	// Advanced SIMD
+	ASIMD
+	// SIMD Dot Product
+	ASIMDDP
+	// Advanced SIMD half-precision floating point
+	ASIMDHP
+	// Rounding Double Multiply Accumulate/Subtract (SQRDMLAH/SQRDMLSH)
+	ASIMDRDM
+	// Large System Extensions (LSE)
+	ATOMICS
+	// CRC32/CRC32C instructions
+	CRC32
+	// Data cache clean to Point of Persistence (DC CVAP)
+	DCPOP
+	// Generic timer
+	EVTSTRM
+	// Floatin point complex number addition and multiplication
+	FCMA
+	// Single-precision and double-precision floating point
+	FP
+	// Half-precision floating point
+	FPHP
+	// Generic Pointer Authentication
+	GPA
+	// Javascript-style double->int convert (FJCVTZS)
+	JSCVT
+	// Weaker release consistency (LDAPR, etc)
+	LRCPC
+	// Polynomial Multiply instructions (PMULL/PMULL2)
+	PMULL
+	// SHA-1 instructions (SHA1C, etc)
+	SHA1
+	// SHA-2 instructions (SHA256H, etc)
+	SHA2
+	// SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
+	SHA3
+	// SHA512 instructions
+	SHA512
+	// SM3 instructions
+	SM3
+	// SM4 instructions
+	SM4
+	// Scalable Vector Extension
+	SVE
 
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
