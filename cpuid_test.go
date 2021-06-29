@@ -42,6 +42,7 @@ func TestCPUID(t *testing.T) {
 	t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
 	t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
 	t.Log("Hz:", CPU.Hz, "Hz")
+	t.Log("BoostFreq:", CPU.BoostFreq, "Hz")
 }
 
 func TestExample(t *testing.T) {

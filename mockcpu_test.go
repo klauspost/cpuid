@@ -193,6 +193,7 @@ func TestMocks(t *testing.T) {
 		t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
 		t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
 		t.Log("Hz:", CPU.Hz, "Hz")
+		t.Log("Boost:", CPU.BoostFreq, "Hz")
 		if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
 			if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
 				t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
