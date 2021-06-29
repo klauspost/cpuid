@@ -49,6 +49,9 @@ func main() {
 	if cpuid.CPU.Hz > 0 {
 		fmt.Println("Frequency:", cpuid.CPU.Hz, "Hz")
 	}
+	if cpuid.CPU.BoostFreq > 0 {
+		fmt.Println("Boost Frequency:", cpuid.CPU.BoostFreq, "Hz")
+	}
 	if cpuid.CPU.SGX.Available {
 		fmt.Printf("SGX: %+v\n", cpuid.CPU.SGX)
 	}
