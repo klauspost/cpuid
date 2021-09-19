@@ -45,9 +45,9 @@ func mockCPU(def []byte) func() {
 				break
 			}
 		}
-		if !strings.Contains(line, "-") {
-			//continue
-		}
+		//if !strings.Contains(line, "-") {
+		//	continue
+		//}
 		items := strings.Split(line, ":")
 		if len(items) < 2 {
 			if len(line) == 51 || len(line) == 50 {
@@ -186,7 +186,7 @@ func TestMocks(t *testing.T) {
 		t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
 		t.Log("LogicalCores:", CPU.LogicalCores)
 		t.Log("Family", CPU.Family, "Model:", CPU.Model)
-		t.Log("Features:", fmt.Sprintf(strings.Join(CPU.FeatureSet(), ",")))
+		t.Log("Features:", strings.Join(CPU.FeatureSet(), ","))
 		t.Log("Cacheline bytes:", CPU.CacheLine)
 		t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
 		t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")

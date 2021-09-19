@@ -335,9 +335,7 @@ func (c CPUInfo) IsVendor(v Vendor) bool {
 
 func (c CPUInfo) FeatureSet() []string {
 	s := make([]string, 0)
-	for _, f := range c.featureSet.Strings() {
-		s = append(s, f)
-	}
+	s = append(s, c.featureSet.Strings()...)
 	return s
 }
 
@@ -800,8 +798,6 @@ func (c *CPUInfo) cacheSize() {
 			}
 		}
 	}
-
-	return
 }
 
 type SGXEPCSection struct {
