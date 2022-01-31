@@ -1,14 +1,17 @@
+//go:build ignore
+
 package main
 
 import (
 	"archive/zip"
 	_ "bytes"
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 // Download all CPUID dumps from http://users.atw.hu/instlatx64/

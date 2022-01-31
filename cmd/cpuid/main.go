@@ -41,6 +41,7 @@ func main() {
 	fmt.Println("Logical Cores:", cpuid.CPU.LogicalCores)
 	fmt.Println("CPU Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model)
 	fmt.Println("Features:", strings.Join(cpuid.CPU.FeatureSet(), ","))
+	fmt.Println("Microarchitecture level:", cpuid.CPU.X64Level())
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1I, "bytes")
 	fmt.Println("L1 Data Cache:", cpuid.CPU.Cache.L1D, "bytes")
