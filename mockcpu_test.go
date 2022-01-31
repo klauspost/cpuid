@@ -187,6 +187,7 @@ func TestMocks(t *testing.T) {
 		t.Log("LogicalCores:", CPU.LogicalCores)
 		t.Log("Family", CPU.Family, "Model:", CPU.Model)
 		t.Log("Features:", strings.Join(CPU.FeatureSet(), ","))
+		t.Log("Microarchitecture level:", CPU.X64Level())
 		t.Log("Cacheline bytes:", CPU.CacheLine)
 		t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
 		t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
