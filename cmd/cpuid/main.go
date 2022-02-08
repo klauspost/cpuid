@@ -25,7 +25,16 @@ var js = flag.Bool("json", false, "Output as JSON")
 func main() {
 	flag.Parse()
 	if *js {
-		b, err := json.MarshalIndent(cpuid.CPU, "", "  ")
+		info := struct {
+			cpuid.CPUInfo
+			Features []string
+			X64Level int
+		}{
+			CPUInfo:  cpuid.CPU,
+			Features: cpuid.CPU.FeatureSet(),
+			X64Level: cpuid.CPU.X64Level(),
+		}
+		b, err := json.MarshalIndent(info, "", "  ")
 		if err != nil {
 			panic(err)
 		}
