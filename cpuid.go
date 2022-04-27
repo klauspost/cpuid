@@ -171,7 +171,11 @@ const (
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
 	X87                                 // FPU
 	XOP                                 // Bulldozer XOP functions
+	XGETBV1                             // Supports XGETBV with ECX = 1
 	XSAVE                               // XSAVE, XRESTOR, XSETBV, XGETBV
+	XSAVEC                              // Supports XSAVEC and the compacted form of XRSTOR.
+	XSAVEOPT                            // XSAVEOPT available
+	XSAVES                              // Supports XSAVES/XRSTORS and IA32_XSS
 
 	// ARM features:
 	AESARM   // AES instructions
@@ -1050,7 +1054,28 @@ func support() flagSet {
 			}
 		}
 	}
-
+	// Processor Extended State Enumeration Sub-leaf (EAX = 0DH, ECX = 1)
+	// EAX
+	// Bit 00: XSAVEOPT is available.
+	// Bit 01: Supports XSAVEC and the compacted form of XRSTOR if set.
+	// Bit 02: Supports XGETBV with ECX = 1 if set.
+	// Bit 03: Supports XSAVES/XRSTORS and IA32_XSS if set.
+	// Bits 31 - 04: Reserved.
+	// EBX
+	// Bits 31 - 00: The size in bytes of the XSAVE area containing all states enabled by XCRO | IA32_XSS.
+	// ECX
+	// Bits 31 - 00: Reports the supported bits of the lower 32 bits of the IA32_XSS MSR. IA32_XSS[n] can be set to 1 only if ECX[n] is 1.
+	// EDX?
+	// Bits 07 - 00: Used for XCR0. Bit 08: PT state. Bit 09: Used for XCR0. Bits 12 - 10: Reserved. Bit 13: HWP state. Bits 31 - 14: Reserved.
+	if mfi >= 0xd {
+		if fs.inSet(XSAVE) {
+			eax, _, _, _ := cpuidex(0xd, 1)
+			fs.setIf(eax&(1<<0) != 0, XSAVEOPT)
+			fs.setIf(eax&(1<<1) != 0, XSAVEC)
+			fs.setIf(eax&(1<<2) != 0, XGETBV1)
+			fs.setIf(eax&(1<<3) != 0, XSAVES)
+		}
+	}
 	if maxExtendedFunction() >= 0x80000001 {
 		_, _, c, d := cpuid(0x80000001)
 		if (c & (1 << 5)) != 0 {
