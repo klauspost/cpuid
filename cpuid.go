@@ -126,6 +126,7 @@ const (
 	IBSOPSAM                            // Instruction Based Sampling Feature (AMD)
 	IBSRDWROPCNT                        // Instruction Based Sampling Feature (AMD)
 	IBSRIPINVALIDCHK                    // Instruction Based Sampling Feature (AMD)
+	IBS_PREVENTHOST                     // Disallowing IBS use by the host supported
 	INT_WBINVD                          // WBINVD/WBNOINVD are interruptible.
 	INVLPGB                             // NVLPGB and TLBSYNC instruction supported
 	LAHF                                // LAHF/SAHF in long mode
@@ -138,6 +139,7 @@ const (
 	MOVDIR64B                           // Move 64 Bytes as Direct Store
 	MOVDIRI                             // Move Doubleword as Direct Store
 	MPX                                 // Intel MPX (Memory Protection Extensions)
+	MSR_PAGEFLUSH                       // Page Flush MSR available
 	MSRIRC                              // Instruction Retired Counter MSR available
 	NX                                  // NX (No-Execute) bit
 	OSXSAVE                             // XSAVE enabled by OS
@@ -150,9 +152,18 @@ const (
 	RTM_ALWAYS_ABORT                    // Indicates that the loaded microcode is forcing RTM abort.
 	SCE                                 // SYSENTER and SYSEXIT instructions
 	SERIALIZE                           // Serialize Instruction Execution
+	SEV                                 // AMD Secure Encrypted Virtualization supported
+	SEV_64BIT                           // AMD SEV guest execution only allowed from a 64-bit host
+	SEV_ALTERNATIVE                     // AMD SEV Alternate Injection supported
+	SEV_DEBUGSWAP                       // Full debug state swap supported for SEV-ES guests
+	SEV_ES                              // AMD SEV Encrypted State supported
+	SEV_RESTRICTED                      // AMD SEV Restricted Injection supported
+	SEV_SNP                             // AMD SEV Secure Nested Paging supported
 	SGX                                 // Software Guard Extensions
 	SGXLC                               // Software Guard Extensions Launch Control
 	SHA                                 // Intel SHA Extensions
+	SME                                 // AMD Secure Memory Encryption supported
+	SME_COHERENT                        // AMD Hardware cache coherency across encryption domains enforced
 	SSE                                 // SSE functions
 	SSE2                                // P4 SSE functions
 	SSE3                                // Prescott SSE3 functions
@@ -165,13 +176,16 @@ const (
 	TBM                                 // AMD Trailing Bit Manipulation
 	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
 	VAES                                // Vector AES
+	VMPL                                // AMD VM Permission Levels supported
+	VMSA_REGPROT                        // AMD VMSA Register Protection supported
 	VMX                                 // Virtual Machine Extensions
 	VPCLMULQDQ                          // Carry-Less Multiplication Quadword
+	VTE                                 // AMD Virtual Transparent Encryption supported
 	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
 	X87                                 // FPU
-	XOP                                 // Bulldozer XOP functions
 	XGETBV1                             // Supports XGETBV with ECX = 1
+	XOP                                 // Bulldozer XOP functions
 	XSAVE                               // XSAVE, XRESTOR, XSETBV, XGETBV
 	XSAVEC                              // Supports XSAVEC and the compacted form of XRSTOR.
 	XSAVEOPT                            // XSAVEOPT available
@@ -1129,6 +1143,24 @@ func support() flagSet {
 		fs.setIf((eax>>5)&1 == 1, IBSBRNTRGT)
 		fs.setIf((eax>>6)&1 == 1, IBSOPCNTEXT)
 		fs.setIf((eax>>7)&1 == 1, IBSRIPINVALIDCHK)
+	}
+
+	if maxExtendedFunction() >= 0x8000001f && vend == AMD {
+		a, _, _, _ := cpuid(0x8000001f)
+		fs.setIf((a>>0)&1 == 1, SME)
+		fs.setIf((a>>1)&1 == 1, SEV)
+		fs.setIf((a>>2)&1 == 1, MSR_PAGEFLUSH)
+		fs.setIf((a>>3)&1 == 1, SEV_ES)
+		fs.setIf((a>>4)&1 == 1, SEV_SNP)
+		fs.setIf((a>>5)&1 == 1, VMPL)
+		fs.setIf((a>>10)&1 == 1, SME_COHERENT)
+		fs.setIf((a>>11)&1 == 1, SEV_64BIT)
+		fs.setIf((a>>12)&1 == 1, SEV_RESTRICTED)
+		fs.setIf((a>>13)&1 == 1, SEV_ALTERNATIVE)
+		fs.setIf((a>>14)&1 == 1, SEV_DEBUGSWAP)
+		fs.setIf((a>>15)&1 == 1, IBS_PREVENTHOST)
+		fs.setIf((a>>16)&1 == 1, VTE)
+		fs.setIf((a>>24)&1 == 1, VMSA_REGPROT)
 	}
 
 	return fs
