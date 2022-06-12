@@ -143,6 +143,7 @@ const (
 	MSRIRC                              // Instruction Retired Counter MSR available
 	NX                                  // NX (No-Execute) bit
 	OSXSAVE                             // XSAVE enabled by OS
+	PCONFIG                             // PCONFIG for Intel Multi-Key Total Memory Encryption
 	POPCNT                              // POPCNT instruction
 	RDPRU                               // RDPRU instruction supported
 	RDRAND                              // RDRAND instruction is available
@@ -174,6 +175,7 @@ const (
 	STIBP                               // Single Thread Indirect Branch Predictors
 	SUCCOR                              // Software uncorrectable error containment and recovery capability.
 	TBM                                 // AMD Trailing Bit Manipulation
+	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
 	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
 	VAES                                // Vector AES
 	VMPL                                // AMD VM Permission Levels supported
@@ -1014,6 +1016,7 @@ func support() flagSet {
 		// CPUID.(EAX=7, ECX=0).ECX
 		fs.setIf(ecx&(1<<5) != 0, WAITPKG)
 		fs.setIf(ecx&(1<<7) != 0, CETSS)
+		fs.setIf(ecx&(1<<13) != 0, TME)
 		fs.setIf(ecx&(1<<25) != 0, CLDEMOTE)
 		fs.setIf(ecx&(1<<27) != 0, MOVDIRI)
 		fs.setIf(ecx&(1<<28) != 0, MOVDIR64B)
@@ -1023,6 +1026,7 @@ func support() flagSet {
 		fs.setIf(edx&(1<<11) != 0, RTM_ALWAYS_ABORT)
 		fs.setIf(edx&(1<<14) != 0, SERIALIZE)
 		fs.setIf(edx&(1<<16) != 0, TSXLDTRK)
+		fs.setIf(edx&(1<<18) != 0, PCONFIG)
 		fs.setIf(edx&(1<<20) != 0, CETIBT)
 		fs.setIf(edx&(1<<26) != 0, IBPB)
 		fs.setIf(edx&(1<<27) != 0, STIBP)
