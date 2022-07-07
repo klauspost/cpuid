@@ -11,7 +11,7 @@ import (
 
 func detectOS(c *CPUInfo) bool {
 	if runtime.GOOS != "ios" {
-		fillCPUInfo(c)
+		tryToFillCPUInfoFomSysctl(c)
 	}
 	// There are no hw.optional sysctl values for the below features on Mac OS 11.0
 	// to detect their supported state dynamically. Assume the CPU features that
@@ -68,19 +68,19 @@ func sysctlGetInt64(unknown int, names ...string) int {
 func setFeature(c *CPUInfo, name string, feature FeatureID) {
 	c.featureSet.setIf(sysctlGetBool(name), feature)
 }
-func fillCPUInfo(c *CPUInfo) {
+func tryToFillCPUInfoFomSysctl(c *CPUInfo) {
 	c.BrandName = sysctlGetString("machdep.cpu.brand_string")
 
 	if len(c.BrandName) != 0 {
 		c.VendorString = strings.Fields(c.BrandName)[0]
 	}
 
-	c.PhysicalCores = sysctlGetInt(0, "hw.physicalcpu")
-	c.ThreadsPerCore = sysctlGetInt(0, "machdep.cpu.thread_count", "kern.num_threads") /
+	c.PhysicalCores = sysctlGetInt(runtime.NumCPU(), "hw.physicalcpu")
+	c.ThreadsPerCore = sysctlGetInt(1, "machdep.cpu.thread_count", "kern.num_threads") /
 		sysctlGetInt(1, "hw.physicalcpu")
-	c.LogicalCores = sysctlGetInt(0, "machdep.cpu.core_count")
+	c.LogicalCores = sysctlGetInt(runtime.NumCPU(), "machdep.cpu.core_count")
 	c.Family = sysctlGetInt(0, "machdep.cpu.family", "hw.cpufamily")
-	c.Model = sysctlGetInt(0, "machdep.cpu.model", "hw.cputype")
+	c.Model = sysctlGetInt(0, "machdep.cpu.model")
 	c.CacheLine = sysctlGetInt64(0, "hw.cachelinesize")
 	c.Cache.L1I = sysctlGetInt64(-1, "hw.l1icachesize")
 	c.Cache.L1D = sysctlGetInt64(-1, "hw.l1icachesize")
