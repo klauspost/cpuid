@@ -115,7 +115,7 @@ func tryToFillCPUInfoFomSysctl(c *CPUInfo) {
 	setFeature(c, "hw.optional.armv8_1_atomics", ATOMICS)
 	setFeature(c, "hw.optional.floatingpoint", FP)
 	setFeature(c, "hw.optional.armv8_2_sha3", SHA3)
-	setFeature(c, "hw.optional.armv8_2_sha3", SHA512)
+	setFeature(c, "hw.optional.armv8_2_sha512", SHA512)
 	setFeature(c, "hw.optional.armv8_3_compnum", FCMA)
 	setFeature(c, "hw.optional.armv8_crc32", CRC32)
 }
