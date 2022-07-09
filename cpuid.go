@@ -112,7 +112,7 @@ const (
 	FMA4                                // Bulldozer FMA4 functions
 	FXSR                                // FXSAVE, FXRESTOR instructions, CR4 bit 9
 	FXSROPT                             // FXSAVE/FXRSTOR optimizations
-	GFNI                                // Galois Field New Instructions
+	GFNI                                // Galois Field New Instructions. May require other features (AVX, AVX512VL,AVX512F) based on usage.
 	HLE                                 // Hardware Lock Elision
 	HTT                                 // Hyperthreading (enabled)
 	HWA                                 // Hardware assert supported. Indicates support for MSRC001_10
@@ -178,11 +178,11 @@ const (
 	TBM                                 // AMD Trailing Bit Manipulation
 	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
 	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
-	VAES                                // Vector AES
+	VAES                                // Vector AES. AVX(512) versions requires additional checks.
 	VMPL                                // AMD VM Permission Levels supported
 	VMSA_REGPROT                        // AMD VMSA Register Protection supported
 	VMX                                 // Virtual Machine Extensions
-	VPCLMULQDQ                          // Carry-Less Multiplication Quadword
+	VPCLMULQDQ                          // Carry-Less Multiplication Quadword. Requires AVX for 3 register versions.
 	VTE                                 // AMD Virtual Transparent Encryption supported
 	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
@@ -1041,12 +1041,16 @@ func support() flagSet {
 		// CPUID.(EAX=7, ECX=0).ECX
 		fs.setIf(ecx&(1<<5) != 0, WAITPKG)
 		fs.setIf(ecx&(1<<7) != 0, CETSS)
+		fs.setIf(ecx&(1<<8) != 0, GFNI)
+		fs.setIf(ecx&(1<<9) != 0, VAES)
+		fs.setIf(ecx&(1<<10) != 0, VPCLMULQDQ)
 		fs.setIf(ecx&(1<<13) != 0, TME)
 		fs.setIf(ecx&(1<<25) != 0, CLDEMOTE)
 		fs.setIf(ecx&(1<<27) != 0, MOVDIRI)
 		fs.setIf(ecx&(1<<28) != 0, MOVDIR64B)
 		fs.setIf(ecx&(1<<29) != 0, ENQCMD)
 		fs.setIf(ecx&(1<<30) != 0, SGXLC)
+
 		// CPUID.(EAX=7, ECX=0).EDX
 		fs.setIf(edx&(1<<11) != 0, RTM_ALWAYS_ABORT)
 		fs.setIf(edx&(1<<14) != 0, SERIALIZE)
@@ -1080,9 +1084,6 @@ func support() flagSet {
 				// ecx
 				fs.setIf(ecx&(1<<1) != 0, AVX512VBMI)
 				fs.setIf(ecx&(1<<6) != 0, AVX512VBMI2)
-				fs.setIf(ecx&(1<<8) != 0, GFNI)
-				fs.setIf(ecx&(1<<9) != 0, VAES)
-				fs.setIf(ecx&(1<<10) != 0, VPCLMULQDQ)
 				fs.setIf(ecx&(1<<11) != 0, AVX512VNNI)
 				fs.setIf(ecx&(1<<12) != 0, AVX512BITALG)
 				fs.setIf(ecx&(1<<14) != 0, AVX512VPOPCNTDQ)
