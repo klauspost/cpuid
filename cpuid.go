@@ -131,6 +131,7 @@ const (
 	INT_WBINVD                          // WBINVD/WBNOINVD are interruptible.
 	INVLPGB                             // NVLPGB and TLBSYNC instruction supported
 	LAHF                                // LAHF/SAHF in long mode
+	LBRVIRT                             // LBR virtualization
 	LZCNT                               // LZCNT instruction
 	MCAOVERFLOW                         // MCA overflow recovery support.
 	MCOMMIT                             // MCOMMIT instruction supported
@@ -140,8 +141,9 @@ const (
 	MOVDIR64B                           // Move 64 Bytes as Direct Store
 	MOVDIRI                             // Move Doubleword as Direct Store
 	MPX                                 // Intel MPX (Memory Protection Extensions)
-	MSR_PAGEFLUSH                       // Page Flush MSR available
 	MSRIRC                              // Instruction Retired Counter MSR available
+	MSR_PAGEFLUSH                       // Page Flush MSR available
+	NRIPS                               // Indicates support for NRIP save on VMEXIT
 	NX                                  // NX (No-Execute) bit
 	OSXSAVE                             // XSAVE enabled by OS
 	PCONFIG                             // PCONFIG for Intel Multi-Key Total Memory Encryption
@@ -175,10 +177,19 @@ const (
 	SSSE3                               // Conroe SSSE3 functions
 	STIBP                               // Single Thread Indirect Branch Predictors
 	SUCCOR                              // Software uncorrectable error containment and recovery capability.
+	SVM                                 // AMD Secure Virtual Machine
+	SVMDA                               // Indicates support for the SVM decode assists.
+	SVMFBASID                           // SVM, Indicates that TLB flush events, including CR3 writes and CR4.PGE toggles, flush only the current ASID's TLB entries. Also indicates support for the extended VMCBTLB_Control
+	SVML                                // AMD SVM lock. Indicates support for SVM-Lock.
+	SVMNP                               // AMD SVM nested paging
+	SVMPF                               // SVM pause intercept filter. Indicates support for the pause intercept filter
+	SVMPFT                              // SVM PAUSE filter threshold. Indicates support for the PAUSE filter cycle count threshold
 	TBM                                 // AMD Trailing Bit Manipulation
 	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
+	TSCRATEMSR                          // MSR based TSC rate control. Indicates support for MSR TSC ratio MSRC000_0104
 	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
 	VAES                                // Vector AES. AVX(512) versions requires additional checks.
+	VMCBCLEAN                           // VMCB clean bits. Indicates support for VMCB clean bits.
 	VMPL                                // AMD VM Permission Levels supported
 	VMSA_REGPROT                        // AMD VMSA Register Protection supported
 	VMX                                 // Virtual Machine Extensions
@@ -1126,13 +1137,17 @@ func support() flagSet {
 			fs.set(LZCNT)
 			fs.set(POPCNT)
 		}
+		// ECX
 		fs.setIf((c&(1<<0)) != 0, LAHF)
+		fs.setIf((c&(1<<2)) != 0, SVM)
+		fs.setIf((c&(1<<6)) != 0, SSE4A)
 		fs.setIf((c&(1<<10)) != 0, IBS)
+
+		// EDX
 		fs.setIf((d&(1<<31)) != 0, AMD3DNOW)
 		fs.setIf((d&(1<<30)) != 0, AMD3DNOWEXT)
 		fs.setIf((d&(1<<23)) != 0, MMX)
 		fs.setIf((d&(1<<22)) != 0, MMXEXT)
-		fs.setIf((c&(1<<6)) != 0, SSE4A)
 		fs.setIf(d&(1<<20) != 0, NX)
 		fs.setIf(d&(1<<27) != 0, RDTSCP)
 
@@ -1161,6 +1176,20 @@ func support() flagSet {
 		fs.setIf((b&(1<<3)) != 0, INVLPGB)
 		fs.setIf((b&(1<<1)) != 0, MSRIRC)
 		fs.setIf((b&(1<<0)) != 0, CLZERO)
+	}
+
+	if fs.inSet(SVM) && maxExtendedFunction() >= 0x8000000A {
+		_, _, _, edx := cpuid(0x8000000A)
+		fs.setIf((edx>>0)&1 == 1, SVMNP)
+		fs.setIf((edx>>1)&1 == 1, LBRVIRT)
+		fs.setIf((edx>>2)&1 == 1, SVML)
+		fs.setIf((edx>>3)&1 == 1, NRIPS)
+		fs.setIf((edx>>4)&1 == 1, TSCRATEMSR)
+		fs.setIf((edx>>5)&1 == 1, VMCBCLEAN)
+		fs.setIf((edx>>6)&1 == 1, SVMFBASID)
+		fs.setIf((edx>>7)&1 == 1, SVMDA)
+		fs.setIf((edx>>10)&1 == 1, SVMPF)
+		fs.setIf((edx>>12)&1 == 1, SVMPFT)
 	}
 
 	if maxExtendedFunction() >= 0x8000001b && fs.inSet(IBS) {
