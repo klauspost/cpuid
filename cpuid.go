@@ -93,7 +93,8 @@ const (
 	AVX512VNNI                          // AVX-512 Vector Neural Network Instructions
 	AVX512VP2INTERSECT                  // AVX-512 Intersect for D/Q
 	AVX512VPOPCNTDQ                     // AVX-512 Vector Population Count Doubleword and Quadword
-	AVXSLOW                             // Indicates the CPU performs 2 128 bit operations instead of one.
+	AVXSLOW                             // Indicates the CPU performs 2 128 bit operations instead of one
+	AVXVNNI                             // AVX (VEX encoded) VNNI neural network instructions
 	BMI1                                // Bit Manipulation Instruction Set 1
 	BMI2                                // Bit Manipulation Instruction Set 2
 	CETIBT                              // Intel CET Indirect Branch Tracking
@@ -102,6 +103,7 @@ const (
 	CLMUL                               // Carry-less Multiplication
 	CLZERO                              // CLZERO instruction supported
 	CMOV                                // i686 CMOV
+	CMPSB_SCADBS_SHORT                  // Fast short CMPSB and SCASB
 	CMPXCHG8                            // CMPXCHG8 instruction
 	CPBOOST                             // Core Performance Boost
 	CX16                                // CMPXCHG16B Instruction
@@ -114,6 +116,7 @@ const (
 	FXSROPT                             // FXSAVE/FXRSTOR optimizations
 	GFNI                                // Galois Field New Instructions. May require other features (AVX, AVX512VL,AVX512F) based on usage.
 	HLE                                 // Hardware Lock Elision
+	HRESET                              // If set CPU supports history reset and the IA32_HRESET_ENABLE MSR
 	HTT                                 // Hyperthreading (enabled)
 	HWA                                 // Hardware assert supported. Indicates support for MSRC001_10
 	HYPERVISOR                          // This bit has been reserved by Intel & AMD for use by hypervisors
@@ -131,6 +134,7 @@ const (
 	INT_WBINVD                          // WBINVD/WBNOINVD are interruptible.
 	INVLPGB                             // NVLPGB and TLBSYNC instruction supported
 	LAHF                                // LAHF/SAHF in long mode
+	LAM                                 // If set, CPU supports Linear Address Masking
 	LBRVIRT                             // LBR virtualization
 	LZCNT                               // LZCNT instruction
 	MCAOVERFLOW                         // MCA overflow recovery support.
@@ -140,6 +144,7 @@ const (
 	MOVBE                               // MOVBE instruction (big-endian)
 	MOVDIR64B                           // Move 64 Bytes as Direct Store
 	MOVDIRI                             // Move Doubleword as Direct Store
+	MOVSB_ZL                            // Fast Zero-Length MOVSB
 	MPX                                 // Intel MPX (Memory Protection Extensions)
 	MSRIRC                              // Instruction Retired Counter MSR available
 	MSR_PAGEFLUSH                       // Page Flush MSR available
@@ -176,6 +181,7 @@ const (
 	SSE4A                               // AMD Barcelona microarchitecture SSE4a instructions
 	SSSE3                               // Conroe SSSE3 functions
 	STIBP                               // Single Thread Indirect Branch Predictors
+	STOSB_SHORT                         // Fast short STOSB
 	SUCCOR                              // Software uncorrectable error containment and recovery capability.
 	SVM                                 // AMD Secure Virtual Machine
 	SVMDA                               // Indicates support for the SVM decode assists.
@@ -230,7 +236,6 @@ const (
 	SM3      // SM3 instructions
 	SM4      // SM4 instructions
 	SVE      // Scalable Vector Extension
-
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
 
@@ -1032,7 +1037,6 @@ func support() flagSet {
 	// Check AVX2, AVX2 requires OS support, but BMI1/2 don't.
 	if mfi >= 7 {
 		_, ebx, ecx, edx := cpuidex(7, 0)
-		eax1, _, _, _ := cpuidex(7, 1)
 		if fs.inSet(AVX) && (ebx&0x00000020) != 0 {
 			fs.set(AVX2)
 		}
@@ -1049,6 +1053,7 @@ func support() flagSet {
 		fs.setIf(ebx&(1<<18) != 0, RDSEED)
 		fs.setIf(ebx&(1<<19) != 0, ADX)
 		fs.setIf(ebx&(1<<29) != 0, SHA)
+
 		// CPUID.(EAX=7, ECX=0).ECX
 		fs.setIf(ecx&(1<<5) != 0, WAITPKG)
 		fs.setIf(ecx&(1<<7) != 0, CETSS)
@@ -1070,6 +1075,15 @@ func support() flagSet {
 		fs.setIf(edx&(1<<20) != 0, CETIBT)
 		fs.setIf(edx&(1<<26) != 0, IBPB)
 		fs.setIf(edx&(1<<27) != 0, STIBP)
+
+		// CPUID.(EAX=7, ECX=1)
+		eax1, _, _, _ := cpuidex(7, 1)
+		fs.setIf(fs.inSet(AVX) && eax1&(1<<4) != 0, AVXVNNI)
+		fs.setIf(eax1&(1<<10) != 0, MOVSB_ZL)
+		fs.setIf(eax1&(1<<11) != 0, STOSB_SHORT)
+		fs.setIf(eax1&(1<<12) != 0, CMPSB_SCADBS_SHORT)
+		fs.setIf(eax1&(1<<22) != 0, HRESET)
+		fs.setIf(eax1&(1<<26) != 0, LAM)
 
 		// Only detect AVX-512 features if XGETBV is supported
 		if c&((1<<26)|(1<<27)) == (1<<26)|(1<<27) {
