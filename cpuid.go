@@ -253,6 +253,7 @@ type CPUInfo struct {
 	LogicalCores   int     // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
 	Family         int     // CPU family number
 	Model          int     // CPU model number
+	Stepping       int     // CPU stepping info
 	CacheLine      int     // Cache line size in bytes. Will be 0 if undetectable.
 	Hz             int64   // Clock speed, if known, 0 otherwise. Will attempt to contain base clock speed.
 	BoostFreq      int64   // Max clock speed, if known, 0 otherwise
@@ -677,7 +678,7 @@ func threadsPerCore() int {
 		if vend == AMD {
 			// Workaround for AMD returning 0, assume 2 if >= Zen 2
 			// It will be more correct than not.
-			fam, _ := familyModel()
+			fam, _, _ := familyModel()
 			_, _, _, d := cpuid(1)
 			if (d&(1<<28)) != 0 && fam >= 23 {
 				return 2
@@ -715,14 +716,27 @@ func logicalCores() int {
 	}
 }
 
-func familyModel() (int, int) {
+func familyModel() (family, model, stepping int) {
 	if maxFunctionID() < 0x1 {
-		return 0, 0
+		return 0, 0, 0
 	}
 	eax, _, _, _ := cpuid(1)
-	family := ((eax >> 8) & 0xf) + ((eax >> 20) & 0xff)
-	model := ((eax >> 4) & 0xf) + ((eax >> 12) & 0xf0)
-	return int(family), int(model)
+	// If BaseFamily[3:0] is less than Fh then ExtendedFamily[7:0] is reserved and Family is equal to BaseFamily[3:0].
+	family = int((eax >> 8) & 0xf)
+	extFam := family == 0x6 // Intel is 0x6, needs extended model.
+	if family == 0xf {
+		// Add ExtFamily
+		family += int((eax >> 20) & 0xff)
+		extFam = true
+	}
+	// If BaseFamily[3:0] is less than 0Fh then ExtendedModel[3:0] is reserved and Model is equal to BaseModel[3:0].
+	model = int((eax >> 4) & 0xf)
+	if extFam {
+		// Add ExtModel
+		model += int((eax >> 12) & 0xf0)
+	}
+	stepping = int(eax & 0xf)
+	return family, model, stepping
 }
 
 func physicalCores() int {
@@ -974,7 +988,7 @@ func support() flagSet {
 	if mfi < 0x1 {
 		return fs
 	}
-	family, model := familyModel()
+	family, model, _ := familyModel()
 
 	_, _, c, d := cpuid(1)
 	fs.setIf((d&(1<<0)) != 0, X87)
