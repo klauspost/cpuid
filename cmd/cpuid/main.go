@@ -62,7 +62,7 @@ func main() {
 	fmt.Println("PhysicalCores:", cpuid.CPU.PhysicalCores)
 	fmt.Println("Threads Per Core:", cpuid.CPU.ThreadsPerCore)
 	fmt.Println("Logical Cores:", cpuid.CPU.LogicalCores)
-	fmt.Println("CPU Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model)
+	fmt.Println("CPU Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model, "Stepping:", cpuid.CPU.Stepping)
 	fmt.Println("Features:", strings.Join(cpuid.CPU.FeatureSet(), ","))
 	fmt.Println("Microarchitecture level:", cpuid.CPU.X64Level())
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)

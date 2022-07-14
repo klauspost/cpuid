@@ -34,7 +34,7 @@ func TestCPUID(t *testing.T) {
 	t.Log("PhysicalCores:", CPU.PhysicalCores)
 	t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
 	t.Log("LogicalCores:", CPU.LogicalCores)
-	t.Log("Family", CPU.Family, "Model:", CPU.Model)
+	t.Log("Family", CPU.Family, "Model:", CPU.Model, "Stepping:", CPU.Stepping)
 	t.Log("Features:", strings.Join(CPU.FeatureSet(), ","))
 	t.Log("Cacheline bytes:", CPU.CacheLine)
 	t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")

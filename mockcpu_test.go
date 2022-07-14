@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -163,53 +164,56 @@ func TestMocks(t *testing.T) {
 	}
 	defer zr.Close()
 	for _, f := range zr.File {
-		rc, err := f.Open()
-		if err != nil {
-			t.Fatal(err)
-		}
-		content, err := ioutil.ReadAll(rc)
-		if err != nil {
-			t.Fatal(err)
-		}
-		rc.Close()
-		t.Log("Opening", f.FileInfo().Name())
-		restore := mockCPU(content)
-		Detect()
-		t.Log("Name:", CPU.BrandName)
-		n := maxFunctionID()
-		t.Logf("Max Function:0x%x", n)
-		n = maxExtendedFunction()
-		t.Logf("Max Extended Function:0x%x", n)
-		t.Log("VendorString:", CPU.VendorString)
-		t.Log("VendorID:", CPU.VendorID)
-		t.Log("PhysicalCores:", CPU.PhysicalCores)
-		t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
-		t.Log("LogicalCores:", CPU.LogicalCores)
-		t.Log("Family", CPU.Family, "Model:", CPU.Model)
-		t.Log("Features:", strings.Join(CPU.FeatureSet(), ","))
-		t.Log("Microarchitecture level:", CPU.X64Level())
-		t.Log("Cacheline bytes:", CPU.CacheLine)
-		t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
-		t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
-		t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
-		t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
-		t.Log("Hz:", CPU.Hz, "Hz")
-		t.Log("Boost:", CPU.BoostFreq, "Hz")
-		if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
-			if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
-				t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
-					CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
+		t.Run(filepath.Base(f.Name), func(t *testing.T) {
+			rc, err := f.Open()
+			if err != nil {
+				t.Fatal(err)
 			}
-		}
+			content, err := ioutil.ReadAll(rc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rc.Close()
+			t.Log("Opening", f.FileInfo().Name())
+			restore := mockCPU(content)
+			Detect()
+			t.Log("Name:", CPU.BrandName)
+			n := maxFunctionID()
+			t.Logf("Max Function:0x%x", n)
+			n = maxExtendedFunction()
+			t.Logf("Max Extended Function:0x%x", n)
+			t.Log("VendorString:", CPU.VendorString)
+			t.Log("VendorID:", CPU.VendorID)
+			t.Log("PhysicalCores:", CPU.PhysicalCores)
+			t.Log("ThreadsPerCore:", CPU.ThreadsPerCore)
+			t.Log("LogicalCores:", CPU.LogicalCores)
+			t.Log("Family", CPU.Family, "Model:", CPU.Model, "Stepping:", CPU.Stepping)
+			t.Log("Features:", strings.Join(CPU.FeatureSet(), ","))
+			t.Log("Microarchitecture level:", CPU.X64Level())
+			t.Log("Cacheline bytes:", CPU.CacheLine)
+			t.Log("L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
+			t.Log("L1 Data Cache:", CPU.Cache.L1D, "bytes")
+			t.Log("L2 Cache:", CPU.Cache.L2, "bytes")
+			t.Log("L3 Cache:", CPU.Cache.L3, "bytes")
+			t.Log("Hz:", CPU.Hz, "Hz")
+			t.Log("Boost:", CPU.BoostFreq, "Hz")
+			if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
+				if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
+					t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
+						CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
+				}
+			}
 
-		if CPU.ThreadsPerCore > 1 && !CPU.Supports(HTT) {
-			t.Fatalf("Hyperthreading not detected")
-		}
-		if CPU.ThreadsPerCore == 1 && CPU.Supports(HTT) {
-			t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
-		}
-		restore()
+			if CPU.ThreadsPerCore > 1 && !CPU.Supports(HTT) {
+				t.Fatalf("Hyperthreading not detected")
+			}
+			if CPU.ThreadsPerCore == 1 && CPU.Supports(HTT) {
+				t.Fatalf("Hyperthreading detected, but only 1 Thread per core")
+			}
+			restore()
+		})
 	}
+
 	Detect()
 
 }
