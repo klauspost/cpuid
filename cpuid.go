@@ -159,7 +159,6 @@ const (
 	RDTSCP                              // RDTSCP Instruction
 	RTM                                 // Restricted Transactional Memory
 	RTM_ALWAYS_ABORT                    // Indicates that the loaded microcode is forcing RTM abort.
-	SCE                                 // SYSENTER and SYSEXIT instructions
 	SERIALIZE                           // Serialize Instruction Execution
 	SEV                                 // AMD Secure Encrypted Virtualization supported
 	SEV_64BIT                           // AMD SEV guest execution only allowed from a 64-bit host
@@ -190,6 +189,8 @@ const (
 	SVMNP                               // AMD SVM nested paging
 	SVMPF                               // SVM pause intercept filter. Indicates support for the pause intercept filter
 	SVMPFT                              // SVM PAUSE filter threshold. Indicates support for the PAUSE filter cycle count threshold
+	SYSCALL                             // System-Call Extension (SCE): SYSCALL and SYSRET instructions.
+	SYSEE                               // SYSENTER and SYSEXIT instructions
 	TBM                                 // AMD Trailing Bit Manipulation
 	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
 	TSCRATEMSR                          // MSR based TSC rate control. Indicates support for MSR TSC ratio MSRC000_0104
@@ -360,11 +361,21 @@ func (c CPUInfo) Has(id FeatureID) bool {
 	return c.featureSet.inSet(id)
 }
 
+// AnyOf returns whether the CPU supports one or more of the requested features.
+func (c CPUInfo) AnyOf(ids ...FeatureID) bool {
+	for _, id := range ids {
+		if c.featureSet.inSet(id) {
+			return true
+		}
+	}
+	return false
+}
+
 // https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
-var level1Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SCE, SSE, SSE2)
-var level2Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SCE, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3)
-var level3Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SCE, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE)
-var level4Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SCE, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL)
+var level1Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2)
+var level2Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3)
+var level3Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE)
+var level4Features = flagSetWith(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL)
 
 // X64Level returns the microarchitecture level detected on the CPU.
 // If features are lacking or non x64 mode, 0 is returned.
@@ -993,7 +1004,7 @@ func support() flagSet {
 	_, _, c, d := cpuid(1)
 	fs.setIf((d&(1<<0)) != 0, X87)
 	fs.setIf((d&(1<<8)) != 0, CMPXCHG8)
-	fs.setIf((d&(1<<11)) != 0, SCE)
+	fs.setIf((d&(1<<11)) != 0, SYSEE)
 	fs.setIf((d&(1<<15)) != 0, CMOV)
 	fs.setIf((d&(1<<22)) != 0, MMXEXT)
 	fs.setIf((d&(1<<23)) != 0, MMX)
@@ -1172,12 +1183,15 @@ func support() flagSet {
 		fs.setIf((c&(1<<10)) != 0, IBS)
 
 		// EDX
-		fs.setIf((d&(1<<31)) != 0, AMD3DNOW)
-		fs.setIf((d&(1<<30)) != 0, AMD3DNOWEXT)
-		fs.setIf((d&(1<<23)) != 0, MMX)
-		fs.setIf((d&(1<<22)) != 0, MMXEXT)
+		fs.setIf(d&(1<<11) != 0, SYSCALL)
 		fs.setIf(d&(1<<20) != 0, NX)
+		fs.setIf(d&(1<<22) != 0, MMXEXT)
+		fs.setIf(d&(1<<23) != 0, MMX)
+		fs.setIf(d&(1<<24) != 0, FXSR)
+		fs.setIf(d&(1<<25) != 0, FXSROPT)
 		fs.setIf(d&(1<<27) != 0, RDTSCP)
+		fs.setIf(d&(1<<30) != 0, AMD3DNOWEXT)
+		fs.setIf(d&(1<<31) != 0, AMD3DNOW)
 
 		/* XOP and FMA4 use the AVX instruction coding scheme, so they can't be
 		 * used unless the OS has AVX support. */
