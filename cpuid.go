@@ -189,7 +189,7 @@ const (
 	SVMNP                               // AMD SVM nested paging
 	SVMPF                               // SVM pause intercept filter. Indicates support for the pause intercept filter
 	SVMPFT                              // SVM PAUSE filter threshold. Indicates support for the PAUSE filter cycle count threshold
-	SYSCALL                             // SYSCALL and SYSRET instructions.
+	SYSCALL                             // System-Call Extension (SCE): SYSCALL and SYSRET instructions.
 	SYSEE                               // SYSENTER and SYSEXIT instructions
 	TBM                                 // AMD Trailing Bit Manipulation
 	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
