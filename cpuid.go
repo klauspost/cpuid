@@ -1006,7 +1006,6 @@ func support() flagSet {
 	fs.setIf((d&(1<<8)) != 0, CMPXCHG8)
 	fs.setIf((d&(1<<11)) != 0, SYSEE)
 	fs.setIf((d&(1<<15)) != 0, CMOV)
-	fs.setIf((d&(1<<22)) != 0, MMXEXT)
 	fs.setIf((d&(1<<23)) != 0, MMX)
 	fs.setIf((d&(1<<24)) != 0, FXSR)
 	fs.setIf((d&(1<<25)) != 0, FXSROPT)
