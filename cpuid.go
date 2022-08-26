@@ -192,6 +192,7 @@ const (
 	SYSCALL                             // System-Call Extension (SCE): SYSCALL and SYSRET instructions.
 	SYSEE                               // SYSENTER and SYSEXIT instructions
 	TBM                                 // AMD Trailing Bit Manipulation
+	TOPEXT                              // TopologyExtensions: topology extensions support. Indicates support for CPUID Fn8000_001D_EAX_x[N:0]-CPUID Fn8000_001E_EDX.
 	TME                                 // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
 	TSCRATEMSR                          // MSR based TSC rate control. Indicates support for MSR TSC ratio MSRC000_0104
 	TSXLDTRK                            // Intel TSX Suspend Load Address Tracking
@@ -882,7 +883,7 @@ func (c *CPUInfo) cacheSize() {
 		c.Cache.L2 = int(((ecx >> 16) & 0xFFFF) * 1024)
 
 		// CPUID Fn8000_001D_EAX_x[N:0] Cache Properties
-		if maxExtendedFunction() < 0x8000001D {
+		if maxExtendedFunction() < 0x8000001D || !c.Has(TOPEXT) {
 			return
 		}
 
@@ -1180,6 +1181,7 @@ func support() flagSet {
 		fs.setIf((c&(1<<2)) != 0, SVM)
 		fs.setIf((c&(1<<6)) != 0, SSE4A)
 		fs.setIf((c&(1<<10)) != 0, IBS)
+		fs.setIf((c&(1<<22)) != 0, TOPEXT)
 
 		// EDX
 		fs.setIf(d&(1<<11) != 0, SYSCALL)
@@ -1195,8 +1197,8 @@ func support() flagSet {
 		/* XOP and FMA4 use the AVX instruction coding scheme, so they can't be
 		 * used unless the OS has AVX support. */
 		if fs.inSet(AVX) {
-			fs.setIf((c&0x00000800) != 0, XOP)
-			fs.setIf((c&0x00010000) != 0, FMA4)
+			fs.setIf((c&(1<<11)) != 0, XOP)
+			fs.setIf((c&(1<<16)) != 0, FMA4)
 		}
 
 	}
