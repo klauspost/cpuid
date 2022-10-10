@@ -16,8 +16,7 @@ Package home: https://github.com/klauspost/cpuid
 
 ## installing
 
-`go get -u github.com/klauspost/cpuid/v2` using modules. 
-
+`go get -u github.com/klauspost/cpuid/v2` using modules.
 Drop `v2` for others.
 
 ## example
@@ -77,10 +76,14 @@ We have Streaming SIMD 2 Extensions
 The `cpuid.CPU` provides access to CPU features. Use `cpuid.CPU.Supports()` to check for CPU features.
 A faster `cpuid.CPU.Has()` is provided which will usually be inlined by the gc compiler.  
 
+To test a larger number of features, they can be combined using `f := CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2)`, etc.
+This can be using with `cpuid.CPU.HasAll(f)` to quickly test if all features are supported.
+
 Note that for some cpu/os combinations some features will not be detected.
 `amd64` has rather good support and should work reliably on all platforms.
 
-Note that hypervisors may not pass through all CPU features.
+Note that hypervisors may not pass through all CPU features through to the guest OS,
+so even if your host supports a feature it may not be visible on guests.
 
 ## arm64 feature detection
 
