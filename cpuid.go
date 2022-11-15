@@ -415,15 +415,19 @@ func (c *CPUInfo) HasAll(f Features) bool {
 }
 
 // https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
-var level1Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2)
-var level2Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3)
-var level3Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE)
-var level4Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SYSCALL, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL)
+var oneOfLevel = CombineFeatures(SYSEE, SYSCALL)
+var level1Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2)
+var level2Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3)
+var level3Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE)
+var level4Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL)
 
 // X64Level returns the microarchitecture level detected on the CPU.
 // If features are lacking or non x64 mode, 0 is returned.
 // See https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 func (c CPUInfo) X64Level() int {
+	if !c.featureSet.hasOneOf(oneOfLevel) {
+		return 0
+	}
 	if c.featureSet.hasSetP(level4Features) {
 		return 4
 	}
@@ -644,6 +648,16 @@ func (s *flagSet) hasSetP(other *flagSet) bool {
 		}
 	}
 	return true
+}
+
+// hasOneOf returns whether one or more features are present.
+func (s *flagSet) hasOneOf(other *flagSet) bool {
+	for i, v := range other[:] {
+		if s[i]&v != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // nEnabled will return the number of enabled flags.
