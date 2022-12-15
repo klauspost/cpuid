@@ -19,6 +19,14 @@ Package home: https://github.com/klauspost/cpuid
 `go get -u github.com/klauspost/cpuid/v2` using modules.
 Drop `v2` for others.
 
+### Homebrew
+
+For macOS/Linux users, you can install via [brew](https://brew.sh/)
+
+```sh
+$ brew install cpuid
+```
+
 ## example
 
 ```Go
