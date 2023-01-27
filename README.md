@@ -19,6 +19,12 @@ Package home: https://github.com/klauspost/cpuid
 `go get -u github.com/klauspost/cpuid/v2` using modules.
 Drop `v2` for others.
 
+Installing binary:
+
+`go install github.com/klauspost/cpuid/v2/cmd/cpuid@latest`
+
+Or download binaries from release page: https://github.com/klauspost/cpuid/releases
+
 ### Homebrew
 
 For macOS/Linux users, you can install via [brew](https://brew.sh/)
