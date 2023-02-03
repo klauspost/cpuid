@@ -308,6 +308,7 @@ Exit Code 1
 | AVXSLOW            | Indicates the CPU performs 2 128 bit operations instead of one                                                                                                                     |
 | AVXVNNI            | AVX (VEX encoded) VNNI neural network instructions                                                                                                                                 |
 | AVXVNNIINT8        | AVX-VNNI-INT8 instructions                                                                                                                                                         |
+| BHI_CTRL           | Branch History Injection and Intra-mode Branch Target Injection / CVE-2022-0001, CVE-2022-0002 / INTEL-SA-00598                                                                    |
 | BMI1               | Bit Manipulation Instruction Set 1                                                                                                                                                 |
 | BMI2               | Bit Manipulation Instruction Set 2                                                                                                                                                 |
 | CETIBT             | Intel CET Indirect Branch Tracking                                                                                                                                                 |
@@ -361,6 +362,7 @@ Exit Code 1
 | IBS_OPFUSE         | AMD: Indicates support for IbsOpFuse                                                                                                                                               |
 | IBS_PREVENTHOST    | Disallowing IBS use by the host supported                                                                                                                                          |
 | IBS_ZEN4           | Fetch and Op IBS support IBS extensions added with Zen4                                                                                                                            |
+| IDPRED_CTRL        | IPRED_DIS                                                                                                                                                                          |
 | INT_WBINVD         | WBINVD/WBNOINVD are interruptible.                                                                                                                                                 |
 | INVLPGB            | NVLPGB and TLBSYNC instruction supported                                                                                                                                           |
 | LAHF               | LAHF/SAHF in long mode                                                                                                                                                             |
@@ -387,12 +389,13 @@ Exit Code 1
 | PCONFIG            | PCONFIG for Intel Multi-Key Total Memory Encryption                                                                                                                                |
 | POPCNT             | POPCNT instruction                                                                                                                                                                 |
 | PPIN               | AMD: Protected Processor Inventory Number support. Indicates that Protected Processor Inventory Number (PPIN) capability can be enabled                                            |
-| PREFETCHI          | PREFETCHIT0/1 instructions                                            |
-| PSFD               | AMD: Predictive Store Forward Disable                                                                                                                                              |
+| PREFETCHI          | PREFETCHIT0/1 instructions                                                                                                                                                         |
+| PSFD               | Predictive Store Forward Disable                                                                                                                                                   |
 | RDPRU              | RDPRU instruction supported                                                                                                                                                        |
 | RDRAND             | RDRAND instruction is available                                                                                                                                                    |
 | RDSEED             | RDSEED instruction is available                                                                                                                                                    |
 | RDTSCP             | RDTSCP Instruction                                                                                                                                                                 |
+| RRSBA_CTRL         | Restricted RSB Alternate                                                                                                                                                           |
 | RTM                | Restricted Transactional Memory                                                                                                                                                    |
 | RTM_ALWAYS_ABORT   | Indicates that the loaded microcode is forcing RTM abort.                                                                                                                          |
 | SERIALIZE          | Serialize Instruction Execution                                                                                                                                                    |
