@@ -173,6 +173,7 @@ const (
 	MOVU                                // AMD: MOVU SSE instructions are more efficient and should be preferred to SSE	MOVL/MOVH. MOVUPS is more efficient than MOVLPS/MOVHPS. MOVUPD is more efficient than MOVLPD/MOVHPD
 	MPX                                 // Intel MPX (Memory Protection Extensions)
 	MSRIRC                              // Instruction Retired Counter MSR available
+	MSRLIST                             // Read/Write List of Model Specific Registers
 	MSR_PAGEFLUSH                       // Page Flush MSR available
 	NRIPS                               // Indicates support for NRIP save on VMEXIT
 	NX                                  // NX (No-Execute) bit
@@ -239,6 +240,7 @@ const (
 	VTE                                 // AMD Virtual Transparent Encryption supported
 	WAITPKG                             // TPAUSE, UMONITOR, UMWAIT
 	WBNOINVD                            // Write Back and Do Not Invalidate Cache
+	WRMSRNS                             // Non-Serializing Write to Model Specific Register
 	X87                                 // FPU
 	XGETBV1                             // Supports XGETBV with ECX = 1
 	XOP                                 // Bulldozer XOP functions
@@ -1235,7 +1237,9 @@ func support() flagSet {
 				fs.setIf(edx&(1<<25) != 0, AMXINT8)
 				// eax1 = CPUID.(EAX=7, ECX=1).EAX
 				fs.setIf(eax1&(1<<5) != 0, AVX512BF16)
+				fs.setIf(eax1&(1<<19) != 0, WRMSRNS)
 				fs.setIf(eax1&(1<<21) != 0, AMXFP16)
+				fs.setIf(eax1&(1<<27) != 0, MSRLIST)
 			}
 		}
 

@@ -380,8 +380,9 @@ Exit Code 1
 | MOVDIRI            | Move Doubleword as Direct Store                                                                                                                                                    |
 | MOVSB_ZL           | Fast Zero-Length MOVSB                                                                                                                                                             |
 | MPX                | Intel MPX (Memory Protection Extensions)                                                                                                                                           |
-| MOVU               | MOVU SSE instructions are more efficient and should be preferred to SSE	MOVL/MOVH. MOVUPS is more efficient than MOVLPS/MOVHPS. MOVUPD is more efficient than MOVLPD/MOVHPD        |
+| MOVU               | MOVU SSE instructions are more efficient and should be preferred to SSE	MOVL/MOVH. MOVUPS is more efficient than MOVLPS/MOVHPS. MOVUPD is more efficient than MOVLPD/MOVHPD       |
 | MSRIRC             | Instruction Retired Counter MSR available                                                                                                                                          |
+| MSRLIST            | Read/Write List of Model Specific Registers                                                                                                                                        |
 | MSR_PAGEFLUSH      | Page Flush MSR available                                                                                                                                                           |
 | NRIPS              | Indicates support for NRIP save on VMEXIT                                                                                                                                          |
 | NX                 | NX (No-Execute) bit                                                                                                                                                                |
@@ -448,6 +449,7 @@ Exit Code 1
 | VTE                | AMD Virtual Transparent Encryption supported                                                                                                                                       |
 | WAITPKG            | TPAUSE, UMONITOR, UMWAIT                                                                                                                                                           |
 | WBNOINVD           | Write Back and Do Not Invalidate Cache                                                                                                                                             |
+| WRMSRNS            | Non-Serializing Write to Model Specific Register                                                                                                                                   |
 | X87                | FPU                                                                                                                                                                                |
 | XGETBV1            | Supports XGETBV with ECX = 1                                                                                                                                                       |
 | XOP                | Bulldozer XOP functions                                                                                                                                                            |
