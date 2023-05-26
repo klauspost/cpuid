@@ -1187,9 +1187,10 @@ func support() flagSet {
 		fs.setIf(edx&(1<<31) != 0, SPEC_CTRL_SSBD)
 
 		// CPUID.(EAX=7, ECX=1).EDX
-		fs.setIf(edx&(1<<4) != 0, AVXVNNIINT8)
-		fs.setIf(edx&(1<<5) != 0, AVXNECONVERT)
-		fs.setIf(edx&(1<<14) != 0, PREFETCHI)
+		_, _, _, edx1 := cpuidex(7, 1)
+		fs.setIf(edx1&(1<<4) != 0, AVXVNNIINT8)
+		fs.setIf(edx1&(1<<5) != 0, AVXNECONVERT)
+		fs.setIf(edx1&(1<<14) != 0, PREFETCHI)
 
 		// CPUID.(EAX=7, ECX=1).EAX
 		eax1, _, _, _ := cpuidex(7, 1)
