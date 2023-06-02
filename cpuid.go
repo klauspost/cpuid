@@ -1186,13 +1186,8 @@ func support() flagSet {
 		fs.setIf(edx&(1<<30) != 0, IA32_CORE_CAP)
 		fs.setIf(edx&(1<<31) != 0, SPEC_CTRL_SSBD)
 
-		// CPUID.(EAX=7, ECX=1).EDX
-		fs.setIf(edx&(1<<4) != 0, AVXVNNIINT8)
-		fs.setIf(edx&(1<<5) != 0, AVXNECONVERT)
-		fs.setIf(edx&(1<<14) != 0, PREFETCHI)
-
 		// CPUID.(EAX=7, ECX=1).EAX
-		eax1, _, _, _ := cpuidex(7, 1)
+		eax1, _, _, edx1 := cpuidex(7, 1)
 		fs.setIf(fs.inSet(AVX) && eax1&(1<<4) != 0, AVXVNNI)
 		fs.setIf(eax1&(1<<7) != 0, CMPCCXADD)
 		fs.setIf(eax1&(1<<10) != 0, MOVSB_ZL)
@@ -1201,6 +1196,11 @@ func support() flagSet {
 		fs.setIf(eax1&(1<<22) != 0, HRESET)
 		fs.setIf(eax1&(1<<23) != 0, AVXIFMA)
 		fs.setIf(eax1&(1<<26) != 0, LAM)
+
+		// CPUID.(EAX=7, ECX=1).EDX
+		fs.setIf(edx1&(1<<4) != 0, AVXVNNIINT8)
+		fs.setIf(edx1&(1<<5) != 0, AVXNECONVERT)
+		fs.setIf(edx1&(1<<14) != 0, PREFETCHI)
 
 		// Only detect AVX-512 features if XGETBV is supported
 		if c&((1<<26)|(1<<27)) == (1<<26)|(1<<27) {
