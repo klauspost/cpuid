@@ -65,6 +65,9 @@ func main() {
 	fmt.Println("CPU Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model, "Stepping:", cpuid.CPU.Stepping)
 	fmt.Println("Features:", strings.Join(cpuid.CPU.FeatureSet(), ","))
 	fmt.Println("Microarchitecture level:", cpuid.CPU.X64Level())
+	if cpuid.CPU.AVX10Level > 0 {
+		fmt.Println("AVX10 level:", cpuid.CPU.AVX10Level)
+	}
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1I, "bytes")
 	fmt.Println("L1 Data Cache:", cpuid.CPU.Cache.L1D, "bytes")
