@@ -1418,6 +1418,20 @@ func support() flagSet {
 		fs.setIf((a>>24)&1 == 1, VMSA_REGPROT)
 	}
 
+	if mfi >= 0x20 {
+		// Microsoft has decided to purposefully hide the information
+		// of the guest TEE when VMs are being created using Hyper-V.
+		//
+		// This leads us to check for the Hyper-V cpuid features
+		// (0x4000000C), and then for the `ebx` value set.
+		//
+		// For Intel TDX, `ebx` is set as `0xbe3`, being 3 the part
+		// we're mostly interested about,according to:
+		// https://github.com/torvalds/linux/blob/d2f51b3516dade79269ff45eae2a7668ae711b25/arch/x86/include/asm/hyperv-tlfs.h#L169-L174
+		_, ebx, _, _ := cpuid(0x4000000C)
+		fs.setIf(ebx == 0xbe3, TDX_GUEST)
+	}
+
 	if mfi >= 0x21 {
 		// Intel Trusted Domain Extensions Guests have their own cpuid leaf (0x21).
 		_, ebx, ecx, edx := cpuid(0x21)

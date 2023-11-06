@@ -98,7 +98,7 @@ func mockCPU(def []byte) func() {
 	}(idfuncs{cpuid: cpuid, cpuidex: cpuidex, xgetbv: xgetbv})
 
 	cpuid = func(op uint32) (eax, ebx, ecx, edx uint32) {
-		if op == 0x80000000 || op == 0 {
+		if op == 0x80000000 || op == 0 || op == 0x4000000c {
 			var ok bool
 			_, ok = fakeID[op]
 			if !ok {
