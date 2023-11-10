@@ -82,4 +82,7 @@ func main() {
 	if cpuid.CPU.SGX.Available {
 		fmt.Printf("SGX: %+v\n", cpuid.CPU.SGX)
 	}
+	if cpuid.CPU.AMDMemEncryption.Available {
+		fmt.Printf("AMD Memory Encryption: %+v\n", cpuid.CPU.AMDMemEncryption)
+	}
 }

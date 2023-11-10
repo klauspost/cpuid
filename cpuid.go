@@ -309,10 +309,11 @@ type CPUInfo struct {
 		L2  int // L2 Cache (per core or shared). Will be -1 if undetected
 		L3  int // L3 Cache (per core, per ccx or shared). Will be -1 if undetected
 	}
-	SGX        SGXSupport
-	AVX10Level uint8
-	maxFunc    uint32
-	maxExFunc  uint32
+	SGX              SGXSupport
+	AMDMemEncryption AMDMemEncryptionSupport
+	AVX10Level       uint8
+	maxFunc          uint32
+	maxExFunc        uint32
 }
 
 var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
@@ -1075,6 +1076,32 @@ func hasSGX(available, lc bool) (rval SGXSupport) {
 			rval.EPCSections = append(rval.EPCSections, section)
 		}
 	}
+
+	return
+}
+
+type AMDMemEncryptionSupport struct {
+	Available          bool
+	CBitPossition      uint32
+	NumVMPL            uint32
+	PhysAddrReduction  uint32
+	NumEntryptedGuests uint32
+	MinSevNoEsAsid     uint32
+}
+
+func hasAMDMemEncryption(available bool) (rval AMDMemEncryptionSupport) {
+	rval.Available = available
+	if !available {
+		return
+	}
+
+	_, b, c, d := cpuidex(0x8000001f, 0)
+
+	rval.CBitPossition = b & 0x3f
+	rval.PhysAddrReduction = (b >> 6) & 0x3F
+	rval.NumVMPL = (b >> 12) & 0xf
+	rval.NumEntryptedGuests = c
+	rval.MinSevNoEsAsid = d
 
 	return
 }
