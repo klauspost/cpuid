@@ -136,6 +136,16 @@ func TestSGX(t *testing.T) {
 	}
 }
 
+// TestAMDMemEncryption tests AMDMemEncryption detection
+func TestAMDMemEncryption(t *testing.T) {
+	got := CPU.AMDMemEncryption.Available
+	expected := CPU.featureSet.inSet(SME) || CPU.featureSet.inSet(SEV)
+	if got != expected {
+		t.Fatalf("AMDMemEncryption: expected %v, got %v", expected, got)
+	}
+	t.Log("AMDMemEncryption Support:", got)
+}
+
 func TestHas(t *testing.T) {
 	Detect()
 	defer Detect()
