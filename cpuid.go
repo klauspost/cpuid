@@ -503,7 +503,7 @@ func (c CPUInfo) FeatureSet() []string {
 // Uses the RDTSCP instruction. The value 0 is returned
 // if the CPU does not support the instruction.
 func (c CPUInfo) RTCounter() uint64 {
-	if !c.Supports(RDTSCP) {
+	if !c.Has(RDTSCP) {
 		return 0
 	}
 	a, _, _, d := rdtscpAsm()
@@ -515,11 +515,20 @@ func (c CPUInfo) RTCounter() uint64 {
 // about the current cpu/core the code is running on.
 // If the RDTSCP instruction isn't supported on the CPU, the value 0 is returned.
 func (c CPUInfo) Ia32TscAux() uint32 {
-	if !c.Supports(RDTSCP) {
+	if !c.Has(RDTSCP) {
 		return 0
 	}
 	_, _, ecx, _ := rdtscpAsm()
 	return ecx
+}
+
+// SveLengths returns arm SVE vector and predicate lengths.
+// Will return 0, 0 if SVE is not enabled or otherwise unable to detect.
+func (c CPUInfo) SveLengths() (vl, pl uint64) {
+	if !c.Has(SVE) {
+		return 0, 0
+	}
+	return getVectorLength()
 }
 
 // LogicalCPU will return the Logical CPU the code is currently executing on.

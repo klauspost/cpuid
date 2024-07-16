@@ -36,3 +36,5 @@ func addInfo(c *CPUInfo, safe bool) {
 	c.cacheSize()
 	c.frequencies()
 }
+
+func getVectorLength() (vl, pl uint64) { return 0, 0 }
