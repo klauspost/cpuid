@@ -55,6 +55,12 @@ const (
 	Qualcomm
 	Marvell
 
+	QEMU
+	QNX
+	ACRN
+	SRE
+	Apple
+
 	lastVendor
 )
 
@@ -881,6 +887,8 @@ var vendorMapping = map[string]Vendor{
 	"Geode by NSC": NSC,
 	"VIA VIA VIA ": VIA,
 	"KVMKVMKVM":    KVM,
+	"Linux KVM Hv": KVM,
+	"TCGTCGTCGTCG": QEMU,
 	"Microsoft Hv": MSVM,
 	"VMwareVMware": VMware,
 	"XenVMMXenVMM": XenHVM,
@@ -890,11 +898,26 @@ var vendorMapping = map[string]Vendor{
 	"SiS SiS SiS ": SiS,
 	"RiseRiseRise": SiS,
 	"Genuine  RDC": RDC,
+	"QNXQVMBSQG":   QNX,
+	"ACRNACRNACRN": ACRN,
+	"SRESRESRESRE": SRE,
+	"Apple VZ":     Apple,
 }
 
 func vendorID() (Vendor, string) {
 	_, b, c, d := cpuid(0)
 	v := string(valAsString(b, d, c))
+	vend, ok := vendorMapping[v]
+	if !ok {
+		return VendorUnknown, v
+	}
+	return vend, v
+}
+
+func hypervisorVendorID() (Vendor, string) {
+	// https://lwn.net/Articles/301888/
+	_, b, c, d := cpuid(0x40000000)
+	v := string(valAsString(b, c, d))
 	vend, ok := vendorMapping[v]
 	if !ok {
 		return VendorUnknown, v
