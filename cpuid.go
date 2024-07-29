@@ -296,20 +296,22 @@ const (
 
 // CPUInfo contains information about the detected system CPU.
 type CPUInfo struct {
-	BrandName      string  // Brand name reported by the CPU
-	VendorID       Vendor  // Comparable CPU vendor ID
-	VendorString   string  // Raw vendor string.
-	featureSet     flagSet // Features of the CPU
-	PhysicalCores  int     // Number of physical processor cores in your CPU. Will be 0 if undetectable.
-	ThreadsPerCore int     // Number of threads per physical core. Will be 1 if undetectable.
-	LogicalCores   int     // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
-	Family         int     // CPU family number
-	Model          int     // CPU model number
-	Stepping       int     // CPU stepping info
-	CacheLine      int     // Cache line size in bytes. Will be 0 if undetectable.
-	Hz             int64   // Clock speed, if known, 0 otherwise. Will attempt to contain base clock speed.
-	BoostFreq      int64   // Max clock speed, if known, 0 otherwise
-	Cache          struct {
+	BrandName              string  // Brand name reported by the CPU
+	VendorID               Vendor  // Comparable CPU vendor ID
+	VendorString           string  // Raw vendor string.
+	HypervisorVendorID     Vendor  // Hypervisor vendor
+	HypervisorVendorString string  // Raw hypervisor vendor string
+	featureSet             flagSet // Features of the CPU
+	PhysicalCores          int     // Number of physical processor cores in your CPU. Will be 0 if undetectable.
+	ThreadsPerCore         int     // Number of threads per physical core. Will be 1 if undetectable.
+	LogicalCores           int     // Number of physical cores times threads that can run on each core through the use of hyperthreading. Will be 0 if undetectable.
+	Family                 int     // CPU family number
+	Model                  int     // CPU model number
+	Stepping               int     // CPU stepping info
+	CacheLine              int     // Cache line size in bytes. Will be 0 if undetectable.
+	Hz                     int64   // Clock speed, if known, 0 otherwise. Will attempt to contain base clock speed.
+	BoostFreq              int64   // Max clock speed, if known, 0 otherwise
+	Cache                  struct {
 		L1I int // L1 Instruction Cache (per core or shared). Will be -1 if undetected
 		L1D int // L1 Data Cache (per core or shared). Will be -1 if undetected
 		L2  int // L2 Cache (per core or shared). Will be -1 if undetected
@@ -318,8 +320,9 @@ type CPUInfo struct {
 	SGX              SGXSupport
 	AMDMemEncryption AMDMemEncryptionSupport
 	AVX10Level       uint8
-	maxFunc          uint32
-	maxExFunc        uint32
+
+	maxFunc   uint32
+	maxExFunc uint32
 }
 
 var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
@@ -877,7 +880,7 @@ var vendorMapping = map[string]Vendor{
 	"GenuineTMx86": Transmeta,
 	"Geode by NSC": NSC,
 	"VIA VIA VIA ": VIA,
-	"KVMKVMKVMKVM": KVM,
+	"KVMKVMKVM":    KVM,
 	"Microsoft Hv": MSVM,
 	"VMwareVMware": VMware,
 	"XenVMMXenVMM": XenHVM,
