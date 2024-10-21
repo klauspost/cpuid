@@ -81,6 +81,7 @@ const (
 	AMXBF16                              // Tile computational operations on BFLOAT16 numbers
 	AMXFP16                              // Tile computational operations on FP16 numbers
 	AMXINT8                              // Tile computational operations on 8-bit integers
+	AMXFP8                               // Tile computational operations on FP8 numbers
 	AMXTILE                              // Tile architecture
 	APX_F                                // Intel APX
 	AVX                                  // AVX functions
@@ -1306,6 +1307,7 @@ func support() flagSet {
 				fs.setIf(ebx&(1<<31) != 0, AVX512VL)
 				// ecx
 				fs.setIf(ecx&(1<<1) != 0, AVX512VBMI)
+				fs.setIf(ecx&(1<<3) != 0, AMXFP8)
 				fs.setIf(ecx&(1<<6) != 0, AVX512VBMI2)
 				fs.setIf(ecx&(1<<11) != 0, AVX512VNNI)
 				fs.setIf(ecx&(1<<12) != 0, AVX512BITALG)
