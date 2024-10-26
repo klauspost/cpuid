@@ -800,11 +800,16 @@ func threadsPerCore() int {
 	_, b, _, _ := cpuidex(0xb, 0)
 	if b&0xffff == 0 {
 		if vend == AMD {
-			// Workaround for AMD returning 0, assume 2 if >= Zen 2
-			// It will be more correct than not.
+			// if >= Zen 2 0x8000001e EBX 15-8 bits means threads per core.
+			// The number of threads per core is ThreadsPerCore+1
+			// See PPR for AMD Family 17h Models 00h-0Fh (page 82)
 			fam, _, _ := familyModel()
 			_, _, _, d := cpuid(1)
 			if (d&(1<<28)) != 0 && fam >= 23 {
+				if maxExtendedFunction() >= 0x8000001e {
+					_, b, _, _ := cpuid(0x8000001e)
+					return int((b>>8)&0xff) + 1
+				}
 				return 2
 			}
 		}
