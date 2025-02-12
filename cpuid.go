@@ -83,6 +83,7 @@ const (
 	AMXINT8                              // Tile computational operations on 8-bit integers
 	AMXFP8                               // Tile computational operations on FP8 numbers
 	AMXTILE                              // Tile architecture
+	AMXCOMPLEX                           // Tile computational operations on complex numbers
 	APX_F                                // Intel APX
 	AVX                                  // AVX functions
 	AVX10                                // If set the Intel AVX10 Converged Vector ISA is supported
@@ -1288,6 +1289,7 @@ func support() flagSet {
 		// CPUID.(EAX=7, ECX=1).EDX
 		fs.setIf(edx1&(1<<4) != 0, AVXVNNIINT8)
 		fs.setIf(edx1&(1<<5) != 0, AVXNECONVERT)
+		fs.setIf(edx1&(1<<8) != 0, AMXCOMPLEX)
 		fs.setIf(edx1&(1<<10) != 0, AVXVNNIINT16)
 		fs.setIf(edx1&(1<<14) != 0, PREFETCHI)
 		fs.setIf(edx1&(1<<19) != 0, AVX10)
