@@ -537,7 +537,7 @@ func (c CPUInfo) Ia32TscAux() uint32 {
 	return ecx
 }
 
-// SveLengths returns arm SVE vector and predicate lengths.
+// SveLengths returns arm SVE vector and predicate lengths in bits.
 // Will return 0, 0 if SVE is not enabled or otherwise unable to detect.
 func (c CPUInfo) SveLengths() (vl, pl uint64) {
 	if !c.Has(SVE) {
