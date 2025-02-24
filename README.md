@@ -284,6 +284,7 @@ Exit Code 1
 | AMXFP8             | Tile computational operations on FP8 numbers                                                                                                                                      |
 | AMXCOMPLEX         | Tile computational operations on complex numbers                                                                                                                                   |
 | AMXTILE            | Tile architecture                                                                                                                                                                  |
+| AMXTF32            | Matrix Multiplication of TF32 Tiles into Packed Single Precision Tile                                                                                                              |
 | APX_F              | Intel APX                                                                                                                                                                          |
 | AVX                | AVX functions                                                                                                                                                                      |
 | AVX10              | If set the Intel AVX10 Converged Vector ISA is supported                                                                                                                           |
