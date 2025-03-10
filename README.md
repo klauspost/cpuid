@@ -285,6 +285,7 @@ Exit Code 1
 | AMXCOMPLEX         | Tile computational operations on complex numbers                                                                                                                                   |
 | AMXTILE            | Tile architecture                                                                                                                                                                  |
 | AMXTF32            | Matrix Multiplication of TF32 Tiles into Packed Single Precision Tile                                                                                                              |
+| AMXTRANSPOSE       | Tile multiply where the first operand is transposed                                                                                                                                |
 | APX_F              | Intel APX                                                                                                                                                                          |
 | AVX                | AVX functions                                                                                                                                                                      |
 | AVX10              | If set the Intel AVX10 Converged Vector ISA is supported                                                                                                                           |
