@@ -421,6 +421,8 @@ Exit Code 1
 | SHA                | Intel SHA Extensions                                                                                                                                                               |
 | SME                | AMD Secure Memory Encryption supported                                                                                                                                             |
 | SME_COHERENT       | AMD Hardware cache coherency across encryption domains enforced                                                                                                                    |
+| SM3_X86            | SM3 instructions                                                                                                                                                                   |
+| SM4_X86            | SM4 instructions                                                                                                                                                                   |
 | SPEC_CTRL_SSBD     | Speculative Store Bypass Disable                                                                                                                                                   |
 | SRBDS_CTRL         | SRBDS mitigation MSR available                                                                                                                                                     |
 | SSE                | SSE functions                                                                                                                                                                      |
