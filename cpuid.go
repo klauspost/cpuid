@@ -223,6 +223,8 @@ const (
 	SHA                                  // Intel SHA Extensions
 	SME                                  // AMD Secure Memory Encryption supported
 	SME_COHERENT                         // AMD Hardware cache coherency across encryption domains enforced
+	SM3_X86                              // SM3 instructions
+	SM4_X86                              // SM4 instructions
 	SPEC_CTRL_SSBD                       // Speculative Store Bypass Disable
 	SRBDS_CTRL                           // SRBDS mitigation MSR available
 	SRSO_MSR_FIX                         // Indicates that software may use MSR BP_CFG[BpSpecReduce] to mitigate SRSO.
@@ -1280,6 +1282,8 @@ func support() flagSet {
 		// CPUID.(EAX=7, ECX=1).EAX
 		eax1, _, _, edx1 := cpuidex(7, 1)
 		fs.setIf(fs.inSet(AVX) && eax1&(1<<4) != 0, AVXVNNI)
+		fs.setIf(eax1&(1<<1) != 0, SM3_X86)
+		fs.setIf(eax1&(1<<2) != 0, SM4_X86)
 		fs.setIf(eax1&(1<<7) != 0, CMPCCXADD)
 		fs.setIf(eax1&(1<<10) != 0, MOVSB_ZL)
 		fs.setIf(eax1&(1<<11) != 0, STOSB_SHORT)
