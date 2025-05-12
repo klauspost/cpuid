@@ -286,7 +286,7 @@ const (
 	CRC32    // CRC32/CRC32C instructions
 	DCPOP    // Data cache clean to Point of Persistence (DC CVAP)
 	EVTSTRM  // Generic timer
-	FCMA     // Floatin point complex number addition and multiplication
+	FCMA     // Floating point complex number addition and multiplication
 	FHM      // FMLAL and FMLSL instructions
 	FP       // Single-precision and double-precision floating point
 	FPHP     // Half-precision floating point
