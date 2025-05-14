@@ -124,6 +124,6 @@ func tryToFillCPUInfoFomSysctl(c *CPUInfo) {
 	setFeature(c, SHA3, "hw.optional.arm.FEAT_SHA3")                                    // SHA-3 instructions (EOR3, RAXI, XAR, BCAX)
 	setFeature(c, SHA512, "hw.optional.arm.FEAT_SHA512")                                // SHA512 instructions
 	setFeature(c, SM3, "hw.optional.arm.FEAT_SM3")                                      // SM3 instructions
-	setFeature(c, SM3, "hw.optional.arm.FEAT_SM4")                                      // SM4 instructions
+	setFeature(c, SM4, "hw.optional.arm.FEAT_SM4")                                      // SM4 instructions
 	setFeature(c, SVE, "hw.optional.arm.FEAT_SVE")                                      // Scalable Vector Extension
 }
