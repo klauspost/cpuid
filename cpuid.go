@@ -881,7 +881,12 @@ func physicalCores() int {
 	v, _ := vendorID()
 	switch v {
 	case Intel:
-		return logicalCores() / threadsPerCore()
+		lc := logicalCores()
+		tpc := threadsPerCore()
+		if lc > 0 && tpc > 0 {
+			return lc / tpc
+		}
+		return 0
 	case AMD, Hygon:
 		lc := logicalCores()
 		tpc := threadsPerCore()
