@@ -418,6 +418,7 @@ Exit Code 1
 | SEV_SNP            | AMD SEV Secure Nested Paging supported                                                                                                                                             |
 | SGX                | Software Guard Extensions                                                                                                                                                          |
 | SGXLC              | Software Guard Extensions Launch Control                                                                                                                                           |
+| SGXPQC             | Software Guard Extensions 256-bit Encryption                                                                                                                                       |
 | SHA                | Intel SHA Extensions                                                                                                                                                               |
 | SME                | AMD Secure Memory Encryption supported                                                                                                                                             |
 | SME_COHERENT       | AMD Hardware cache coherency across encryption domains enforced                                                                                                                    |
