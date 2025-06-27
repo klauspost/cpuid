@@ -220,6 +220,7 @@ const (
 	SEV_SNP                              // AMD SEV Secure Nested Paging supported
 	SGX                                  // Software Guard Extensions
 	SGXLC                                // Software Guard Extensions Launch Control
+	SGXPQC                               // Software Guard Extensions 256-bit Encryption
 	SHA                                  // Intel SHA Extensions
 	SME                                  // AMD Secure Memory Encryption supported
 	SME_COHERENT                         // AMD Hardware cache coherency across encryption domains enforced
@@ -1358,6 +1359,11 @@ func support() flagSet {
 		fs.setIf(edx&(1<<4) != 0, BHI_CTRL)
 		fs.setIf(edx&(1<<5) != 0, MCDT_NO)
 
+		if fs.inSet(SGX) {
+			eax, _, _, _ := cpuidex(0x12, 0)
+			fs.setIf(eax&(1<<12) != 0, SGXPQC)
+		}
+
 		// Add keylocker features.
 		if fs.inSet(KEYLOCKER) && mfi >= 0x19 {
 			_, ebx, _, _ := cpuidex(0x19, 0)
@@ -1371,6 +1377,7 @@ func support() flagSet {
 			fs.setIf(ebx&(1<<17) != 0, AVX10_256)
 			fs.setIf(ebx&(1<<18) != 0, AVX10_512)
 		}
+
 	}
 
 	// Processor Extended State Enumeration Sub-leaf (EAX = 0DH, ECX = 1)
