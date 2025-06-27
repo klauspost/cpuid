@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLastID(t *testing.T) {
@@ -261,6 +263,63 @@ func TestCombineFeatures(t *testing.T) {
 			t.Errorf("id %d:%s mismatch", i, i.String())
 		}
 	}
+}
+
+// PMU test
+func TestParseLeaf0AH(t *testing.T) {
+	testCases := []struct {
+		name string
+		eax  uint32
+		ebx  uint32
+		edx  uint32
+		want PerformanceMonitoringInfo
+	}{
+		{
+			name: "eax_is_zero",
+			eax:  0,
+			ebx:  0,
+			edx:  0,
+			want: PerformanceMonitoringInfo{
+				SupportedFixedEvents: []FeatureID{},
+			},
+		},
+		{
+			name: "v4, 3 fixed counters, 4 GP",
+			eax:  0x7300404,
+			ebx:  0x0,
+			edx:  0x603,
+			want: PerformanceMonitoringInfo{
+				VersionID:            4,
+				GPPMCWidth:           48,
+				NumGPCounters:        4,
+				NumFixedPMC:          3,
+				FixedPMCWidth:        48,
+				SupportedFixedEvents: []FeatureID{PMU_FixedCounter_Instructions, PMU_FixedCounter_Cycles, PMU_FixedCounter_RefCycles},
+			},
+		},
+		{
+			name: "v2, 4 fixed counters, 8 GP",
+			eax:  0x8300802,
+			ebx:  0x0,
+			edx:  0x604,
+			want: PerformanceMonitoringInfo{
+				VersionID:            2,
+				GPPMCWidth:           48,
+				NumGPCounters:        8,
+				NumFixedPMC:          4,
+				FixedPMCWidth:        48,
+				SupportedFixedEvents: []FeatureID{PMU_FixedCounter_Instructions, PMU_FixedCounter_Cycles, PMU_FixedCounter_RefCycles, PMU_FixedCounter_Topdown_Slots},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc.want.RawEAX = tc.eax
+		tc.want.RawEBX = tc.ebx
+		tc.want.RawEDX = tc.edx
+		got := parseLeaf0AH(tc.eax, tc.ebx, tc.edx)
+		assert.Equal(t, tc.want, got)
+	}
+
 }
 
 func BenchmarkFlags(b *testing.B) {

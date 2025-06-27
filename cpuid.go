@@ -304,6 +304,13 @@ const (
 	SM3      // SM3 instructions
 	SM4      // SM4 instructions
 	SVE      // Scalable Vector Extension
+
+	// PMU
+	PMU_FixedCounter_Cycles
+	PMU_FixedCounter_RefCycles
+	PMU_FixedCounter_Instructions
+	PMU_FixedCounter_Topdown_Slots
+
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
 
@@ -336,9 +343,38 @@ type CPUInfo struct {
 	SGX              SGXSupport
 	AMDMemEncryption AMDMemEncryptionSupport
 	AVX10Level       uint8
+	PMU              PerformanceMonitoringInfo //  holds information about the PMU
 
 	maxFunc   uint32
 	maxExFunc uint32
+}
+
+// PerformanceMonitoringInfo holds information about CPU performance monitoring capabilities.
+// This is primarily populated from CPUID leaf 0xAh on x86 and PMU system registers on ARM64.
+type PerformanceMonitoringInfo struct {
+	// VersionID (x86 only): Version ID of architectural performance monitoring.
+	// A value of 0 means architectural performance monitoring is not supported or information is unavailable.
+	VersionID uint8
+	// NumGPPMC: Number of General-Purpose Performance Monitoring Counters per logical processor.
+	// On ARM, this is derived from PMCR_EL0.N (number of event counters).
+	NumGPCounters uint8
+	// GPPMCWidth: Bit width of General-Purpose Performance Monitoring Counters.
+	// On ARM, typically 64 for PMU event counters.
+	GPPMCWidth uint8
+	// SupportedFixedEvents: A list of names for events supported by Fixed-Function Performance Counters (x86)
+	// or standard architectural events (like processor cycles or instructions retired on ARM).
+	// Examples: PMU_FixedCounter_Cycles, PMU_FixedCounter_Instructions
+	SupportedFixedEvents []FeatureID
+	// NumFixedPMC: Number of Fixed-Function Performance Counters.
+	// Valid on x86 if VersionID > 1. On ARM, this typically includes at least the cycle counter (PMCCNTR_EL0).
+	NumFixedPMC uint8
+	// FixedPMCWidth: Bit width of Fixed-Function Performance Counters.
+	// Valid on x86 if VersionID > 1. On ARM, the cycle counter (PMCCNTR_EL0) is 64-bit.
+	FixedPMCWidth uint8
+	// Raw register output from CPUID leaf 0xAh.
+	RawEBX uint32
+	RawEAX uint32
+	RawEDX uint32
 }
 
 var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
