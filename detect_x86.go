@@ -44,9 +44,7 @@ func addInfo(c *CPUInfo, safe bool) {
 
 func getVectorLength() (vl, pl uint64) { return 0, 0 }
 
-func parseLeaf0AH(eax, ebx, edx uint32) PerformanceMonitoringInfo {
-	var info PerformanceMonitoringInfo
-
+func parseLeaf0AH(eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
 	info.VersionID = uint8(eax & 0xFF)
 	info.NumGPCounters = uint8((eax >> 8) & 0xFF)
 	info.GPPMCWidth = uint8((eax >> 16) & 0xFF)
