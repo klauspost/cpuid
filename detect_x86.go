@@ -38,7 +38,7 @@ func addInfo(c *CPUInfo, safe bool) {
 	c.frequencies()
 	if c.maxFunc >= 0x0A {
 		eax, ebx, _, edx := cpuid(0x0A)
-		c.PMU = parseLeaf0AH(eax, ebx, edx)
+		c.PMU = parseLeaf0AH(c, eax, ebx, edx)
 	}
 }
 

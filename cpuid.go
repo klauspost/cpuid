@@ -307,10 +307,10 @@ const (
 	SVE      // Scalable Vector Extension
 
 	// PMU
-	PMU_FixedCounter_Cycles
-	PMU_FixedCounter_RefCycles
-	PMU_FixedCounter_Instructions
-	PMU_FixedCounter_Topdown_Slots
+	PMU_FIXEDCOUNTER_CYCLES
+	PMU_FIXEDCOUNTER_REFCYCLES
+	PMU_FIXEDCOUNTER_INSTRUCTIONS
+	PMU_FIXEDCOUNTER_TOPDOWN_SLOTS
 
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
@@ -362,10 +362,6 @@ type PerformanceMonitoringInfo struct {
 	// GPPMCWidth: Bit width of General-Purpose Performance Monitoring Counters.
 	// On ARM, typically 64 for PMU event counters.
 	GPPMCWidth uint8
-	// SupportedFixedEvents: A list of names for events supported by Fixed-Function Performance Counters (x86)
-	// or standard architectural events (like processor cycles or instructions retired on ARM).
-	// Examples: PMU_FixedCounter_Cycles, PMU_FixedCounter_Instructions
-	SupportedFixedEvents []FeatureID
 	// NumFixedPMC: Number of Fixed-Function Performance Counters.
 	// Valid on x86 if VersionID > 1. On ARM, this typically includes at least the cycle counter (PMCCNTR_EL0).
 	NumFixedPMC uint8
@@ -1619,7 +1615,7 @@ func valAsString(values ...uint32) []byte {
 	return r
 }
 
-func parseLeaf0AH(eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
+func parseLeaf0AH(c *CPUInfo, eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
 	info.VersionID = uint8(eax & 0xFF)
 	info.NumGPCounters = uint8((eax >> 8) & 0xFF)
 	info.GPPMCWidth = uint8((eax >> 16) & 0xFF)
@@ -1627,7 +1623,6 @@ func parseLeaf0AH(eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
 	info.RawEBX = ebx
 	info.RawEAX = eax
 	info.RawEDX = edx
-	info.SupportedFixedEvents = []FeatureID{}
 
 	if info.VersionID > 1 { // This information is only valid if VersionID > 1
 		info.NumFixedPMC = uint8(edx & 0x1F)          // Bits 4:0
@@ -1636,26 +1631,30 @@ func parseLeaf0AH(eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
 	if info.VersionID > 0 {
 		// first 4 fixed events are always instructions retired, cycles, ref cycles and topdown slots
 		if ebx == 0x0 && info.NumFixedPMC == 3 {
-			info.SupportedFixedEvents = []FeatureID{PMU_FixedCounter_Instructions, PMU_FixedCounter_Cycles, PMU_FixedCounter_RefCycles}
+			c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
+			c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
 		}
 		if ebx == 0x0 && info.NumFixedPMC == 4 {
-			info.SupportedFixedEvents = []FeatureID{PMU_FixedCounter_Instructions, PMU_FixedCounter_Cycles, PMU_FixedCounter_RefCycles, PMU_FixedCounter_Topdown_Slots}
+			c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
+			c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_TOPDOWN_SLOTS)
 		}
 		if ebx != 0x0 {
 			if ((ebx >> 0) & 1) == 0 {
-				info.SupportedFixedEvents = append(info.SupportedFixedEvents, PMU_FixedCounter_Instructions)
+				c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
 			}
 			if ((ebx >> 1) & 1) == 0 {
-				info.SupportedFixedEvents = append(info.SupportedFixedEvents, PMU_FixedCounter_Cycles)
+				c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
 			}
 			if ((ebx >> 2) & 1) == 0 {
-				info.SupportedFixedEvents = append(info.SupportedFixedEvents, PMU_FixedCounter_RefCycles)
+				c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
 			}
 			if ((ebx >> 3) & 1) == 0 {
-				info.SupportedFixedEvents = append(info.SupportedFixedEvents, PMU_FixedCounter_Topdown_Slots)
+				c.featureSet.set(PMU_FIXEDCOUNTER_TOPDOWN_SLOTS)
 			}
 		}
 	}
-
 	return info
 }
