@@ -47,9 +47,6 @@ func getVectorLength() (vl, pl uint64) { return 0, 0 }
 func parseLeaf0AH(eax, ebx, edx uint32) PerformanceMonitoringInfo {
 	var info PerformanceMonitoringInfo
 
-	// fmt.Printf("EAX: %X / %d\n", eax, eax)
-	// fmt.Printf("EBX: %X / %d\n", ebx, ebx)
-	// fmt.Printf("EDX: %X / %d\n", edx, edx)
 	info.VersionID = uint8(eax & 0xFF)
 	info.NumGPCounters = uint8((eax >> 8) & 0xFF)
 	info.GPPMCWidth = uint8((eax >> 16) & 0xFF)
