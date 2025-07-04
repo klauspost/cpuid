@@ -351,7 +351,7 @@ type CPUInfo struct {
 }
 
 // PerformanceMonitoringInfo holds information about CPU performance monitoring capabilities.
-// This is primarily populated from CPUID leaf 0xAh on x86 and PMU system registers on ARM64.
+// This is primarily populated from CPUID leaf 0xAh on x86
 type PerformanceMonitoringInfo struct {
 	// VersionID (x86 only): Version ID of architectural performance monitoring.
 	// A value of 0 means architectural performance monitoring is not supported or information is unavailable.
