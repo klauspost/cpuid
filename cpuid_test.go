@@ -4,10 +4,9 @@ package cpuid
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLastID(t *testing.T) {
@@ -317,7 +316,9 @@ func TestParseLeaf0AH(t *testing.T) {
 		tc.want.RawEBX = tc.ebx
 		tc.want.RawEDX = tc.edx
 		got := parseLeaf0AH(tc.eax, tc.ebx, tc.edx)
-		assert.Equal(t, tc.want, got)
+		if !reflect.DeepEqual(tc.want, got) {
+			t.Fatalf("want: %v got: %v", tc.want, got)
+		}
 	}
 
 }
