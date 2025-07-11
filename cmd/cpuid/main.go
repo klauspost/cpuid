@@ -85,4 +85,9 @@ func main() {
 	if cpuid.CPU.AMDMemEncryption.Available {
 		fmt.Printf("AMD Memory Encryption: %+v\n", cpuid.CPU.AMDMemEncryption)
 	}
+	if cpuid.CPU.PMU.VersionID != 0 {
+		fmt.Println("PMU version:", cpuid.CPU.PMU.VersionID,
+			"Fixed Counters:", cpuid.CPU.PMU.NumFixedPMC,
+			"General Purpose Counters:", cpuid.CPU.PMU.NumGPCounters)
+	}
 }

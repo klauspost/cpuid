@@ -4,6 +4,7 @@ package cpuid
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -261,6 +262,72 @@ func TestCombineFeatures(t *testing.T) {
 			t.Errorf("id %d:%s mismatch", i, i.String())
 		}
 	}
+}
+
+// PMU test
+func TestParseLeaf0AH(t *testing.T) {
+	var fixedCounters3 flagSet
+	var fixedCounters4 flagSet
+	fixedCounters3.setIf(true, PMU_FIXEDCOUNTER_CYCLES, PMU_FIXEDCOUNTER_INSTRUCTIONS, PMU_FIXEDCOUNTER_REFCYCLES)
+	fixedCounters4.setIf(true, PMU_FIXEDCOUNTER_CYCLES, PMU_FIXEDCOUNTER_INSTRUCTIONS, PMU_FIXEDCOUNTER_REFCYCLES, PMU_FIXEDCOUNTER_TOPDOWN_SLOTS)
+	testCases := []struct {
+		name         string
+		eax          uint32
+		ebx          uint32
+		edx          uint32
+		wantPMU      PerformanceMonitoringInfo
+		wantFeatures flagSet
+	}{
+		{
+			name:    "eax_is_zero",
+			eax:     0,
+			ebx:     0,
+			edx:     0,
+			wantPMU: PerformanceMonitoringInfo{},
+		},
+		{
+			name: "v4, 3 fixed counters, 4 GP",
+			eax:  0x7300404,
+			ebx:  0x0,
+			edx:  0x603,
+			wantPMU: PerformanceMonitoringInfo{
+				VersionID:     4,
+				GPPMCWidth:    48,
+				NumGPCounters: 4,
+				NumFixedPMC:   3,
+				FixedPMCWidth: 48,
+			},
+			wantFeatures: fixedCounters3,
+		},
+		{
+			name: "v2, 4 fixed counters, 8 GP",
+			eax:  0x8300802,
+			ebx:  0x0,
+			edx:  0x604,
+			wantPMU: PerformanceMonitoringInfo{
+				VersionID:     2,
+				GPPMCWidth:    48,
+				NumGPCounters: 8,
+				NumFixedPMC:   4,
+				FixedPMCWidth: 48,
+			},
+			wantFeatures: fixedCounters4,
+		},
+	}
+	for _, tc := range testCases {
+		var cpu CPUInfo
+		tc.wantPMU.RawEAX = tc.eax
+		tc.wantPMU.RawEBX = tc.ebx
+		tc.wantPMU.RawEDX = tc.edx
+		got := parseLeaf0AH(&cpu, tc.eax, tc.ebx, tc.edx)
+		if !reflect.DeepEqual(tc.wantPMU, got) {
+			t.Fatalf("PMU mismatch want: %v got: %v", tc.wantPMU, got)
+		}
+		if !cpu.featureSet.hasSet(tc.wantFeatures) {
+			t.Fatalf("featureSet mismatch want: %v got: %v", tc.wantFeatures.Strings(), cpu.featureSet.Strings())
+		}
+	}
+
 }
 
 func BenchmarkFlags(b *testing.B) {

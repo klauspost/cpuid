@@ -305,6 +305,13 @@ const (
 	SM3      // SM3 instructions
 	SM4      // SM4 instructions
 	SVE      // Scalable Vector Extension
+
+	// PMU
+	PMU_FIXEDCOUNTER_CYCLES
+	PMU_FIXEDCOUNTER_REFCYCLES
+	PMU_FIXEDCOUNTER_INSTRUCTIONS
+	PMU_FIXEDCOUNTER_TOPDOWN_SLOTS
+
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
 
@@ -337,9 +344,34 @@ type CPUInfo struct {
 	SGX              SGXSupport
 	AMDMemEncryption AMDMemEncryptionSupport
 	AVX10Level       uint8
+	PMU              PerformanceMonitoringInfo //  holds information about the PMU
 
 	maxFunc   uint32
 	maxExFunc uint32
+}
+
+// PerformanceMonitoringInfo holds information about CPU performance monitoring capabilities.
+// This is primarily populated from CPUID leaf 0xAh on x86
+type PerformanceMonitoringInfo struct {
+	// VersionID (x86 only): Version ID of architectural performance monitoring.
+	// A value of 0 means architectural performance monitoring is not supported or information is unavailable.
+	VersionID uint8
+	// NumGPPMC: Number of General-Purpose Performance Monitoring Counters per logical processor.
+	// On ARM, this is derived from PMCR_EL0.N (number of event counters).
+	NumGPCounters uint8
+	// GPPMCWidth: Bit width of General-Purpose Performance Monitoring Counters.
+	// On ARM, typically 64 for PMU event counters.
+	GPPMCWidth uint8
+	// NumFixedPMC: Number of Fixed-Function Performance Counters.
+	// Valid on x86 if VersionID > 1. On ARM, this typically includes at least the cycle counter (PMCCNTR_EL0).
+	NumFixedPMC uint8
+	// FixedPMCWidth: Bit width of Fixed-Function Performance Counters.
+	// Valid on x86 if VersionID > 1. On ARM, the cycle counter (PMCCNTR_EL0) is 64-bit.
+	FixedPMCWidth uint8
+	// Raw register output from CPUID leaf 0xAh.
+	RawEBX uint32
+	RawEAX uint32
+	RawEDX uint32
 }
 
 var cpuid func(op uint32) (eax, ebx, ecx, edx uint32)
@@ -1581,4 +1613,48 @@ func valAsString(values ...uint32) []byte {
 		}
 	}
 	return r
+}
+
+func parseLeaf0AH(c *CPUInfo, eax, ebx, edx uint32) (info PerformanceMonitoringInfo) {
+	info.VersionID = uint8(eax & 0xFF)
+	info.NumGPCounters = uint8((eax >> 8) & 0xFF)
+	info.GPPMCWidth = uint8((eax >> 16) & 0xFF)
+
+	info.RawEBX = ebx
+	info.RawEAX = eax
+	info.RawEDX = edx
+
+	if info.VersionID > 1 { // This information is only valid if VersionID > 1
+		info.NumFixedPMC = uint8(edx & 0x1F)          // Bits 4:0
+		info.FixedPMCWidth = uint8((edx >> 5) & 0xFF) // Bits 12:5
+	}
+	if info.VersionID > 0 {
+		// first 4 fixed events are always instructions retired, cycles, ref cycles and topdown slots
+		if ebx == 0x0 && info.NumFixedPMC == 3 {
+			c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
+			c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
+		}
+		if ebx == 0x0 && info.NumFixedPMC == 4 {
+			c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
+			c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
+			c.featureSet.set(PMU_FIXEDCOUNTER_TOPDOWN_SLOTS)
+		}
+		if ebx != 0x0 {
+			if ((ebx >> 0) & 1) == 0 {
+				c.featureSet.set(PMU_FIXEDCOUNTER_INSTRUCTIONS)
+			}
+			if ((ebx >> 1) & 1) == 0 {
+				c.featureSet.set(PMU_FIXEDCOUNTER_CYCLES)
+			}
+			if ((ebx >> 2) & 1) == 0 {
+				c.featureSet.set(PMU_FIXEDCOUNTER_REFCYCLES)
+			}
+			if ((ebx >> 3) & 1) == 0 {
+				c.featureSet.set(PMU_FIXEDCOUNTER_TOPDOWN_SLOTS)
+			}
+		}
+	}
+	return info
 }
