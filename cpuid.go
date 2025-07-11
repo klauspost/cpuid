@@ -256,6 +256,9 @@ const (
 	TLB_FLUSH_NESTED                     // AMD: Flushing includes all the nested translations for guest translations
 	TME                                  // Intel Total Memory Encryption. The following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
 	TOPEXT                               // TopologyExtensions: topology extensions support. Indicates support for CPUID Fn8000_001D_EAX_x[N:0]-CPUID Fn8000_001E_EDX.
+	TSA_L1_NO                            // AMD only: Not vulnerable to TSA-L1
+	TSA_SQ_NO                            // AM onlyD: Not vulnerable to TSA-SQ
+	TSA_VERW_CLEAR                       // If set, the memory form of the VERW instruction may be used to help mitigate TSA
 	TSCRATEMSR                           // MSR based TSC rate control. Indicates support for MSR TSC ratio MSRC000_0104
 	TSXLDTRK                             // Intel TSX Suspend Load Address Tracking
 	VAES                                 // Vector AES. AVX(512) versions requires additional checks.
@@ -1553,12 +1556,28 @@ func support() flagSet {
 	}
 
 	if maxExtendedFunction() >= 0x80000021 && vend == AMD {
-		a, _, _, _ := cpuid(0x80000021)
+		a, _, c, _ := cpuid(0x80000021)
 		fs.setIf((a>>31)&1 == 1, SRSO_MSR_FIX)
 		fs.setIf((a>>30)&1 == 1, SRSO_USER_KERNEL_NO)
 		fs.setIf((a>>29)&1 == 1, SRSO_NO)
 		fs.setIf((a>>28)&1 == 1, IBPB_BRTYPE)
 		fs.setIf((a>>27)&1 == 1, SBPB)
+		fs.setIf((c>>1)&1 == 1, TSA_L1_NO)
+		fs.setIf((c>>2)&1 == 1, TSA_SQ_NO)
+		fs.setIf((a>>5)&1 == 1, TSA_VERW_CLEAR)
+	}
+	if vend == AMD {
+		if family < 0x19 {
+			// AMD CPUs that are older than Family 19h are not vulnerable to TSA but do not set TSA_L1_NO or TSA_SQ_NO.
+			// Source: https://www.amd.com/content/dam/amd/en/documents/resources/bulletin/technical-guidance-for-mitigating-transient-scheduler-attacks.pdf
+			fs.set(TSA_L1_NO)
+			fs.set(TSA_SQ_NO)
+		} else if family == 0x1a {
+			// AMD Family 1Ah models 00h-4Fh and 60h-7Fh are also not vulnerable to TSA but do not set TSA_L1_NO or TSA_SQ_NO.
+			// Future AMD CPUs will set these CPUID bits if appropriate. CPUs will be designed to set these CPUID bits if appropriate.
+			notVuln := model <= 0x4f || (model >= 0x60 && model <= 0x7f)
+			fs.setIf(notVuln, TSA_L1_NO, TSA_SQ_NO)
+		}
 	}
 
 	if mfi >= 0x20 {
