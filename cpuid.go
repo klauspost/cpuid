@@ -95,6 +95,7 @@ const (
 	AVX2                                 // AVX2 functions
 	AVX512BF16                           // AVX-512 BFLOAT16 Instructions
 	AVX512BITALG                         // AVX-512 Bit Algorithms
+	AVX512BMM                            // AVX-512 Bit Manipulation Instructions
 	AVX512BW                             // AVX-512 Byte and Word Instructions
 	AVX512CD                             // AVX-512 Conflict Detection Instructions
 	AVX512DQ                             // AVX-512 Doubleword and Quadword Instructions
@@ -1562,6 +1563,7 @@ func support() flagSet {
 		fs.setIf((a>>29)&1 == 1, SRSO_NO)
 		fs.setIf((a>>28)&1 == 1, IBPB_BRTYPE)
 		fs.setIf((a>>27)&1 == 1, SBPB)
+		fs.setIf((a>>23)&1 == 1, AVX512BMM)
 		fs.setIf((c>>1)&1 == 1, TSA_L1_NO)
 		fs.setIf((c>>2)&1 == 1, TSA_SQ_NO)
 		fs.setIf((a>>5)&1 == 1, TSA_VERW_CLEAR)
