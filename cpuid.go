@@ -140,6 +140,7 @@ const (
 	FMA4                                 // Bulldozer FMA4 functions
 	FP128                                // AMD: When set, the internal FP/SIMD execution datapath is no more than 128-bits wide
 	FP256                                // AMD: When set, the internal FP/SIMD execution datapath is no more than 256-bits wide
+	FRED                                 // Flexible Return and Event Delivery
 	FSRM                                 // Fast Short Rep Mov
 	FXSR                                 // FXSAVE, FXRESTOR instructions, CR4 bit 9
 	FXSROPT                              // FXSAVE/FXRSTOR optimizations
@@ -1330,6 +1331,7 @@ func support() flagSet {
 		fs.setIf(eax1&(1<<10) != 0, MOVSB_ZL)
 		fs.setIf(eax1&(1<<11) != 0, STOSB_SHORT)
 		fs.setIf(eax1&(1<<12) != 0, CMPSB_SCADBS_SHORT)
+		fs.setIf(eax1&(1<<17) != 0, FRED)
 		fs.setIf(eax1&(1<<22) != 0, HRESET)
 		fs.setIf(eax1&(1<<23) != 0, AVXIFMA)
 		fs.setIf(eax1&(1<<26) != 0, LAM)
