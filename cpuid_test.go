@@ -360,3 +360,146 @@ func BenchmarkFlags(b *testing.B) {
 		_ = a
 	})
 }
+
+func TestHasOneOf(t *testing.T) {
+	var c CPUInfo
+	c.featureSet.set(RV_F)
+	c.featureSet.set(RV_D)
+
+	if !c.HasOneOf(CombineFeatures(RV_F, RV_ZBA)) {
+		t.Error("HasOneOf should match when one feature is present")
+	}
+	if c.HasOneOf(CombineFeatures(RV_ZBA)) {
+		t.Error("HasOneOf should not match absent feature")
+	}
+	if !c.HasOneOf(CombineFeatures(RV_D)) {
+		t.Error("HasOneOf should match single present feature")
+	}
+	if c.HasOneOf(CombineFeatures(RV_V, RV_ZBA)) {
+		t.Error("HasOneOf should not match when no features are present")
+	}
+}
+
+func TestParseISAString(t *testing.T) {
+	tests := []struct {
+		isa      string
+		features []FeatureID
+	}{
+		{
+			isa:      "rv64imafdc_zicsr_zifencei",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D},
+		},
+		{
+			isa:      "rv64gc",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D},
+		},
+		{
+			isa:      "rv64imafdc_zba_zbb_zbc_zbs",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZBA, RV_ZBB, RV_ZBC, RV_ZBS},
+		},
+		{
+			isa:      "rv64imafdcv",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_V},
+		},
+		{
+			isa:      "rv64imafdc_zicond_zihintpause",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZICOND, RV_ZIHINTPAUSE},
+		},
+		{
+			isa:      "rv64imafdc_zicbom_zicboz_zicbop",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZICBOM, RV_ZICBOZ, RV_ZICBOP},
+		},
+		{
+			isa:      "rv64imafdc_zfa_zfh_zfhmin",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZFA, RV_ZFH, RV_ZFHMIN},
+		},
+		{
+			isa:      "rv64imafdc_ztso_zacas",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZTSO, RV_ZACAS},
+		},
+		{
+			isa:      "rv64imafdc_zknd_zkne_zknh_zksed_zksh",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZKND, RV_ZKNE, RV_ZKNH, RV_ZKSED, RV_ZKSH},
+		},
+		{
+			isa:      "rv64imafdc_zvbb_zvbc_zvkg_zvkned_zvknhb_zvksed_zvksh",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZVBB, RV_ZVBC, RV_ZVKG, RV_ZVKNED, RV_ZVKNHB, RV_ZVKSED, RV_ZVKSH},
+		},
+		{
+			isa:      "rv64imafdc_zbkb_zbkc_zbkx",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZBKB, RV_ZBKC, RV_ZBKX},
+		},
+		{
+			isa:      "rv64imac",
+			features: []FeatureID{RV_IMA, RV_C},
+		},
+		{
+			isa:      "rv64ima",
+			features: []FeatureID{RV_IMA},
+		},
+		{
+			isa:      "rv64imafdc_zba_zbb_zbc_zbs_zicond_zihintpause_zicbom_zicboz_zicbop_zfa_zfh_zfhmin_ztso_zacas_zknd_zkne_zkr",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZBA, RV_ZBB, RV_ZBC, RV_ZBS, RV_ZICOND, RV_ZIHINTPAUSE, RV_ZICBOM, RV_ZICBOZ, RV_ZICBOP, RV_ZFA, RV_ZFH, RV_ZFHMIN, RV_ZTSO, RV_ZACAS, RV_ZKND, RV_ZKNE},
+		},
+		// Combined crypto suites auto-detection
+		{
+			isa:      "rv64imafdc_zbkb_zbkc_zbkx_zknd_zkne_zknh_zkt",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZBKB, RV_ZBKC, RV_ZBKX, RV_ZKND, RV_ZKNE, RV_ZKNH, RV_ZKT, RV_ZKN},
+		},
+		{
+			isa:      "rv64imafdc_zbkb_zbkc_zbkx_zksed_zksh_zkt",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZBKB, RV_ZBKC, RV_ZBKX, RV_ZKSED, RV_ZKSH, RV_ZKT, RV_ZKS},
+		},
+		{
+			isa:      "rv64imafdc_zvbb_zvbc_zvkb_zvkg_zvkned_zvknhb_zvkt",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZVBB, RV_ZVBC, RV_ZVKB, RV_ZVKG, RV_ZVKNED, RV_ZVKNHB, RV_ZVKT, RV_ZVKNG},
+		},
+		{
+			isa:      "rv64imafdc_zvbb_zvbc_zvkb_zvkg_zvksed_zvksh_zvkt",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZVBB, RV_ZVBC, RV_ZVKB, RV_ZVKG, RV_ZVKSED, RV_ZVKSH, RV_ZVKT, RV_ZVKSG},
+		},
+		// Bundle tokens directly in ISA string
+		{
+			isa:      "rv64imafdc_zkn",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZKN},
+		},
+		{
+			isa:      "rv64imafdc_zks",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZKS},
+		},
+		{
+			isa:      "rv64imafdc_zvkng",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZVKNG},
+		},
+		{
+			isa:      "rv64imafdc_zvksg",
+			features: []FeatureID{RV_IMA, RV_C, RV_F, RV_D, RV_ZVKSG},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.isa, func(t *testing.T) {
+			var c CPUInfo
+			parseISAString(&c, tt.isa)
+
+			var want flagSet
+			for _, feat := range tt.features {
+				want.set(feat)
+			}
+
+			for _, feat := range tt.features {
+				if !c.featureSet.inSet(feat) {
+					t.Errorf("missing %s", feat.String())
+				}
+			}
+
+			got := c.featureSet.nEnabled()
+			wantN := want.nEnabled()
+			if got != wantN {
+				gotSet := c.featureSet.Strings()
+				wantSet := want.Strings()
+				t.Errorf("got %d features %v, want %d %v", got, gotSet, wantN, wantSet)
+			}
+		})
+	}
+}

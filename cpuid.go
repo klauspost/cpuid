@@ -3,7 +3,7 @@
 // Package cpuid provides information about the CPU running the current program.
 //
 // CPU features are detected on startup, and kept for fast access through the life of the application.
-// Currently x86 / x64 (AMD64) as well as arm64 is supported.
+// Currently x86 / x64 (AMD64), arm64, and riscv64 are supported.
 //
 // You can access the CPU information by accessing the shared CPU variable of the cpuid library.
 //
@@ -61,6 +61,13 @@ const (
 	ACRN
 	SRE
 	Apple
+
+	// RISC-V vendors
+	SiFive
+	StarFive
+	THead
+	Andes
+	SpacemiT
 
 	lastVendor
 )
@@ -318,6 +325,57 @@ const (
 	PMU_FIXEDCOUNTER_INSTRUCTIONS
 	PMU_FIXEDCOUNTER_TOPDOWN_SLOTS
 
+	// RISC-V features
+	RV_IMA         // IMA base (Integer, Multiply, Atomic)
+	RV_C           // Compressed instructions
+	RV_F           // Single-precision FP
+	RV_D           // Double-precision FP
+	RV_V           // Vector extension (V)
+	RV_ZBA         // Address generation
+	RV_ZBB         // Basic bit manipulation
+	RV_ZBC         // Carry-less multiplication
+	RV_ZBS         // Single-bit manipulation
+	RV_ZICOND      // Integer conditional operations
+	RV_ZIHINTPAUSE // Pause hint
+	RV_ZICBOM      // Cache block management operations
+	RV_ZICBOZ      // Cache block zero
+	RV_ZICBOP      // Cache block prefetch
+	RV_ZFA         // Additional floating-point
+	RV_ZFH         // Half-precision FP
+	RV_ZFHMIN      // Minimal half-precision FP
+	RV_ZTSO        // Total store ordering
+	RV_ZACAS       // Atomic CAS
+	// Scalar cryptography
+	RV_ZBKB  // Bit-manipulation for crypto
+	RV_ZBKC  // Carry-less multiply for crypto
+	RV_ZBKX  // Crossbar permutations
+	RV_ZKND  // NIST Suite: AES decrypt
+	RV_ZKNE  // NIST Suite: AES encrypt
+	RV_ZKNH  // NIST Suite: SHA-2 (SHA-256/SHA-512)
+	RV_ZKSED // ShangMi Suite: SM4 block cipher
+	RV_ZKSH  // ShangMi Suite: SM3 hash
+	RV_ZKT   // Data-independent execution latency (Crypto)
+
+	// Scalar crypto suites (combined from individual extensions)
+	RV_ZKN // NIST Algorithm Suite (Zknd+Zkne+Zknh+Zbkb+Zbkc+Zbkx+Zkt)
+	RV_ZKS // ShangMi Algorithm Suite (Zksed+Zksh+Zbkb+Zbkc+Zbkx+Zkt)
+
+	// Vector cryptography
+	RV_ZVBB   // Vector Basic Bit-manipulation
+	RV_ZVBC   // Vector Carry-less multiply
+	RV_ZVKB   // Vector Bit-manipulation for crypto
+	RV_ZVKG   // Vector GCM/GMAC
+	RV_ZVKNED // NIST Suite: Vector AES encrypt+decrypt
+	RV_ZVKNHA // NIST Suite: Vector SHA-2 (SHA-256)
+	RV_ZVKNHB // NIST Suite: Vector SHA-2 (SHA-512)
+	RV_ZVKSED // ShangMi Suite: Vector SM4
+	RV_ZVKSH  // ShangMi Suite: Vector SM3 hash
+	RV_ZVKT   // Vector Data-independent execution latency
+
+	// Vector crypto suites (combined from individual extensions)
+	RV_ZVKNG // NIST Suite with GCM (Zvkned+Zvknhb+Zvkg+Zvkb+Zvkt)
+	RV_ZVKSG // ShangMi Suite with GCM (Zvksed+Zvksh+Zvkg+Zvkb+Zvkt)
+
 	// Keep it last. It automatically defines the size of []flagSet
 	lastID
 
@@ -494,12 +552,35 @@ func (c *CPUInfo) HasAll(f Features) bool {
 	return c.featureSet.hasSetP(f)
 }
 
+// HasOneOf returns whether the CPU supports one or more of the requested features.
+func (c *CPUInfo) HasOneOf(f Features) bool {
+	return c.featureSet.hasOneOf(f)
+}
+
 // https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 var oneOfLevel = CombineFeatures(SYSEE, SYSCALL)
 var level1Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2)
 var level2Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3)
 var level3Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE)
 var level4Features = CombineFeatures(CMOV, CMPXCHG8, X87, FXSR, MMX, SSE, SSE2, CX16, LAHF, POPCNT, SSE3, SSE4, SSE42, SSSE3, AVX, AVX2, BMI1, BMI2, F16C, FMA3, LZCNT, MOVBE, OSXSAVE, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL)
+
+// RV_CRYPTO_FEATS contains all RISC-V scalar cryptography instruction extensions (excludes Zkt since it is a timing guarantee, not a computational instruction).
+var RV_CRYPTO_FEATS = CombineFeatures(RV_ZBKB, RV_ZBKC, RV_ZBKX, RV_ZKND, RV_ZKNE, RV_ZKNH, RV_ZKSED, RV_ZKSH)
+
+// RV_VECTOR_CRYPTO_FEATS contains all RISC-V vector cryptography extensions.
+var RV_VECTOR_CRYPTO_FEATS = CombineFeatures(RV_ZVBB, RV_ZVBC, RV_ZVKB, RV_ZVKG, RV_ZVKNED, RV_ZVKNHA, RV_ZVKNHB, RV_ZVKSED, RV_ZVKSH)
+
+// RISC-V application profile feature sets.
+// https://github.com/riscv/riscv-profiles
+var rvProfile20Features = CombineFeatures(RV_IMA, RV_C, RV_F, RV_D)
+var rvProfile22Features = CombineFeatures(RV_IMA, RV_C, RV_F, RV_D, RV_ZBA, RV_ZBB, RV_ZBS, RV_ZFHMIN, RV_ZICBOM, RV_ZICBOP, RV_ZICBOZ, RV_ZIHINTPAUSE)
+var rvProfile23Features = CombineFeatures(RV_IMA, RV_C, RV_F, RV_D, RV_ZBA, RV_ZBB, RV_ZBS, RV_ZFHMIN, RV_ZICBOM, RV_ZICBOP, RV_ZICBOZ, RV_ZIHINTPAUSE, RV_V, RV_ZFA, RV_ZICOND, RV_ZVBB, RV_ZVKB)
+
+// RISC-V crypto suites — combined from individual extensions.
+var rvZKNFeatures = CombineFeatures(RV_ZKND, RV_ZKNE, RV_ZKNH, RV_ZBKB, RV_ZBKC, RV_ZBKX, RV_ZKT)
+var rvZKSFeatures = CombineFeatures(RV_ZKSED, RV_ZKSH, RV_ZBKB, RV_ZBKC, RV_ZBKX, RV_ZKT)
+var rvZVKNFeatures = CombineFeatures(RV_ZVKNED, RV_ZVKNHB, RV_ZVKG, RV_ZVKB, RV_ZVKT)
+var rvZVKSFeatures = CombineFeatures(RV_ZVKSED, RV_ZVKSH, RV_ZVKG, RV_ZVKB, RV_ZVKT)
 
 // X64Level returns the microarchitecture level detected on the CPU.
 // If features are lacking or non x64 mode, 0 is returned.
@@ -521,6 +602,23 @@ func (c CPUInfo) X64Level() int {
 		return 1
 	}
 	return 0
+}
+
+// RVProfile returns the RISC-V application profile level.
+// 0 = unknown / base ISA only, 20 = RVA20, 22 = RVA22, 23 = RVA23.
+// Returns 0 on non-RISC-V architectures.
+// https://github.com/riscv/riscv-profiles
+func (c CPUInfo) RVProfile() int {
+	switch {
+	case c.featureSet.hasSetP(rvProfile23Features):
+		return 23
+	case c.featureSet.hasSetP(rvProfile22Features):
+		return 22
+	case c.featureSet.hasSetP(rvProfile20Features):
+		return 20
+	default:
+		return 0
+	}
 }
 
 // Disable will disable one or several features.

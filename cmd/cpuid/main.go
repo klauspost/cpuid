@@ -3,7 +3,7 @@
 // Package cpuid provides information about the CPU running the current program.
 //
 // CPU features are detected on startup, and kept for fast access through the life of the application.
-// Currently x86 / x64 (AMD64) as well as arm64 is supported.
+// Currently x86 / x64 (AMD64), arm64, and riscv64 are supported.
 //
 // You can access the CPU information by accessing the shared CPU variable of the cpuid library.
 //
@@ -41,12 +41,14 @@ func main() {
 	if *js {
 		info := struct {
 			cpuid.CPUInfo
-			Features []string
-			X64Level int
+			Features  []string
+			X64Level  int
+			RVProfile int
 		}{
-			CPUInfo:  cpuid.CPU,
-			Features: cpuid.CPU.FeatureSet(),
-			X64Level: cpuid.CPU.X64Level(),
+			CPUInfo:   cpuid.CPU,
+			Features:  cpuid.CPU.FeatureSet(),
+			X64Level:  cpuid.CPU.X64Level(),
+			RVProfile: cpuid.CPU.RVProfile(),
 		}
 		b, err := json.MarshalIndent(info, "", "  ")
 		if err != nil {
@@ -67,6 +69,9 @@ func main() {
 	fmt.Println("Microarchitecture level:", cpuid.CPU.X64Level())
 	if cpuid.CPU.AVX10Level > 0 {
 		fmt.Println("AVX10 level:", cpuid.CPU.AVX10Level)
+	}
+	if rvp := cpuid.CPU.RVProfile(); rvp > 0 {
+		fmt.Printf("RISC-V Profile: RVA%d\n", rvp)
 	}
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1I, "bytes")
