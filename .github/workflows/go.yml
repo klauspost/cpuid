@@ -10,9 +10,9 @@ jobs:
   build:
     strategy:
       matrix:
-        go-version: [1.22.x, 1.23.x, 1.24.x]
-        os: [ubuntu-latest, macos-latest, windows-latest]  
-    runs-on: ubuntu-latest
+        go-version: [1.24.x, 1.25.x, 1.26.x]
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
 
@@ -50,7 +50,7 @@ jobs:
       run: GOOS=linux GOARCH=386 go test -short ./...
 
     - name: goreleaser deprecation
-      run: curl -sfL https://git.io/goreleaser | VERSION=v2.3.2 sh -s -- check
+      run: curl -sfL https://git.io/goreleaser | VERSION=v2.16.0 sh -s -- check
       
     - name: goreleaser snapshot
-      run: curl -sL https://git.io/goreleaser | VERSION=v2.3.2 sh -s -- --snapshot --clean
+      run: curl -sL https://git.io/goreleaser | VERSION=v2.16.0 sh -s -- --snapshot --clean
