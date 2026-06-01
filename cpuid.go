@@ -17,6 +17,7 @@ import (
 	"math/bits"
 	"os"
 	"runtime"
+	"slices"
 	"strings"
 )
 
@@ -473,12 +474,7 @@ func (c *CPUInfo) Has(id FeatureID) bool {
 
 // AnyOf returns whether the CPU supports one or more of the requested features.
 func (c CPUInfo) AnyOf(ids ...FeatureID) bool {
-	for _, id := range ids {
-		if c.featureSet.inSet(id) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(ids, c.featureSet.inSet)
 }
 
 // Features contains several features combined for a fast check using
@@ -773,7 +769,7 @@ func flagSetWith(feat ...FeatureID) flagSet {
 // Will return UNKNOWN if not found.
 func ParseFeature(s string) FeatureID {
 	s = strings.ToUpper(s)
-	for i := firstID; i < lastID; i++ {
+	for i := range lastID {
 		if i.String() == s {
 			return i
 		}
@@ -787,7 +783,7 @@ func (s flagSet) Strings() []string {
 		return []string{""}
 	}
 	r := make([]string, 0)
-	for i := firstID; i < lastID; i++ {
+	for i := range lastID {
 		if s.inSet(i) {
 			r = append(r, i.String())
 		}
@@ -808,7 +804,7 @@ func maxFunctionID() uint32 {
 func brandName() string {
 	if maxExtendedFunction() >= 0x80000004 {
 		v := make([]uint32, 0, 48)
-		for i := uint32(0); i < 3; i++ {
+		for i := range uint32(3) {
 			a, b, c, d := cpuid(0x80000002 + i)
 			v = append(v, a, b, c, d)
 		}
@@ -1077,7 +1073,7 @@ func (c *CPUInfo) cacheSize() {
 		// Hack: When we encounter the same entry 100 times we break.
 		nSame := 0
 		var last uint32
-		for i := uint32(0); i < math.MaxUint32; i++ {
+		for i := range uint32(math.MaxUint32) {
 			eax, ebx, ecx, _ := cpuidex(0x8000001D, i)
 
 			level := (eax >> 5) & 7

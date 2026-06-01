@@ -257,7 +257,7 @@ func ExampleCPUInfo_Ia32TscAux() {
 
 func TestCombineFeatures(t *testing.T) {
 	cpu := CPU
-	for i := FeatureID(0); i < lastID; i++ {
+	for i := range lastID {
 		if cpu.Has(i) != cpu.HasAll(CombineFeatures(i)) {
 			t.Errorf("id %d:%s mismatch", i, i.String())
 		}
