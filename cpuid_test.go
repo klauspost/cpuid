@@ -418,7 +418,7 @@ func TestARM64Level(t *testing.T) {
 		{"v8.3", v83, 8, 3},
 		{"v8.4", v84, 8, 4},
 		{"v8.5", v85, 8, 5},
-		{"v8.5-without-ssbs", addFeats(v84, SB, BTI, FRINTTS, FLAGM2, DCPODP), 8, 5},
+		{"v8.5-without-ssbs-bti", addFeats(v84, SB, FRINTTS, FLAGM2, DCPODP), 8, 5},
 		{"v8.6", v86, 8, 6},
 		{"v9.0", addFeats(v85, SVE2), 9, 0},
 		{"v9.1", addFeats(v86, SVE2), 9, 1},
