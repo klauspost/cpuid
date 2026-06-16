@@ -5,4 +5,3 @@
 package cpuid
 
 var hwcap uint
-var hwcap2 uint

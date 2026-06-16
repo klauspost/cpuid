@@ -600,18 +600,25 @@ var rvZVKSFeatures = CombineFeatures(RV_ZVKSED, RV_ZVKSH, RV_ZVKG, RV_ZVKB, RV_Z
 // package can detect. EL1/system-only features (PAN, VHE, CSV2/CSV3, ECV, ...)
 // are excluded since they are irrelevant to user-space code generation, exactly
 // as X64Level ignores non-instruction features.
+//
+// FEAT_SSBS, although mandatory from ARMv8.5, is intentionally NOT required: it
+// is a speculation-control feature that Go code generation never depends on, and
+// it is reported unreliably. Linux ties HWCAP_SSBS to the SSB mitigation state
+// and hypervisors frequently hide it from guests, so requiring it would cap
+// otherwise-capable v8.5+/v9 CPUs (e.g. Neoverse N2) at v8.4. SSBS is still
+// detected and reported through FeatureSet when present.
 // https://go.dev/wiki/MinimumRequirements#arm64
 var armV8Levels = [...]Features{
-	CombineFeatures(FP, ASIMD),                                                                                                                                     // v8.0
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM),                                                                                                           // v8.1
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP),                                                                                                    // v8.2
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC),                                                                                // v8.3
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS),                                                                            // v8.4
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP),                                    // v8.5
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM),                        // v8.6
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT),                  // v8.7
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC),       // v8.8
-	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC, CSSC), // v8.9
+	CombineFeatures(FP, ASIMD),                                                                                                                               // v8.0
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM),                                                                                                     // v8.1
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP),                                                                                              // v8.2
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC),                                                                          // v8.3
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS),                                                                      // v8.4
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, BTI, FRINTTS, FLAGM2, DCPODP),                                    // v8.5
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM),                        // v8.6
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT),                  // v8.7
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC),       // v8.8
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC, CSSC), // v8.9
 }
 
 // armCrypto matches the GOARM64 ",crypto" option: FEAT_AES, FEAT_PMULL,

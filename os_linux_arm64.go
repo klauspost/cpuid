@@ -115,15 +115,19 @@ const (
 	hwcap2_POE         = 1 << 63
 )
 
+// hwcap2 holds AT_HWCAP2. Unlike hwcap, the arm64 runtime does not expose it
+// through internal/cpu, so detectOS reads it from the auxiliary vector.
+var hwcap2 uint
+
 func detectOS(c *CPUInfo) bool {
 	// For now assuming no hyperthreading is reasonable.
 	c.LogicalCores = runtime.NumCPU()
 	c.PhysicalCores = c.LogicalCores
 	c.ThreadsPerCore = 1
-	if hwcap == 0 {
-		// We did not get values from the runtime.
-		// Try reading /proc/self/auxv
-
+	// hwcap is provided by the runtime through the internal/cpu.HWCap linkname,
+	// but the runtime does not expose HWCAP2 on arm64. Read the auxiliary vector
+	// directly to obtain hwcap2 (and hwcap when the linkname is unavailable).
+	if hwcap == 0 || hwcap2 == 0 {
 		// From https://github.com/golang/sys
 		const (
 			_AT_HWCAP  = 16
@@ -132,37 +136,34 @@ func detectOS(c *CPUInfo) bool {
 			uintSize = int(32 << (^uint(0) >> 63))
 		)
 
-		buf, err := ioutil.ReadFile("/proc/self/auxv")
-		if err != nil {
-			// e.g. on android /proc/self/auxv is not accessible, so silently
-			// ignore the error and leave Initialized = false. On some
-			// architectures (e.g. arm64) doinit() implements a fallback
-			// readout and will set Initialized = true again.
-			return false
-		}
-		bo := binary.LittleEndian
-		for len(buf) >= 2*(uintSize/8) {
-			var tag, val uint
-			switch uintSize {
-			case 32:
-				tag = uint(bo.Uint32(buf[0:]))
-				val = uint(bo.Uint32(buf[4:]))
-				buf = buf[8:]
-			case 64:
-				tag = uint(bo.Uint64(buf[0:]))
-				val = uint(bo.Uint64(buf[8:]))
-				buf = buf[16:]
-			}
-			switch tag {
-			case _AT_HWCAP:
-				hwcap = val
-			case _AT_HWCAP2:
-				hwcap2 = val
+		// e.g. on android /proc/self/auxv is not accessible, so silently ignore
+		// the error and fall back to whatever the runtime provided.
+		if buf, err := ioutil.ReadFile("/proc/self/auxv"); err == nil {
+			bo := binary.LittleEndian
+			for len(buf) >= 2*(uintSize/8) {
+				var tag, val uint
+				switch uintSize {
+				case 32:
+					tag = uint(bo.Uint32(buf[0:]))
+					val = uint(bo.Uint32(buf[4:]))
+					buf = buf[8:]
+				case 64:
+					tag = uint(bo.Uint64(buf[0:]))
+					val = uint(bo.Uint64(buf[8:]))
+					buf = buf[16:]
+				}
+				switch tag {
+				case _AT_HWCAP:
+					hwcap = val
+				case _AT_HWCAP2:
+					hwcap2 = val
+				}
 			}
 		}
-		if hwcap == 0 {
-			return false
-		}
+	}
+	if hwcap == 0 {
+		// Nothing detected, e.g. on android or a restricted environment.
+		return false
 	}
 
 	// HWCap was populated by the runtime from the auxiliary vector.

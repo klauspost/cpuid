@@ -68,7 +68,9 @@ func main() {
 	fmt.Println("Logical Cores:", cpuid.CPU.LogicalCores)
 	fmt.Println("CPU Family", cpuid.CPU.Family, "Model:", cpuid.CPU.Model, "Stepping:", cpuid.CPU.Stepping)
 	fmt.Println("Features:", strings.Join(cpuid.CPU.FeatureSet(), ","))
-	fmt.Println("Microarchitecture level:", cpuid.CPU.X64Level())
+	if x := cpuid.CPU.X64Level(); x > 0 {
+		fmt.Println("Microarchitecture level:", x)
+	}
 	if cpuid.CPU.AVX10Level > 0 {
 		fmt.Println("AVX10 level:", cpuid.CPU.AVX10Level)
 	}
