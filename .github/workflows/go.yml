@@ -29,7 +29,13 @@ jobs:
 
     - name: Test Noasm
       run: go test -tags=noasm ./...
-      
+
+    - name: Run cpuid command
+      run: go run cmd/cpuid/main.go
+
+    - name: Run cpuid command noasm
+      run: go run -tags=noasm cmd/cpuid/main.go
+
   build-special:
     env:
       CGO_ENABLED: 0

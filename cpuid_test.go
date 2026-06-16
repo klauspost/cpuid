@@ -380,6 +380,84 @@ func TestHasOneOf(t *testing.T) {
 	}
 }
 
+func armCPU(ids ...FeatureID) CPUInfo {
+	var c CPUInfo
+	for _, id := range ids {
+		c.featureSet.set(id)
+	}
+	return c
+}
+
+// addFeats returns a fresh slice of base plus add, avoiding append aliasing.
+func addFeats(base []FeatureID, add ...FeatureID) []FeatureID {
+	out := make([]FeatureID, 0, len(base)+len(add))
+	out = append(out, base...)
+	return append(out, add...)
+}
+
+func TestARM64Level(t *testing.T) {
+	v80 := []FeatureID{FP, ASIMD}
+	v81 := addFeats(v80, ATOMICS, CRC32, ASIMDRDM)
+	v82 := addFeats(v81, DCPOP)
+	v83 := addFeats(v82, JSCVT, FCMA, LRCPC)
+	v84 := addFeats(v83, TS)
+	v85 := addFeats(v84, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP)
+	v86 := addFeats(v85, BF16, I8MM)
+
+	tests := []struct {
+		name         string
+		ids          []FeatureID
+		major, minor int
+	}{
+		{"none", nil, 0, 0},
+		{"fp-without-asimd", []FeatureID{FP}, 0, 0},
+		{"v8.0", v80, 8, 0},
+		{"v8.1", v81, 8, 1},
+		{"v8.1-incomplete", addFeats(v80, ATOMICS, CRC32), 8, 0},
+		{"v8.2", v82, 8, 2},
+		{"v8.3", v83, 8, 3},
+		{"v8.4", v84, 8, 4},
+		{"v8.5", v85, 8, 5},
+		{"v8.6", v86, 8, 6},
+		{"v9.0", addFeats(v85, SVE2), 9, 0},
+		{"v9.1", addFeats(v86, SVE2), 9, 1},
+		{"sve2-without-v8.5", addFeats(v80, SVE2), 8, 0},
+	}
+	for _, tc := range tests {
+		c := armCPU(tc.ids...)
+		if maj, min := c.ARM64Level(); maj != tc.major || min != tc.minor {
+			t.Errorf("%s: ARM64Level() = %d.%d, want %d.%d", tc.name, maj, min, tc.major, tc.minor)
+		}
+	}
+}
+
+func TestGOARM64(t *testing.T) {
+	v80 := []FeatureID{FP, ASIMD}
+	v83 := addFeats(v80, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC)
+	v85 := addFeats(v83, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP)
+
+	tests := []struct {
+		name string
+		ids  []FeatureID
+		want string
+	}{
+		{"none", nil, ""},
+		{"v8.0", v80, "v8.0"},
+		{"v8.0+lse", addFeats(v80, ATOMICS), "v8.0,lse"},
+		{"v8.0+crypto", addFeats(v80, AESARM, PMULL, SHA1, SHA2), "v8.0,crypto"},
+		{"v8.0+lse+crypto", []FeatureID{FP, ASIMD, ATOMICS, AESARM, PMULL, SHA1, SHA2}, "v8.0,lse,crypto"},
+		{"v8.3", v83, "v8.3"},
+		{"v8.3+crypto", addFeats(v83, AESARM, PMULL, SHA1, SHA2), "v8.3,crypto"},
+		{"v9.0", addFeats(v85, SVE2), "v9.0"},
+	}
+	for _, tc := range tests {
+		c := armCPU(tc.ids...)
+		if got := c.GOARM64(); got != tc.want {
+			t.Errorf("%s: GOARM64() = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}
+
 func TestParseISAString(t *testing.T) {
 	tests := []struct {
 		isa      string

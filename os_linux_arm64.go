@@ -157,7 +157,7 @@ func detectOS(c *CPUInfo) bool {
 			case _AT_HWCAP:
 				hwcap = val
 			case _AT_HWCAP2:
-				// Not used
+				hwcap2 = val
 			}
 		}
 		if hwcap == 0 {
@@ -184,9 +184,9 @@ func detectOS(c *CPUInfo) bool {
 	c.featureSet.setIf(isSet(hwcap, hwcap_JSCVT), JSCVT)
 	c.featureSet.setIf(isSet(hwcap, hwcap_LRCPC), LRCPC)
 	c.featureSet.setIf(isSet(hwcap, hwcap_PMULL), PMULL)
-	c.featureSet.setIf(isSet(hwcap, hwcap2_RNG), RNDR)
-	// c.featureSet.setIf(isSet(hwcap, hwcap_), TLB)
-	// c.featureSet.setIf(isSet(hwcap, hwcap_), TS)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_RNG), RNDR)
+	// TLB (FEAT_TLBIOS/TLBIRANGE) has no HWCAP bit; only detectable via ID registers.
+	c.featureSet.setIf(isSet(hwcap, hwcap_FLAGM), TS)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA1), SHA1)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA2), SHA2)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SHA3), SHA3)
@@ -194,6 +194,21 @@ func detectOS(c *CPUInfo) bool {
 	c.featureSet.setIf(isSet(hwcap, hwcap_SM3), SM3)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SM4), SM4)
 	c.featureSet.setIf(isSet(hwcap, hwcap_SVE), SVE)
+	c.featureSet.setIf(isSet(hwcap, hwcap_SB), SB)
+	c.featureSet.setIf(isSet(hwcap, hwcap_SSBS), SSBS)
+
+	// Features reported through the second hardware capability word (HWCAP2).
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_SVE2), SVE2)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_BTI), BTI)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_FLAGM2), FLAGM2)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_FRINT), FRINTTS)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_DCPODP), DCPODP)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_BF16), BF16)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_I8MM), I8MM)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_WFXT), WFXT)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_MOPS), MOPS)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_HBC), HBC)
+	c.featureSet.setIf(isSet(hwcap2, hwcap2_CSSC), CSSC)
 
 	// The Samsung S9+ kernel reports support for atomics, but not all cores
 	// actually support them, resulting in SIGILL. See issue #28431.

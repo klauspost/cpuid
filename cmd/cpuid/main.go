@@ -44,11 +44,13 @@ func main() {
 			Features  []string
 			X64Level  int
 			RVProfile int
+			GOARM64   string `json:"GOARM64,omitempty"`
 		}{
 			CPUInfo:   cpuid.CPU,
 			Features:  cpuid.CPU.FeatureSet(),
 			X64Level:  cpuid.CPU.X64Level(),
 			RVProfile: cpuid.CPU.RVProfile(),
+			GOARM64:   cpuid.CPU.GOARM64(),
 		}
 		b, err := json.MarshalIndent(info, "", "  ")
 		if err != nil {
@@ -72,6 +74,9 @@ func main() {
 	}
 	if rvp := cpuid.CPU.RVProfile(); rvp > 0 {
 		fmt.Printf("RISC-V Profile: RVA%d\n", rvp)
+	}
+	if v := cpuid.CPU.GOARM64(); v != "" {
+		fmt.Println("GOARM64:", v)
 	}
 	fmt.Println("Cacheline bytes:", cpuid.CPU.CacheLine)
 	fmt.Println("L1 Instruction Cache:", cpuid.CPU.Cache.L1I, "bytes")

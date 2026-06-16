@@ -318,6 +318,19 @@ const (
 	SM3      // SM3 instructions
 	SM4      // SM4 instructions
 	SVE      // Scalable Vector Extension
+	SVE2     // Scalable Vector Extension 2
+	SB       // Speculation barrier (SB instruction)
+	SSBS     // Speculative Store Bypass Safe (PSTATE.SSBS)
+	BTI      // Branch Target Identification
+	FLAGM2   // Condition flag manipulation version 2 (AXFLAG, XAFLAG)
+	FRINTTS  // Floating-point to integer rounding (FRINT32Z, FRINT64Z, etc)
+	DCPODP   // Data cache clean to Point of Deep Persistence (DC CVADP)
+	BF16     // BFloat16 instructions (BFDOT, BFMMLA, etc)
+	I8MM     // Int8 matrix multiplication (SMMLA, UMMLA, USMMLA)
+	WFXT     // WFE/WFI with timeout (WFET, WFIT)
+	MOPS     // Memory copy and set instructions (CPYF, SETP, etc)
+	HBC      // Hinted conditional branches (BC.cond)
+	CSSC     // Common short sequence compression (ABS, SMAX, UMAX, etc)
 
 	// PMU
 	PMU_FIXEDCOUNTER_CYCLES
@@ -582,6 +595,29 @@ var rvZKSFeatures = CombineFeatures(RV_ZKSED, RV_ZKSH, RV_ZBKB, RV_ZBKC, RV_ZBKX
 var rvZVKNFeatures = CombineFeatures(RV_ZVKNED, RV_ZVKNHB, RV_ZVKG, RV_ZVKB, RV_ZVKT)
 var rvZVKSFeatures = CombineFeatures(RV_ZVKSED, RV_ZVKSH, RV_ZVKG, RV_ZVKB, RV_ZVKT)
 
+// ARM64 architecture levels. armV8Levels[m] is the cumulative set of mandatory
+// user-space instruction features added up to and including ARMv8.m that this
+// package can detect. EL1/system-only features (PAN, VHE, CSV2/CSV3, ECV, ...)
+// are excluded since they are irrelevant to user-space code generation, exactly
+// as X64Level ignores non-instruction features.
+// https://go.dev/wiki/MinimumRequirements#arm64
+var armV8Levels = [...]Features{
+	CombineFeatures(FP, ASIMD),                                                                                                                                     // v8.0
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM),                                                                                                           // v8.1
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP),                                                                                                    // v8.2
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC),                                                                                // v8.3
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS),                                                                            // v8.4
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP),                                    // v8.5
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM),                        // v8.6
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT),                  // v8.7
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC),       // v8.8
+	CombineFeatures(FP, ASIMD, ATOMICS, CRC32, ASIMDRDM, DCPOP, JSCVT, FCMA, LRCPC, TS, SB, SSBS, BTI, FRINTTS, FLAGM2, DCPODP, BF16, I8MM, WFXT, MOPS, HBC, CSSC), // v8.9
+}
+
+// armCrypto matches the GOARM64 ",crypto" option: FEAT_AES, FEAT_PMULL,
+// FEAT_SHA1 and FEAT_SHA256.
+var armCrypto = CombineFeatures(AESARM, PMULL, SHA1, SHA2)
+
 // X64Level returns the microarchitecture level detected on the CPU.
 // If features are lacking or non x64 mode, 0 is returned.
 // See https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
@@ -606,7 +642,7 @@ func (c CPUInfo) X64Level() int {
 
 // RVProfile returns the RISC-V application profile level.
 // 0 = unknown / base ISA only, 20 = RVA20, 22 = RVA22, 23 = RVA23.
-// Returns 0 on non-RISC-V architectures.
+// Returns 0 on non-RISC-V architectures or if not detected.
 // https://github.com/riscv/riscv-profiles
 func (c CPUInfo) RVProfile() int {
 	switch {
@@ -619,6 +655,50 @@ func (c CPUInfo) RVProfile() int {
 	default:
 		return 0
 	}
+}
+
+// ARM64Level returns the ARMv8/ARMv9 architecture version supported by the CPU
+// as (major, minor), e.g. 8, 4 for ARMv8.4-A or 9, 0 for ARMv9.0-A.
+// Only mandatory user-space instruction features are considered, so the result
+// is the highest level whose required instructions are all present.
+// Returns 0, 0 on non-arm64 CPUs or when feature detection was unavailable.
+func (c CPUInfo) ARM64Level() (major, minor int) {
+	if !c.featureSet.hasSetP(armV8Levels[0]) {
+		return 0, 0
+	}
+	m8 := 0
+	for m := len(armV8Levels) - 1; m >= 1; m-- {
+		if c.featureSet.hasSetP(armV8Levels[m]) {
+			m8 = m
+			break
+		}
+	}
+	// ARMv9.x mandates everything in ARMv8.(x+5) plus SVE2.
+	if m8 >= 5 && c.featureSet.inSet(SVE2) {
+		return 9, m8 - 5
+	}
+	return 8, m8
+}
+
+// GOARM64 returns a value usable as the GOARM64 build setting for the detected
+// CPU, e.g. "v8.4" or "v9.0,crypto". The ",crypto" suffix is appended when AES,
+// PMULL, SHA1 and SHA256 are all present; the ",lse" suffix is appended in the
+// rare case LSE is present without the rest of the ARMv8.1 feature set.
+// Returns "" on non-arm64 CPUs or when feature detection was unavailable.
+// See https://go.dev/wiki/MinimumRequirements#arm64
+func (c CPUInfo) GOARM64() string {
+	major, minor := c.ARM64Level()
+	if major == 0 {
+		return ""
+	}
+	v := fmt.Sprintf("v%d.%d", major, minor)
+	if major == 8 && minor == 0 && c.featureSet.inSet(ATOMICS) {
+		v += ",lse"
+	}
+	if c.featureSet.hasSetP(armCrypto) {
+		v += ",crypto"
+	}
+	return v
 }
 
 // Disable will disable one or several features.
