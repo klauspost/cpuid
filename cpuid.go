@@ -493,8 +493,8 @@ func Detect() {
 		os.Exit(1)
 	}
 	if disableFlag != nil {
-		s := strings.Split(*disableFlag, ",")
-		for _, feat := range s {
+		s := strings.SplitSeq(*disableFlag, ",")
+		for feat := range s {
 			feat := ParseFeature(strings.TrimSpace(feat))
 			if feat != UNKNOWN {
 				CPU.featureSet.unset(feat)

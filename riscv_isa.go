@@ -7,7 +7,7 @@ import "strings"
 func parseISAString(c *CPUInfo, isa string) {
 	isa = strings.ToLower(isa)
 	extMap := make(map[string]bool)
-	for _, ext := range strings.Split(isa, "_") {
+	for ext := range strings.SplitSeq(isa, "_") {
 		ext = strings.TrimSpace(ext)
 		if strings.HasPrefix(ext, "rv64") {
 			extMap["i"] = true
