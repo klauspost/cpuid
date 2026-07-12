@@ -68,6 +68,8 @@ const (
 	THead
 	Andes
 	SpacemiT
+	Microchip
+	MIPS
 
 	lastVendor
 )
