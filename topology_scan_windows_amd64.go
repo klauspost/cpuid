@@ -45,11 +45,17 @@ func scanLogicalCPUs() ([]logicalCPU, error) {
 			continue
 		}
 		// SetThreadAffinityMask may defer migration; wait until we are on CPU i.
+		// If it never lands there, skip it rather than record another CPU's data.
+		migrated := false
 		for range 10000 {
 			if cur, _, _ := procGetCurrentProcessorNumber.Call(); uint32(cur) == uint32(i) {
+				migrated = true
 				break
 			}
 			runtime.Gosched()
+		}
+		if !migrated {
+			continue
 		}
 		cpus = append(cpus, parseLogicalCPU())
 	}
