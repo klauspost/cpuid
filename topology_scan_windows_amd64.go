@@ -12,18 +12,27 @@ import (
 )
 
 var (
-	kernel32                      = windows.NewLazySystemDLL("kernel32.dll")
-	procGetCurrentThread          = kernel32.NewProc("GetCurrentThread")
-	procGetCurrentProcess         = kernel32.NewProc("GetCurrentProcess")
-	procGetProcessAffinityMask    = kernel32.NewProc("GetProcessAffinityMask")
-	procSetThreadAffinityMask     = kernel32.NewProc("SetThreadAffinityMask")
-	procGetCurrentProcessorNumber = kernel32.NewProc("GetCurrentProcessorNumber")
+	kernel32                       = windows.NewLazySystemDLL("kernel32.dll")
+	procGetCurrentThread           = kernel32.NewProc("GetCurrentThread")
+	procGetCurrentProcess          = kernel32.NewProc("GetCurrentProcess")
+	procGetProcessAffinityMask     = kernel32.NewProc("GetProcessAffinityMask")
+	procSetThreadAffinityMask      = kernel32.NewProc("SetThreadAffinityMask")
+	procGetCurrentProcessorNumber  = kernel32.NewProc("GetCurrentProcessorNumber")
+	procGetActiveProcessorGroupCnt = kernel32.NewProc("GetActiveProcessorGroupCount")
 )
 
 // scanLogicalCPUs samples CPUID on every CPU in the process affinity mask by
 // pinning the current thread to each in turn. It covers a single processor
 // group (up to 64 logical CPUs); larger systems are not fully enumerated.
 func scanLogicalCPUs() ([]logicalCPU, error) {
+	// A single process affinity mask only covers one processor group (<=64
+	// CPUs). Rather than record a partial tree on a machine with more than one
+	// group, bail out and let ScanTopology fall back to the snapshot, whose
+	// counts come from the (group-aware) OS totals.
+	if n, _, _ := procGetActiveProcessorGroupCnt.Call(); n > 1 {
+		return nil, ErrTopologyScanUnavailable
+	}
+
 	proc, _, _ := procGetCurrentProcess.Call()
 	var procMask, sysMask uintptr
 	if ret, _, _ := procGetProcessAffinityMask.Call(proc, uintptr(unsafe.Pointer(&procMask)), uintptr(unsafe.Pointer(&sysMask))); ret == 0 || procMask == 0 {
