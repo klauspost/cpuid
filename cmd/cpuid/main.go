@@ -23,6 +23,7 @@ import (
 
 var js = flag.Bool("json", false, "Output as JSON")
 var level = flag.Int("check-level", 0, "Check microarchitecture level. Exit code will be 0 if supported")
+var topo = flag.Bool("topology", false, "Print the CPU topology tree (System > Package > Group > Core > Thread)")
 
 func main() {
 	flag.Parse()
@@ -36,6 +37,22 @@ func main() {
 			log.Fatalf("Microarchitecture level %d not supported. Max level is %d.", *level, cpuid.CPU.X64Level())
 		}
 		log.Printf("Microarchitecture level %d is supported. Max level is %d.", *level, cpuid.CPU.X64Level())
+		os.Exit(0)
+	}
+	if *topo {
+		sys, err := cpuid.ScanTopology()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Note:", err)
+		}
+		if *js {
+			b, err := json.MarshalIndent(sys, "", "  ")
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(string(b))
+		} else {
+			fmt.Print(sys.String())
+		}
 		os.Exit(0)
 	}
 	if *js {

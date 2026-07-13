@@ -479,6 +479,7 @@ func init() {
 // exported CPU variable.
 func Detect() {
 	// Set defaults
+	topoSnapshot.Store(nil)
 	CPU.ThreadsPerCore = 1
 	CPU.Cache.L1I = -1
 	CPU.Cache.L1D = -1
