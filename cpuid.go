@@ -958,7 +958,7 @@ func flagSetWith(feat ...FeatureID) flagSet {
 // ParseFeature will parse the string and return the ID of the matching feature.
 // Will return UNKNOWN if not found.
 func ParseFeature(s string) FeatureID {
-	s = strings.ToUpper(s)
+	s = strings.ToUpper(strings.TrimSpace(s))
 	for i := range lastID {
 		if i.String() == s {
 			return i
