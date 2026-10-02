@@ -478,6 +478,9 @@ func init() {
 // If you call this, you must ensure that no other goroutine is accessing the
 // exported CPU variable.
 func Detect() {
+	detectExternalMu.Lock()
+	defer detectExternalMu.Unlock()
+
 	// Set defaults
 	topoSnapshot.Store(nil)
 	CPU.ThreadsPerCore = 1
