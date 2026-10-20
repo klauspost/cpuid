@@ -19,26 +19,7 @@ func initCPU() {
 }
 
 func addInfo(c *CPUInfo, safe bool) {
-	c.maxFunc = maxFunctionID()
-	c.maxExFunc = maxExtendedFunction()
-	c.BrandName = brandName()
-	c.CacheLine = cacheLine()
-	c.Family, c.Model, c.Stepping = familyModel()
-	c.featureSet = support()
-	c.SGX = hasSGX(c.featureSet.inSet(SGX), c.featureSet.inSet(SGXLC))
-	c.AMDMemEncryption = hasAMDMemEncryption(c.featureSet.inSet(SME) || c.featureSet.inSet(SEV))
-	c.ThreadsPerCore = threadsPerCore()
-	c.LogicalCores = logicalCores()
-	c.PhysicalCores = physicalCores()
-	c.VendorID, c.VendorString = vendorID()
-	c.HypervisorVendorID, c.HypervisorVendorString = hypervisorVendorID()
-	c.AVX10Level = c.supportAVX10()
-	c.cacheSize()
-	c.frequencies()
-	if c.maxFunc >= 0x0A {
-		eax, ebx, _, edx := cpuid(0x0A)
-		c.PMU = parseLeaf0AH(c, eax, ebx, edx)
-	}
+	addInfoX86(c)
 }
 
 func getVectorLength() (vl, pl uint64) { return 0, 0 }
