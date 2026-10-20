@@ -148,7 +148,7 @@ func mockCPU(def []byte) func() {
 		}
 		second := first[0]
 		// ECX bit 26 must be set
-		if (second[2] & 1 << 26) == 0 {
+		if (second[2] & (1 << 26)) == 0 {
 			panic(fmt.Sprintf("XGETBV not supported %v", fakeID))
 		}
 		// We don't have any data to return, unfortunately
@@ -219,4 +219,50 @@ func TestMocks(t *testing.T) {
 
 	Detect()
 
+}
+
+// TestXSAVEBitPrecedence checks that leaf 1 ECX bits 26 (XSAVE) and 27
+// (OSXSAVE) are tested, not bit 0 (SSE3). `&` and `<<` have the same
+// precedence, so an unparenthesized `c&1<<26` is `(c&1)<<26`.
+// It calls support() directly, so it runs on every architecture and with
+// the noasm tag, where Detect does not use the x86 feature detection.
+func TestXSAVEBitPrecedence(t *testing.T) {
+	// Max standard leaf is 1 so support does not query later leaves this
+	// dump does not provide. Vendor registers spell GenuineIntel.
+	const leaf0 = "CPUID 00000000: 00000001-756e6547-6c65746e-49656e69\n"
+	tests := []struct {
+		name    string
+		leaf1   string
+		sse3    bool
+		xsave   bool
+		osxsave bool
+	}{
+		{
+			name:  "sse3_only",
+			leaf1: "CPUID 00000001: 00000000-00000000-00000001-00000000\n",
+			sse3:  true,
+		},
+		{
+			name:    "xsave_osxsave",
+			leaf1:   "CPUID 00000001: 00000000-00000000-0c000000-00000000\n",
+			xsave:   true,
+			osxsave: true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			restore := mockCPU([]byte(leaf0 + tc.leaf1))
+			fs := support()
+			restore()
+			if got := fs.inSet(SSE3); got != tc.sse3 {
+				t.Errorf("SSE3: got %v, want %v", got, tc.sse3)
+			}
+			if got := fs.inSet(XSAVE); got != tc.xsave {
+				t.Errorf("XSAVE: got %v, want %v", got, tc.xsave)
+			}
+			if got := fs.inSet(OSXSAVE); got != tc.osxsave {
+				t.Errorf("OSXSAVE: got %v, want %v", got, tc.osxsave)
+			}
+		})
+	}
 }
