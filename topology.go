@@ -428,21 +428,53 @@ func countsTopology() *topology.System {
 	if physical < 1 {
 		physical = max(1, CPU.LogicalCores/tpc)
 	}
-	sys := &topology.System{Vendor: CPU.VendorString, Online: CPU.LogicalCores}
+	logical := CPU.LogicalCores
+	if logical < 1 {
+		logical = physical * tpc
+	}
+	if logical < physical {
+		physical = logical
+	}
+
+	isHybrid := CPU.Supports(HYBRID_CPU) || (physical*tpc > logical)
+	smtCores := 0
+	if isHybrid {
+		smtCores = max(0, min(physical, logical-physical))
+	}
+
+	sys := &topology.System{Vendor: CPU.VendorString, Online: logical}
 	var grp topology.Group
 	id := 0
 	for c := range physical {
-		core := topology.Core{ID: c, Type: topology.Performance}
-		for range tpc {
-			core.Threads = append(core.Threads, topology.Thread{ID: id})
-			id++
+		coreType := topology.Performance
+		threadsForCore := tpc
+		if isHybrid {
+			if c < smtCores {
+				threadsForCore = 2
+				coreType = topology.Performance
+			} else {
+				threadsForCore = 1
+				if CPU.Supports(HYBRID_CPU) {
+					coreType = topology.Efficiency
+				}
+			}
 		}
-		addCacheVal(&core.Caches, 1, topology.Data, CPU.Cache.L1D, tpc)
-		addCacheVal(&core.Caches, 1, topology.Instruction, CPU.Cache.L1I, tpc)
-		addCacheVal(&core.Caches, 2, topology.Unified, CPU.Cache.L2, tpc)
+
+		core := topology.Core{ID: c, Type: coreType}
+		for range threadsForCore {
+			if id < logical {
+				core.Threads = append(core.Threads, topology.Thread{ID: id})
+				id++
+			}
+		}
+		coreThreads := len(core.Threads)
+		addCacheVal(&core.Caches, 1, topology.Data, CPU.Cache.L1D, coreThreads)
+		addCacheVal(&core.Caches, 1, topology.Instruction, CPU.Cache.L1I, coreThreads)
+		addCacheVal(&core.Caches, 2, topology.Unified, CPU.Cache.L2, coreThreads)
 		grp.Cores = append(grp.Cores, core)
 	}
-	addCacheVal(&grp.Caches, 3, topology.Unified, CPU.Cache.L3, physical*tpc)
+	sys.Online = id
+	addCacheVal(&grp.Caches, 3, topology.Unified, CPU.Cache.L3, id)
 	sys.Packages = []topology.Package{{Groups: []topology.Group{grp}}}
 	return sys
 }

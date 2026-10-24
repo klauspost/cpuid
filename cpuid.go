@@ -1105,6 +1105,29 @@ func physicalCores() int {
 	v, _ := vendorID()
 	switch v {
 	case Intel:
+		// On Intel hybrid architectures (e.g., Alder Lake, Raptor Lake, Arrow Lake),
+		// SMT is non-uniform across cores (Performance cores typically have 2 threads,
+		// while Efficient cores have 1 thread). Standard division of logical cores by
+		// threadsPerCore() would undercount physical cores.
+		//
+		// Detect hybrid capability via CPUID leaf 7 subleaf 0 EDX bit 15 (HYBRID).
+		// When hybrid is detected, use CPUID leaf 4 (deterministic cache parameters)
+		// EAX[31:26] (+1) to determine the addressable physical core count in the package,
+		// verifying that leaf 4 is valid via the cache type field EAX[4:0] != 0.
+		isHybrid := false
+		if maxFunctionID() >= 7 {
+			_, _, _, edx := cpuidex(7, 0)
+			isHybrid = (edx & (1 << 15)) != 0
+		}
+		if isHybrid && maxFunctionID() >= 4 {
+			eax, _, _, _ := cpuid(4)
+			if eax&0x1f != 0 {
+				cores := int((eax >> 26) + 1)
+				if cores > 0 {
+					return cores
+				}
+			}
+		}
 		lc := logicalCores()
 		tpc := threadsPerCore()
 		if lc > 0 && tpc > 0 {

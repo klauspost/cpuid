@@ -279,3 +279,181 @@ func checkCacheOnce(t *testing.T, sys *topology.System) {
 		}
 	}
 }
+
+func TestCountsTopologyHybrid(t *testing.T) {
+	defer Detect()
+
+	tests := []struct {
+		name         string
+		physical     int
+		logical      int
+		tpc          int
+		isHybrid     bool
+		wantP        int
+		wantE        int
+		wantTotalTh  int
+		wantSharedL3 int
+	}{
+		{
+			name:         "Alder Lake i9 12900K (8P+8E)",
+			physical:     16,
+			logical:      24,
+			tpc:          2,
+			isHybrid:     true,
+			wantP:        8,
+			wantE:        8,
+			wantTotalTh:  24,
+			wantSharedL3: 24,
+		},
+		{
+			name:         "Raptor Lake i9 13900K (8P+16E)",
+			physical:     24,
+			logical:      32,
+			tpc:          2,
+			isHybrid:     true,
+			wantP:        8,
+			wantE:        16,
+			wantTotalTh:  32,
+			wantSharedL3: 32,
+		},
+		{
+			name:         "Alder Lake i5 12600K (6P+4E)",
+			physical:     10,
+			logical:      16,
+			tpc:          2,
+			isHybrid:     true,
+			wantP:        6,
+			wantE:        4,
+			wantTotalTh:  16,
+			wantSharedL3: 16,
+		},
+		{
+			name:         "Alder Lake-N N100 (0P+8E)",
+			physical:     8,
+			logical:      8,
+			tpc:          1,
+			isHybrid:     true,
+			wantP:        0,
+			wantE:        8,
+			wantTotalTh:  8,
+			wantSharedL3: 8,
+		},
+		{
+			name:         "Hybrid leaf 4 reporting max addressable IDs (64 cores, 24 logical)",
+			physical:     64,
+			logical:      24,
+			tpc:          2,
+			isHybrid:     true,
+			wantP:        0,
+			wantE:        24,
+			wantTotalTh:  24,
+			wantSharedL3: 24,
+		},
+		{
+			name:         "Asymmetric SMT without HYBRID_CPU flag (12 physical, 16 logical, tpc=2)",
+			physical:     12,
+			logical:      16,
+			tpc:          2,
+			isHybrid:     false,
+			wantP:        12,
+			wantE:        0,
+			wantTotalTh:  16,
+			wantSharedL3: 16,
+		},
+		{
+			name:         "Homogeneous SMT (8 physical, 16 logical, tpc=2)",
+			physical:     8,
+			logical:      16,
+			tpc:          2,
+			isHybrid:     false,
+			wantP:        8,
+			wantE:        0,
+			wantTotalTh:  16,
+			wantSharedL3: 16,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			CPU.PhysicalCores = tt.physical
+			CPU.LogicalCores = tt.logical
+			CPU.ThreadsPerCore = tt.tpc
+			CPU.VendorString = "GenuineIntel"
+			CPU.Cache.L1D = 32768
+			CPU.Cache.L1I = 32768
+			CPU.Cache.L2 = 524288
+			CPU.Cache.L3 = 16777216
+
+			if tt.isHybrid {
+				CPU.Enable(HYBRID_CPU)
+			} else {
+				CPU.Disable(HYBRID_CPU)
+			}
+
+			sys := countsTopology()
+
+			if sys.Online != tt.wantTotalTh {
+				t.Errorf("sys.Online = %d, want %d", sys.Online, tt.wantTotalTh)
+			}
+			if got := sys.NumThreads(); got != tt.wantTotalTh {
+				t.Errorf("NumThreads() = %d, want %d", got, tt.wantTotalTh)
+			}
+
+			seen := make(map[int]bool, tt.wantTotalTh)
+			var allThreads []int
+			pCores := 0
+			eCores := 0
+			for _, pkg := range sys.Packages {
+				for _, grp := range pkg.Groups {
+					for _, c := range grp.Cores {
+						switch c.Type {
+						case topology.Performance:
+							pCores++
+							if len(c.Threads) == 2 {
+								for _, ca := range c.Caches {
+									if ca.SharedThreads != 2 {
+										t.Errorf("Core %d (Performance) cache SharedThreads = %d, want 2", c.ID, ca.SharedThreads)
+									}
+								}
+							}
+						case topology.Efficiency:
+							eCores++
+							if len(c.Threads) == 1 {
+								for _, ca := range c.Caches {
+									if ca.SharedThreads != 1 {
+										t.Errorf("Core %d (Efficiency) cache SharedThreads = %d, want 1", c.ID, ca.SharedThreads)
+									}
+								}
+							}
+						}
+						for _, th := range c.Threads {
+							if th.ID < 0 || th.ID >= tt.wantTotalTh {
+								t.Errorf("Thread ID %d out of bounds [0, %d)", th.ID, tt.wantTotalTh)
+							}
+							if seen[th.ID] {
+								t.Errorf("Duplicate thread ID %d", th.ID)
+							}
+							seen[th.ID] = true
+							allThreads = append(allThreads, th.ID)
+						}
+					}
+					for _, ca := range grp.Caches {
+						if ca.Level == 3 && ca.SharedThreads != tt.wantSharedL3 {
+							t.Errorf("Group L3 SharedThreads = %d, want %d", ca.SharedThreads, tt.wantSharedL3)
+						}
+					}
+				}
+			}
+
+			if len(allThreads) != tt.wantTotalTh {
+				t.Errorf("Total threads collected = %d, want %d", len(allThreads), tt.wantTotalTh)
+			}
+			if pCores != tt.wantP {
+				t.Errorf("Performance cores = %d, want %d", pCores, tt.wantP)
+			}
+			if eCores != tt.wantE {
+				t.Errorf("Efficiency cores = %d, want %d", eCores, tt.wantE)
+			}
+		})
+	}
+}

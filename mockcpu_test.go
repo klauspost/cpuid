@@ -200,10 +200,38 @@ func TestMocks(t *testing.T) {
 			if CPU.AVX10Level > 0 {
 				t.Log("AVX10 level:", CPU.AVX10Level)
 			}
-			if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 {
+			if CPU.LogicalCores > 0 && CPU.PhysicalCores > 0 && !CPU.Supports(HYBRID_CPU) {
 				if CPU.LogicalCores != CPU.PhysicalCores*CPU.ThreadsPerCore {
 					t.Fatalf("Core count mismatch, LogicalCores (%d) != PhysicalCores (%d) * CPU.ThreadsPerCore (%d)",
 						CPU.LogicalCores, CPU.PhysicalCores, CPU.ThreadsPerCore)
+				}
+			}
+			if CPU.Supports(HYBRID_CPU) && CPU.LogicalCores > 0 {
+				topo := countsTopology()
+				if topo.Online != CPU.LogicalCores {
+					t.Fatalf("Hybrid topology Online mismatch: got %d, want %d", topo.Online, CPU.LogicalCores)
+				}
+				if n := topo.NumThreads(); n != CPU.LogicalCores {
+					t.Fatalf("Hybrid topology NumThreads mismatch: got %d, want %d", n, CPU.LogicalCores)
+				}
+				seen := make(map[int]bool, CPU.LogicalCores)
+				for _, p := range topo.Packages {
+					for _, g := range p.Groups {
+						for _, c := range g.Cores {
+							for _, th := range c.Threads {
+								if th.ID < 0 || th.ID >= CPU.LogicalCores {
+									t.Fatalf("Thread ID %d out of bounds [0, %d)", th.ID, CPU.LogicalCores)
+								}
+								if seen[th.ID] {
+									t.Fatalf("Duplicate thread ID %d", th.ID)
+								}
+								seen[th.ID] = true
+							}
+						}
+					}
+				}
+				if len(seen) != CPU.LogicalCores {
+					t.Fatalf("Expected %d unique threads, got %d", CPU.LogicalCores, len(seen))
 				}
 			}
 
